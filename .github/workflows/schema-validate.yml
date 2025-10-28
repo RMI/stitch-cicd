@@ -33,8 +33,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --upgrade pip
-          uv pip install check-jsonschema
+          uv pip install --upgrade pip --system
+          uv pip install check-jsonschema --system
 
       - name: Make script executable
         run: |
