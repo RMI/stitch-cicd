@@ -40,8 +40,7 @@ jobs:
 
       - name: Make script executable
         run: |
-          chmod +x schema/bin/validate_schemas.sh
+          chmod +x bin/validate_schemas.sh
 
       - name: Validate Schemas
-        working-directory: schema
         run: ./bin/validate_schemas.sh
