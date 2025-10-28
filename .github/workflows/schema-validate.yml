@@ -18,6 +18,9 @@ jobs:
   validate:
     name: Validate JSON Schemas
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: schema
 
     steps:
       - name: Checkout code
