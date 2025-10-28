@@ -7,10 +7,7 @@ requires-python = ">=3.12"
 dependencies = []
 
 [project.optional-dependencies]
-cli = [
-    "stitch-cli",
-    "stitch-validator",
-]
+cli = ["stitch-cli", "stitch-validator"]
 
 [tool.uv.workspace]
 members = ["packages/*", "dev/*", "deployments/*"]
@@ -22,3 +19,4 @@ stitch-validator = { workspace = true }
 
 [dependency-groups]
 dev = ["pytest>=8.4.2", "ruff>=0.14.2"]
+cli = ["stitch-cli", "stitch-validator"]
