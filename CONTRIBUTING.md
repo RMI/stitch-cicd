@@ -6,7 +6,7 @@ The package `dev/stitch-cli` exposes a plugin interface to allow developers to e
 To install the CLI and all registered commands, run
 
 ```bash
-uv sync --group cli
+uv sync --extra cli
 ```
 
 Now, the subcommands (or groups) will be accessible via the `stitch` binary in your virtual environment.
