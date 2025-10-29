@@ -13,7 +13,6 @@ cli = ["stitch-cli", "stitch-validator"]
 members = ["packages/*", "dev/*", "deployments/*"]
 
 [tool.uv.sources]
-external-schemas = { workspace = true }
 stitch-cli = { workspace = true }
 stitch-validator = { workspace = true }
 
