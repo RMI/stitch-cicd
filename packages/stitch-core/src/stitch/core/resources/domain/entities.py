@@ -21,7 +21,7 @@ class ResourceEntity:
         created_by: id for the user/service/process responsible for creating the resource
     """
 
-    resource_id: int
+    id: int
     name: str
     country: str
     latitude: float | None = None
@@ -34,10 +34,10 @@ class ResourceEntity:
     def __eq__(self, other) -> bool:
         if not isinstance(other, ResourceEntity):
             return False
-        return self.resource_id == other.resource_id
+        return self.id == other.id
 
     def __hash__(self) -> int:
-        return hash((self.resource_id, self.dataset, self.source_pk))
+        return hash((self.id, self.name, self.latitude, self.longitude))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -71,3 +71,13 @@ class MembershipEntity:
     created_by: UserPlaceholder | None = None
     created: datetime
     updated: datetime
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, MembershipEntity):
+            return False
+        return self.id == other.id
+
+    def __hash__(self) -> int:
+        return hash(
+            (self.id, self.resource_id, self.dataset, self.source_pk, self.status)
+        )
