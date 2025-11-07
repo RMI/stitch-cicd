@@ -50,19 +50,21 @@ class MembershipEntity:
     constituent source data to the appropriate resource_ids.
 
     Attributes:
-        id:
-        resource_id:
-        dataset:
-        source_pk:
-        created_by:
-        status:
-        created:
+        id: identifier for the Membership
+        resource_id: the Resource identifier
+        dataset: table name or other identifier for the source collection
+        source_pk: unique identifier for the row/entity within the specified `dataset`
+        status: status of this Membership ("repointed", "deprecated", "invalid", etc...)
+        created_by: id for the user/service/process responsible for creating the resource
+        created: creation timestamp
+        updated: timestamp for last update to the entitiy
     """
 
     id: int
     resource_id: int
     dataset: str
     source_pk: str
-    created_by: UserPlaceholder | None = None
     status: str | None = None
+    created_by: UserPlaceholder | None = None
     created: datetime
+    updated: datetime
