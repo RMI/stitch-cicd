@@ -5,6 +5,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from stitch.core.resources.domain.entities import MembershipEntity
 from .base import Base, TimestampMixin
 
 
@@ -27,3 +29,14 @@ class MembershipModel(Base, TimestampMixin):
     created_by: Mapped[str | None] = mapped_column(String, nullable=True)
 
     resource = relationship("ResourceModel", back_populates="memberships")
+
+    def as_entity(self) -> MembershipEntity:
+        return MembershipEntity(
+            id=self.id,
+            resource_id=self.resource_id,
+            source=self.source,
+            source_pk=self.source_pk,
+            created_by=self.created_by,
+            status=self.status,
+            created=self.created,
+        )

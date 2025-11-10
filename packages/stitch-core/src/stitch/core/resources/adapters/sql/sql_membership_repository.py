@@ -14,11 +14,11 @@ class SQLMembershipRepository(MembershipRepository):
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def create(self, resource_id: int, source_name: str, source_id: str):
+    def create(self, resource_id: int, source_name: str, source_pk: str):
         model = MembershipModel(
             resource_id=resource_id,
             source=source_name,
-            source_pk=source_id,
+            source_pk=source_pk,
         )
 
         self._session.add(model)
@@ -29,20 +29,9 @@ class SQLMembershipRepository(MembershipRepository):
         model = self._session.get(MembershipModel, membership_id)
         if model is None:
             return None
-        return self._model_to_entity(model)
+        return model.as_entity()
 
     def get_active_members(self, resource_id: int) -> Sequence[MembershipModel]:
         stmt = select(MembershipModel).where(MembershipModel.resource_id == resource_id)
 
         return self._session.execute(stmt).scalars().all()
-
-    def _model_to_entity(self, model: MembershipModel) -> MembershipEntity:
-        return MembershipEntity(
-            id=model.id,
-            resource_id=model.resource_id,
-            source=model.source,
-            source_pk=model.source_pk,
-            created_by=model.created_by,
-            status=model.status,
-            created=model.created,
-        )
