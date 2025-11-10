@@ -16,12 +16,10 @@ class SQLMembershipRepository(MembershipRepository):
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def create(
-        self, resource_id: int, source_name: str, source_id: str
-    ):
+    def create(self, resource_id: int, source_name: str, source_id: str):
         model = MembershipModel(
             resource_id=resource_id,
-            dataset=source_name,
+            source=source_name,
             source_pk=source_id,
         )
 
@@ -44,7 +42,7 @@ class SQLMembershipRepository(MembershipRepository):
         return MembershipEntity(
             id=model.id,
             resource_id=model.resource_id,
-            dataset=model.dataset,
+            source=model.source,
             source_pk=model.source_pk,
             created_by=model.created_by,
             status=model.status,

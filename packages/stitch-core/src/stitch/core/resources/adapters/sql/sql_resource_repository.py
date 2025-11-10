@@ -10,7 +10,7 @@ def normalize_resource_model(model: ResourceModel) -> dict[str, Any]:
     """Translate provider-specific ORM row into the normalized dict expected by domain."""
     projection = {
         "id": model.id,
-        "dataset": model.dataset,
+        "source": model.source,
         "source_pk": model.source_pk,
         "repointed_id": model.repointed_id,
         "name": model.name,
@@ -31,9 +31,9 @@ class SQLResourceRepository(ResourceRepository):
 
     def create(
         self,
-        dataset: str | None,
+        source: str | None,
         source_pk: str | None,
-        repointed_id: int | None = None,
+        repointed_to: int | None = None,
         name: str | None = None,
         country_iso3: str | None = None,
         operator: str | None = None,
@@ -41,9 +41,9 @@ class SQLResourceRepository(ResourceRepository):
         longitude: float | None = None,
     ) -> int:
         model = ResourceModel(
-            dataset=dataset,
+            source=source,
             source_pk=source_pk,
-            repointed_id=repointed_id,
+            repointed_to=repointed_to,
             name=name,
             country_iso3=country_iso3,
             operator=operator,
