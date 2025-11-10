@@ -12,7 +12,7 @@ class ResourceEntity:
     """Minimal object to relate resources to one another.
 
     Attributes:
-        resource_id: unique identifier
+        id: unique identifier
         name: the resource name
         country: ISO 3166-1 country code
         repointed_to: `id` field for the new parent/aggregate resource, None if not merged
