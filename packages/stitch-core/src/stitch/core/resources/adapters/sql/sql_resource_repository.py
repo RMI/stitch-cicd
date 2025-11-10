@@ -12,9 +12,9 @@ def normalize_resource_model(model: ResourceModel) -> dict[str, Any]:
         "id": model.id,
         "source": model.source,
         "source_pk": model.source_pk,
-        "repointed_id": model.repointed_id,
+        "repointed_to": model.repointed_to,
         "name": model.name,
-        "country_iso3": model.country_iso3,
+        "country": model.country,
         "operator": model.operator,
         "latitude": float(model.latitude) if model.latitude is not None else None,
         "longitude": float(model.longitude) if model.longitude is not None else None,
@@ -31,21 +31,17 @@ class SQLResourceRepository(ResourceRepository):
 
     def create(
         self,
-        source: str | None,
-        source_pk: str | None,
         repointed_to: int | None = None,
         name: str | None = None,
-        country_iso3: str | None = None,
+        country: str | None = None,
         operator: str | None = None,
         latitude: float | None = None,
         longitude: float | None = None,
     ) -> int:
-        model = ResourceModel(
-            source=source,
-            source_pk=source_pk,
+        model = ResourceModel.create(
             repointed_to=repointed_to,
             name=name,
-            country_iso3=country_iso3,
+            country=country,
             operator=operator,
             latitude=latitude,
             longitude=longitude,
@@ -58,15 +54,15 @@ class SQLResourceRepository(ResourceRepository):
         model = self._session.get(ResourceModel, resource_id)
         if model is None:
             return None
-        return self._model_to_entity(model)
+        return model.as_entity()
 
     def get_root_resource(self, resource_id: int):
-        """Trace the `repointed_id` values until reaching a `ResourceModel` where  repointed_id is None/null"""
+        """Trace the `repointed_to` values until reaching a `ResourceModel` where  repointed_to is None/null"""
         pass
 
     def repoint_resource(self, resource_id: int, to_resource_id: int):
         """
-        Update the resource's `repointed_id`  to `to_resource_id`
+        Update the resource's `repointed_to`  to `to_resource_id`
         """
 
     def _model_to_entity(self, model: ResourceModel):

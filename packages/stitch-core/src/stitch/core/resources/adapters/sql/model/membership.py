@@ -5,21 +5,23 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    func,
     text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from .base import Base
+from sqlalchemy.schema import FetchedValue
+from .base import Base, TimestampMixin
 
 
-class MembershipModel(Base):
+class MembershipModel(Base, TimestampMixin):
     __tablename__ = "memberships"
 
     __table_args__ = (
         UniqueConstraint(
             "resource_id",
-            "dataset",
+            "source",
             "source_pk",
-            name="uq_dataset_source_pk",
+            name="uc_source_source_pk",
         ),
     )
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -28,15 +30,5 @@ class MembershipModel(Base):
     source_pk: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str | None] = mapped_column(String, nullable=True)
     created_by: Mapped[str | None] = mapped_column(String, nullable=True)
-    created: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=text("CURRENT_TIMESTAMP"),
-    )
-    updated: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=text("CURRENT_TIMESTAMP"),
-    )
 
     resource = relationship("ResourceModel", back_populates="memberships")
