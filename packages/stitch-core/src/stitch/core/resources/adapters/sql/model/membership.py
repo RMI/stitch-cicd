@@ -6,6 +6,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+# TODO: determine a convention around imports
+# fully qualified? explicit but verbose
+# relative? succint and package contents can move with the package without updates
+# mix of both? i.e. within a package directory, use relative, when reaching outside, use full
 from stitch.core.resources.domain.entities import MembershipEntity
 from .base import Base, TimestampMixin
 
