@@ -22,14 +22,14 @@ class ResourceEntity:
     """
 
     id: int
+    repointed_to: int | None = None
     name: str
     country: str
     latitude: float | None = None
     longitude: float | None = None
-    repointed_id: int | None = None
+    last_updated: datetime
     created: datetime
     created_by: UserPlaceholder | None = None
-    last_updated: datetime
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, ResourceEntity):
@@ -44,7 +44,7 @@ class ResourceEntity:
 class MembershipEntity:
     """Primary connection between external/unknown data sources and resources.
 
-    There's a 1-to-1 mapping between "dataset" + "source_pk" and resource_id.
+    There's a 1-to-1 mapping between "source" + "source_pk" and resource_id.
 
     When merging resources together, we'll create new MembershipEntities that use the newly
     created `resource_id`.
@@ -55,8 +55,8 @@ class MembershipEntity:
     Attributes:
         id: identifier for the Membership
         resource_id: the Resource identifier
-        dataset: table name or other identifier for the source collection
-        source_pk: unique identifier for the row/entity within the specified `dataset`
+        source: table name or other identifier for the source collection
+        source_pk: unique identifier for the row/entity within the specified `source`
         status: status of this Membership ("repointed", "deprecated", "invalid", etc...)
         created_by: id for the user/service/process responsible for creating the resource
         created: creation timestamp
@@ -65,7 +65,7 @@ class MembershipEntity:
 
     id: int
     resource_id: int
-    dataset: str
+    source: str
     source_pk: str
     status: str | None = None
     created_by: UserPlaceholder | None = None
@@ -79,5 +79,5 @@ class MembershipEntity:
 
     def __hash__(self) -> int:
         return hash(
-            (self.id, self.resource_id, self.dataset, self.source_pk, self.status)
+            (self.id, self.resource_id, self.source, self.source_pk, self.status)
         )
