@@ -1,10 +1,30 @@
 from __future__ import annotations
 from ast import TypeAlias
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Required, TypedDict
 
+from .ports.sources import SourceEntity
+
 UserPlaceholder: TypeAlias = str
+
+
+@dataclass(frozen=True, kw_only=True)
+class AggregateResourceEntity:
+    """A view-like object to capture a `ResourceEntity` that is aggregation of its constituent `ResourceEntity` objects.
+
+    Note: `constituents` may themselves be aggregate resources.
+
+    Attributes:
+        root: the primary `ResourceEntity` for this object
+        constituents: the `ResourceEntity` objects whose `repointed_to` attribute points to `root`
+        source_data: the total collected source data aggregated through the `MembershipEntity` relationships
+    """
+
+    root: ResourceEntity
+    constituents: Sequence[ResourceEntity]
+    source_data: Mapping[str, SourceEntity]
 
 
 @dataclass(frozen=True, kw_only=True)
