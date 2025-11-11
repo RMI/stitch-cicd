@@ -33,6 +33,16 @@ class TestResourceServiceCreateResourceUnit:
     ):
         """Verify repositories are called in correct sequence with correct arguments."""
         test_data = {"id": "TEST123", "name": "Test"}
+        source_repo = configure_source_mock(
+            mock_transaction_context,
+            {
+                "source": "test_source",
+                "name": "Test Resource",
+                "country": "USA",
+                "latitude": 30.0,
+                "longitude": -95.0,
+            },
+        )
 
         result = resource_service.create_resource(source="test_source", data=test_data)
 
@@ -40,10 +50,6 @@ class TestResourceServiceCreateResourceUnit:
 
         mock_transaction_context.source_registry.get_source_repository.assert_called_once_with(
             "test_source"
-        )
-
-        source_repo = (
-            mock_transaction_context.source_registry.get_source_repository.return_value
         )
         source_repo.row_to_record_data.assert_called_once_with(test_data)
         source_repo.write.assert_called_once()
@@ -75,17 +81,17 @@ class TestResourceServiceCreateResourceUnit:
 
     def test_data_transformation(self, resource_service, mock_transaction_context):
         """Verify source data is correctly transformed to resource data."""
-        source_repo = (
-            mock_transaction_context.source_registry.get_source_repository.return_value
+        configure_source_mock(
+            mock_transaction_context,
+            {
+                "source": "test_source",
+                "payload": {"id": "CUSTOM"},
+                "name": "Custom Name",
+                "country": "CAN",
+                "latitude": 45.5,
+                "longitude": -73.5,
+            },
         )
-        source_repo.row_to_record_data.return_value = {
-            "source": "test_source",
-            "payload": {"id": "CUSTOM"},
-            "name": "Custom Name",
-            "country": "CAN",
-            "latitude": 45.5,
-            "longitude": -73.5,
-        }
 
         resource_service.create_resource(source="test_source", data={"id": "X"})
 
@@ -101,16 +107,16 @@ class TestResourceServiceCreateResourceUnit:
         self, resource_service, mock_transaction_context
     ):
         """Verify exception from source write propagates correctly."""
-        source_repo = (
-            mock_transaction_context.source_registry.get_source_repository.return_value
+        configure_source_mock(
+            mock_transaction_context,
+            {"source": "test", "name": "Test"},
+            write_error=ValueError("Source write failed"),
         )
-        source_repo.write.side_effect = ValueError("Source write failed")
 
         with pytest.raises(ValueError, match="Source write failed"):
             resource_service.create_resource(source="test_source", data={"id": "TEST"})
 
-        mock_transaction_context.resources.create.assert_not_called()
-        mock_transaction_context.memberships.create.assert_not_called()
+        assert_no_downstream_calls(mock_transaction_context)
 
     def test_returns_resource_id(self, resource_service, mock_transaction_context):
         """Verify service returns the resource ID from repository."""
@@ -139,8 +145,7 @@ class TestResourceServiceErrorHandling:
                 source="unknown_source", data={"id": "TEST"}
             )
 
-        mock_transaction_context.resources.create.assert_not_called()
-        mock_transaction_context.memberships.create.assert_not_called()
+        assert_no_downstream_calls(mock_transaction_context)
 
     def test_resource_creation_failure_propagates(
         self, resource_service, mock_transaction_context
@@ -172,8 +177,8 @@ class TestResourceServiceErrorHandling:
         self, resource_service, mock_transaction_context
     ):
         """Verify exception from data transformation propagates correctly."""
-        source_repo = (
-            mock_transaction_context.source_registry.get_source_repository.return_value
+        source_repo = configure_source_mock(
+            mock_transaction_context, {"source": "test", "name": "Test"}
         )
         source_repo.row_to_record_data.side_effect = ValueError("Invalid data format")
 
@@ -181,8 +186,7 @@ class TestResourceServiceErrorHandling:
             resource_service.create_resource(source="test_source", data={"id": "TEST"})
 
         source_repo.write.assert_not_called()
-        mock_transaction_context.resources.create.assert_not_called()
-        mock_transaction_context.memberships.create.assert_not_called()
+        assert_no_downstream_calls(mock_transaction_context)
 
 
 class TestResourceServiceDataScenarios:
@@ -244,10 +248,7 @@ class TestResourceServiceDataScenarios:
         expected_fields,
     ):
         """Verify service handles different data formats and optional fields."""
-        source_repo = (
-            mock_transaction_context.source_registry.get_source_repository.return_value
-        )
-        source_repo.row_to_record_data.return_value = source_data
+        configure_source_mock(mock_transaction_context, source_data)
 
         resource_service.create_resource(
             source=source_data["source"], data={"id": "TEST"}
