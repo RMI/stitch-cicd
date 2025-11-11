@@ -7,6 +7,10 @@ from stitch.core.resources.adapters.sql.sql_resource_repository import (
     SQLResourceRepository,
 )
 from stitch.core.resources.adapters.sql.model.resource import ResourceModel
+from stitch.core.resources.adapters.sql.errors import (
+    EntityNotFoundError,
+    ResourceIntegrityError,
+)
 from tests.fixtures.fixture_db_data import RESOURCE_DATA
 
 
@@ -131,3 +135,53 @@ class TestSQLResourceRepositoryGet:
         result = repo.get(999999)
 
         assert result is None
+
+
+class TestSQLResourceRepositoryMergeResources:
+    """Test suite for SQLResourceRepository.merge_resources() method."""
+
+    def test_merge_creates_new_resource_with_higher_id_attributes(
+        self, db_session: Session
+    ):
+        """Test that merge creates new resource with attributes from higher ID resource."""
+        repo = SQLResourceRepository(db_session)
+
+        # Create two resources with different attributes
+        id1 = repo.create(
+            name="Resource One",
+            country="Country A",
+            latitude=10.0,
+            longitude=20.0,
+        )
+        id2 = repo.create(
+            name="Resource Two",
+            country="Country B",
+            latitude=30.0,
+            longitude=40.0,
+        )
+
+        # Merge them
+        new_resource = repo.merge_resources(id1, id2)
+
+        # Verify new resource was created
+        assert new_resource is not None
+        assert new_resource.id is not None
+        assert new_resource.id != id1
+        assert new_resource.id != id2
+
+        # New resource should have attributes from higher ID (id2)
+        assert new_resource.name == "Resource Two"
+        assert new_resource.country == "Country B"
+        assert pytest.approx(new_resource.latitude, rel=1e-6) == 30.0
+        assert pytest.approx(new_resource.longitude, rel=1e-6) == 40.0
+
+        # Both original resources should be repointed to new resource
+        saved_r1 = db_session.get(ResourceModel, id1)
+        saved_r2 = db_session.get(ResourceModel, id2)
+
+        assert saved_r1.repointed_to == new_resource.id
+        assert saved_r2.repointed_to == new_resource.id
+
+        # New resource itself should not be repointed
+        saved_new = db_session.get(ResourceModel, new_resource.id)
+        assert saved_new.repointed_to is None
