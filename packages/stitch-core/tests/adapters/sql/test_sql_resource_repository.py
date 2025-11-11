@@ -330,3 +330,51 @@ class TestSQLResourceRepositoryMergeResources:
 
         error_message = str(exc_info.value)
         assert "Cannot merge any resource that has already been merged" in error_message
+
+    def test_merge_resources_with_special_data(self, db_session: Session):
+        """Test merging resources with special characters, unicode, and null coordinates."""
+        repo = SQLResourceRepository(db_session)
+
+        # Test with unicode/special characters
+        # Regular resource created first (will have lower ID)
+        id_regular = repo.create(
+            name="Regular Name",
+            country="USA",
+            latitude=10.0,
+            longitude=20.0,
+        )
+
+        # Special chars resource created second (will have higher ID)
+        special_chars_data = RESOURCE_DATA["edge_case_special_chars"]
+        id_special = repo.create(**special_chars_data)
+
+        # Merge them (special has higher ID, so its attributes should be selected)
+        merged1 = repo.merge_resources(id_regular, id_special)
+        assert merged1.name == special_chars_data["name"]
+        assert merged1.country == special_chars_data["country"]
+
+        # Test with null coordinates
+        # Resource with location created first (lower ID)
+        id_with_loc = repo.create(
+            name="With Location",
+            country="USA",
+            latitude=30.0,
+            longitude=40.0,
+        )
+
+        # Resource without location created second (higher ID)
+        no_location_data = RESOURCE_DATA["edge_case_no_location"]
+        id_no_loc = repo.create(**no_location_data)
+
+        # Merge them (no_location has higher ID)
+        merged2 = repo.merge_resources(id_with_loc, id_no_loc)
+        assert merged2.name == no_location_data["name"]
+        assert merged2.country == no_location_data["country"]
+        assert merged2.latitude is None
+        assert merged2.longitude is None
+
+        # Verify both originals are repointed
+        saved1 = db_session.get(ResourceModel, id_with_loc)
+        saved2 = db_session.get(ResourceModel, id_no_loc)
+        assert saved1.repointed_to == merged2.id
+        assert saved2.repointed_to == merged2.id
