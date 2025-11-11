@@ -108,7 +108,6 @@ class TestResourceMembershipIntegration:
         resource_data = RESOURCE_DATA["gem_full"]
         resource_id = resource_repo.create(
             name=resource_data["name"],
-            operator=resource_data["operator"],
             country=resource_data["country"],
         )
 

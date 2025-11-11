@@ -96,7 +96,7 @@ class MembershipEntity:
 
 class MembershipEntityData(TypedDict, total=False):
     resource_id: Required[int]
-    dataset: Required[str]
+    source: Required[str]
     source_pk: Required[str]
     created_by: str | None = None
     status: str | None = None

@@ -33,13 +33,11 @@ class TestSQLResourceRepositoryCreate:
         # Verify resource was saved correctly
         saved = db_session.get(ResourceModel, resource_id)
         assert saved is not None
-        assert saved.dataset == data["dataset"]
-        assert saved.source_pk == data["source_pk"]
         assert saved.created is not None
         assert saved.memberships == []
 
         # Verify optional fields match input
-        for field in ["name", "country_iso3", "operator", "latitude", "longitude"]:
+        for field in ["name", "country", "latitude", "longitude"]:
             expected = data.get(field)
             actual = getattr(saved, field)
             if expected is not None and field in ["latitude", "longitude"]:
@@ -51,9 +49,9 @@ class TestSQLResourceRepositoryCreate:
         """Test creating multiple resources in sequence."""
         repo = SQLResourceRepository(db_session)
 
-        id1 = repo.create(dataset="gem", source_pk="MULTI-001")
-        id2 = repo.create(dataset="woodmac", source_pk="MULTI-002")
-        id3 = repo.create(dataset="gem", source_pk="MULTI-003")
+        id1 = repo.create()
+        id2 = repo.create()
+        id3 = repo.create()
 
         # All IDs should be unique
         assert len({id1, id2, id3}) == 3
@@ -61,90 +59,31 @@ class TestSQLResourceRepositoryCreate:
         # All resources should exist in database
         assert all(db_session.get(ResourceModel, i) for i in [id1, id2, id3])
 
-    def test_create_resource_with_repointed_id(self, db_session: Session):
-        """Test creating a resource with repointed_id set (for merge scenarios)."""
+    def test_create_resource_with_repointed_to(self, db_session: Session):
+        """Test creating a resource with repointed_to set (for merge scenarios)."""
         repo = SQLResourceRepository(db_session)
 
         # Create parent resource first
         parent_id = repo.create(
-            dataset="woodmac",
-            source_pk="PARENT-001",
             name="Parent Resource",
         )
 
+        assert parent_id is not None
+
         # Create child resource pointing to parent
         child_id = repo.create(
-            dataset="gem",
-            source_pk="CHILD-001",
-            repointed_id=parent_id,
+            repointed_to=parent_id,
             name="Child Resource",
         )
 
         saved_child = db_session.get(ResourceModel, child_id)
-        assert saved_child.repointed_id == parent_id
+        assert saved_child.repointed_to == parent_id
 
-    def test_create_duplicate_dataset_source_pk_fails(self, db_session: Session):
-        """Test that creating duplicate (dataset, source_pk) raises IntegrityError."""
-        repo = SQLResourceRepository(db_session)
-
-        # Create first resource
-        repo.create(
-            dataset="gem",
-            source_pk="DUPLICATE-001",
-            name="First Resource",
-        )
-        db_session.commit()
-
-        # Attempt to create duplicate should fail
-        with pytest.raises(IntegrityError):
-            repo.create(
-                dataset="gem",
-                source_pk="DUPLICATE-001",
-                name="Second Resource",
-            )
-            db_session.commit()
-
-    def test_create_aggregate_resource_without_dataset_or_source_pk(
-        self, db_session: Session
-    ):
-        """Test creating an aggregate resource with no dataset or source_pk."""
-        repo = SQLResourceRepository(db_session)
-
-        # Aggregate resources represent merged entities from multiple sources
-        resource_id = repo.create(
-            dataset=None,
-            source_pk=None,
-            name="Merged Resource",
-            operator="Shell",
-        )
-
-        assert resource_id is not None
-        saved = db_session.get(ResourceModel, resource_id)
-        assert saved.dataset is None
-        assert saved.source_pk is None
-        assert saved.name == "Merged Resource"
-
-    def test_unique_constraint_allows_multiple_null_source_pks(
-        self, db_session: Session
-    ):
-        """Test that multiple aggregate resources with NULL dataset/source_pk are allowed."""
-        repo = SQLResourceRepository(db_session)
-
-        # Create multiple aggregate resources
-        id1 = repo.create(dataset=None, source_pk=None, name="Aggregate 1")
-        id2 = repo.create(dataset=None, source_pk=None, name="Aggregate 2")
-        id3 = repo.create(dataset=None, source_pk=None, name="Aggregate 3")
-
-        # All should succeed (NULL != NULL in SQL unique constraints)
-        assert len({id1, id2, id3}) == 3
-
-    def test_resource_created_timestamp_is_set_automatically(
-        self, db_session: Session
-    ):
+    def test_resource_created_timestamp_is_set_automatically(self, db_session: Session):
         """Test that created timestamp is set automatically by database."""
         repo = SQLResourceRepository(db_session)
 
-        resource_id = repo.create(dataset="gem", source_pk="TS-001")
+        resource_id = repo.create()
 
         saved = db_session.get(ResourceModel, resource_id)
         assert saved.created is not None
@@ -181,11 +120,8 @@ class TestSQLResourceRepositoryGet:
 
         assert entity is not None
         assert entity.id == resource_id
-        assert entity.dataset == data["dataset"]
-        assert entity.source_pk == data["source_pk"]
         assert entity.name == data["name"]
-        assert entity.country_iso3 == data["country_iso3"]
-        assert entity.operator == data["operator"]
+        assert entity.country == data["country"]
         assert pytest.approx(entity.latitude, rel=1e-6) == data["latitude"]
         assert pytest.approx(entity.longitude, rel=1e-6) == data["longitude"]
 

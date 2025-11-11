@@ -25,7 +25,6 @@ class TestResourceMembershipRelationships:
         mock_source_repo.row_to_record_data.return_value = {
             "name": "Test Resource",
             "country": "USA",
-            "operator": "TestCo",
             "latitude": 30.0,
             "longitude": -95.0,
         }
@@ -43,7 +42,7 @@ class TestResourceMembershipRelationships:
         memberships = resource.memberships
         assert len(memberships) == 1
         assert memberships[0].resource_id == resource.id
-        assert memberships[0].dataset == "test_source"
+        assert memberships[0].source == "test_source"
         assert memberships[0].source_pk == "source_123"
 
     def test_membership_resource_relationship(
@@ -54,7 +53,6 @@ class TestResourceMembershipRelationships:
         mock_source_repo.row_to_record_data.return_value = {
             "name": "Relationship Test",
             "country": "CAN",
-            "operator": "CanadaCo",
             "latitude": 45.0,
             "longitude": -75.0,
         }
@@ -75,8 +73,6 @@ class TestResourceMembershipRelationships:
         assert resource.id == resource_id
         assert resource.name == "Relationship Test"
         assert resource.country == "CAN"
-        assert resource.operator == "CanadaCo"
-        assert resource.dataset == "woodmac"
 
     def test_cascade_behavior_multiple_memberships(
         self, resource_service_integration, db_session, mock_source_repo
@@ -86,7 +82,6 @@ class TestResourceMembershipRelationships:
         mock_source_repo.row_to_record_data.return_value = {
             "name": "Multi-Source Field",
             "country": "USA",
-            "operator": "MultiCo",
             "latitude": 35.0,
             "longitude": -100.0,
         }
@@ -102,7 +97,7 @@ class TestResourceMembershipRelationships:
         member_repo = SQLMembershipRepository(repo_session)
 
         member_repo.create(
-            resource_id=resource_id, source="woodmac", source_id="second_999"
+            resource_id=resource_id, source="woodmac", source_pk="second_999"
         )
         repo_session.commit()
 
@@ -116,7 +111,7 @@ class TestResourceMembershipRelationships:
         assert resource.memberships[0].resource is resource.memberships[1].resource
 
         # Verify different sources
-        sources = {m.dataset for m in resource.memberships}
+        sources = {m.source for m in resource.memberships}
         assert sources == {"gem", "woodmac"}
 
         # Verify both memberships link back to resource

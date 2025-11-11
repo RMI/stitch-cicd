@@ -24,12 +24,11 @@ def mock_source_repo():
     Default behavior transforms data and returns source IDs.
     """
     repo = MagicMock()
-    repo.source_name = "test_source"
+    repo.source = "test_source"
     repo.row_to_record_data.return_value = {
         "id": "TEST123",
         "name": "Test Resource",
-        "country_iso3": "USA",
-        "operator": "Test Operator",
+        "country": "USA",
         "latitude": 30.0,
         "longitude": -95.0,
     }

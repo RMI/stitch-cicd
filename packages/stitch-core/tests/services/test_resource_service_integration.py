@@ -33,8 +33,7 @@ class TestResourceServiceCreateResourceIntegration:
         # Arrange
         mock_source_repo.row_to_record_data.return_value = {
             "name": "Permian Basin Field",
-            "country_iso3": "USA",
-            "operator": "ExxonMobil",
+            "country": "USA",
             "latitude": 32.0,
             "longitude": -102.5,
         }
@@ -49,21 +48,16 @@ class TestResourceServiceCreateResourceIntegration:
         resource = db_session.query(ResourceModel).filter_by(id=resource_id).first()
         assert resource is not None
         assert resource.name == "Permian Basin Field"
-        assert resource.country_iso3 == "USA"
-        assert resource.operator == "ExxonMobil"
+        assert resource.country == "USA"
         assert resource.latitude == 32.0
         assert resource.longitude == -102.5
-        assert resource.dataset == "gem"
-        assert resource.source_pk == "gem_12345"
 
         # Assert - verify membership created
         membership = (
-            db_session.query(MembershipModel)
-            .filter_by(resource_id=resource_id)
-            .first()
+            db_session.query(MembershipModel).filter_by(resource_id=resource_id).first()
         )
         assert membership is not None
-        assert membership.dataset == "gem"
+        assert membership.source == "gem"
         assert membership.source_pk == "gem_12345"
 
     def test_minimal_data_creation(
@@ -73,8 +67,7 @@ class TestResourceServiceCreateResourceIntegration:
         # Arrange - minimal data with None values
         mock_source_repo.row_to_record_data.return_value = {
             "name": "Minimal Field",
-            "country_iso3": None,
-            "operator": None,
+            "country": None,
             "latitude": None,
             "longitude": None,
         }
@@ -88,8 +81,7 @@ class TestResourceServiceCreateResourceIntegration:
         # Assert
         resource = db_session.query(ResourceModel).filter_by(id=resource_id).first()
         assert resource.name == "Minimal Field"
-        assert resource.country_iso3 is None
-        assert resource.operator is None
+        assert resource.country is None
         assert resource.latitude is None
         assert resource.longitude is None
 
@@ -131,9 +123,9 @@ class TestResourceServiceCreateResourceIntegration:
         """Test creating multiple resources independently."""
         # Arrange
         resources_data = [
-            {"name": "Field A", "country_iso3": "USA"},
-            {"name": "Field B", "country_iso3": "CAN"},
-            {"name": "Field C", "country_iso3": "MEX"},
+            {"name": "Field A", "country": "USA"},
+            {"name": "Field B", "country": "CAN"},
+            {"name": "Field C", "country": "MEX"},
         ]
 
         resource_ids = []
@@ -142,7 +134,6 @@ class TestResourceServiceCreateResourceIntegration:
         for i, data in enumerate(resources_data):
             mock_source_repo.row_to_record_data.return_value = {
                 **data,
-                "operator": None,
                 "latitude": None,
                 "longitude": None,
             }

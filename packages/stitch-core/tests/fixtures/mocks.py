@@ -46,18 +46,17 @@ def mock_source_persistence_repository():
     """Mock SourceRepository with standard behavior.
 
     Returns a MagicMock with SourceRepository spec and default behaviors:
-    - source_name property returns "test_source"
+    - source property returns "test_source"
     - row_to_record_data() returns dict with all mapped fields
     - write() returns "source_123"
     """
     repo = MagicMock(spec=SourceRepository)
-    repo.source_name = "test_source"
+    repo.source = "test_source"
     repo.row_to_record_data.return_value = {
-        "dataset": "test_source",
+        "source": "test_source",
         "payload": {"id": "TEST123"},
         "name": "Test Resource",
-        "country_iso3": "USA",
-        "operator": "Test Operator",
+        "country": "USA",
         "latitude": 30.0,
         "longitude": -95.0,
     }

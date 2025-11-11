@@ -16,7 +16,6 @@ RESOURCE_DATA: dict[str, ResourceEntityData] = {
     "gem_full": {
         "name": "Permian Basin Oil Field",
         "country": "USA",
-        "operator": "ExxonMobil Corporation",
         "latitude": 31.8457,
         "longitude": -102.3676,
         "created_by": "user",
@@ -27,7 +26,6 @@ RESOURCE_DATA: dict[str, ResourceEntityData] = {
     "woodmac_full": {
         "name": "Ghawar Field",
         "country": "SAU",
-        "operator": "Saudi Aramco",
         "latitude": 25.5,
         "longitude": 49.5,
         "created_by": "user",
@@ -35,7 +33,6 @@ RESOURCE_DATA: dict[str, ResourceEntityData] = {
     "woodmac_numeric_pk": {
         "name": "North Sea Field",
         "country": "GBR",
-        "operator": "BP plc",
         "latitude": 58.0,
         "longitude": 1.5,
         "created_by": "user",
@@ -43,7 +40,6 @@ RESOURCE_DATA: dict[str, ResourceEntityData] = {
     "edge_case_no_location": {
         "name": "Unknown Location Field",
         "country": "IRQ",
-        "operator": "Iraq National Oil Company",
         "latitude": None,
         "longitude": None,
         "created_by": "user",
@@ -51,7 +47,6 @@ RESOURCE_DATA: dict[str, ResourceEntityData] = {
     "edge_case_no_operator": {
         "name": "Orphaned Field",
         "country": "VEN",
-        "operator": None,
         "latitude": 10.5,
         "longitude": -66.9,
         "created_by": "user",
@@ -59,7 +54,6 @@ RESOURCE_DATA: dict[str, ResourceEntityData] = {
     "edge_case_long_name": {
         "name": "The Extraordinarily Long Named Oil and Gas Extraction Field with Multiple Operators and Complex Ownership Structure in Remote Location",
         "country": "RUS",
-        "operator": "Gazprom Neft",
         "latitude": 61.5240,
         "longitude": 105.3188,
         "created_by": "user",
@@ -67,7 +61,6 @@ RESOURCE_DATA: dict[str, ResourceEntityData] = {
     "edge_case_special_chars": {
         "name": "Field with Spëcial Çharacters & Symbols (Тест)",
         "country": "KAZ",
-        "operator": "КазМунайГаз",
         "latitude": 47.0,
         "longitude": 51.5,
         "created_by": "user",
@@ -75,7 +68,6 @@ RESOURCE_DATA: dict[str, ResourceEntityData] = {
     "edge_case_extreme_coordinates": {
         "name": "Arctic Offshore Field",
         "country": "NOR",
-        "operator": "Equinor ASA",
         "latitude": 89.999999,
         "longitude": -179.999999,
         "created_by": "user",
@@ -83,7 +75,6 @@ RESOURCE_DATA: dict[str, ResourceEntityData] = {
     "edge_case_zero_coordinates": {
         "name": "Null Island Field",
         "country": None,
-        "operator": "Test Operator",
         "latitude": 0.0,
         "longitude": 0.0,
         "created_by": "user",

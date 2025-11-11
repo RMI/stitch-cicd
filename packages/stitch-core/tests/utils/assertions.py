@@ -21,7 +21,7 @@ def assert_resource_created_with(mock_tx: MagicMock, **expected_fields):
 
     Args:
         mock_tx: Mocked transaction context
-        **expected_fields: Expected field values (e.g., name="Test", dataset="source")
+        **expected_fields: Expected field values (e.g., name="Test", source="source")
     """
     mock_tx.resources.create.assert_called_once()
     actual_kwargs = get_create_kwargs(mock_tx.resources)
@@ -36,21 +36,21 @@ def assert_resource_created_with(mock_tx: MagicMock, **expected_fields):
 def assert_membership_created_with(
     mock_tx: MagicMock,
     resource_id: int,
-    source_name: str,
-    source_id: str,
+    source: str,
+    source_pk: str,
 ):
     """Assert membership repository was called with expected values.
 
     Args:
         mock_tx: Mocked transaction context
         resource_id: Expected resource ID
-        source_name: Expected source name
-        source_id: Expected source ID
+        source: Expected source name
+        source_pk: Expected source ID
     """
     mock_tx.memberships.create.assert_called_once_with(
         resource_id=resource_id,
-        source_name=source_name,
-        source_id=source_id,
+        source=source,
+        source_pk=source_pk,
     )
 
 
