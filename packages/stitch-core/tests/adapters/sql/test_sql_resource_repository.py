@@ -2,7 +2,6 @@
 
 import pytest
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from stitch.core.resources.adapters.sql.sql_resource_repository import (
     SQLResourceRepository,
@@ -98,7 +97,7 @@ class TestSQLResourceRepositoryCreate:
             created = created.replace(tzinfo=timezone.utc)
 
         age = now - created
-        assert timedelta(0) <= age < timedelta(minutes=1)
+        assert timedelta(0) <= age < timedelta(seconds=20)
 
 
 class TestSQLResourceRepositoryGet:
