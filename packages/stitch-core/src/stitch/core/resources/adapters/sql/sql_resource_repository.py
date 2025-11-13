@@ -95,14 +95,11 @@ class SQLResourceRepository(ResourceRepository):
             )
 
         # once here, both Resources exist and neither has been repointed
-        most_recent = left_model if left_model.id > right_model.id else right_model
-        # TODO: how to integrate domain-specific logic to control creation at this point
+        # NOTE: We create an essentially empty resource. Determining which source data are used
+        # to create the final aggregate resource representation will be handled in a domain-specific
+        # component or view/presentation layer
         new_resource = ResourceModel.create(
             repointed_to=None,
-            name=most_recent.name,
-            country=most_recent.country,
-            latitude=most_recent.latitude,
-            longitude=most_recent.longitude,
             created_by="user",
         )
         self._session.add(new_resource)
