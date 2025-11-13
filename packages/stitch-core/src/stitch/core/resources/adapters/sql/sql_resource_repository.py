@@ -1,24 +1,17 @@
+from collections.abc import Sequence
 from sqlalchemy.orm import Session
 
+from stitch.core.resources.adapters.sql.common import extract_id
 from stitch.core.resources.adapters.sql.errors import (
     EntityNotFoundError,
     ResourceIntegrityError,
 )
 from .model.resource import ResourceModel
 from stitch.core.resources.domain.entities import (
-    AggregateResourceEntity,
     ResourceEntity,
     UserPlaceholder,
 )
 from stitch.core.resources.domain.ports import ResourceRepository
-
-
-def _extract_id(entity: AggregateResourceEntity | ResourceEntity | int) -> int:
-    if isinstance(entity, AggregateResourceEntity):
-        return entity.root.id
-    if isinstance(entity, ResourceEntity):
-        return entity.id
-    return entity
 
 
 class SQLResourceRepository(ResourceRepository):
@@ -54,7 +47,9 @@ class SQLResourceRepository(ResourceRepository):
         return model.as_entity()
 
     def merge_resources(
-        self, left: ResourceEntity | int, right: ResourceEntity | int
+        self,
+        left: ResourceEntity | int,
+        right: ResourceEntity | int,
     ) -> ResourceEntity:
         """Merge two resources and repoint them to the newly created resource.
 
@@ -74,8 +69,8 @@ class SQLResourceRepository(ResourceRepository):
             ResourceIntegrityError: If ids are the same or if either has been repointed
             EntityNotFoundError: If either `Resource` hasn't been persisted
         """
-        left_id = _extract_id(left)
-        right_id = _extract_id(right)
+        left_id = extract_id(left)
+        right_id = extract_id(right)
         if left_id == right_id:
             raise ResourceIntegrityError(
                 f"Cannot merge Resources with same id. ({left_id} == {right_id})"
@@ -101,6 +96,7 @@ class SQLResourceRepository(ResourceRepository):
 
         # once here, both Resources exist and neither has been repointed
         most_recent = left_model if left_model.id > right_model.id else right_model
+        # TODO: how to integrate domain-specific logic to control creation at this point
         new_resource = ResourceModel.create(
             repointed_to=None,
             name=most_recent.name,
