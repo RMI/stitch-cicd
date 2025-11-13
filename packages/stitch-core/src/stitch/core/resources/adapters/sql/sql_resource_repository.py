@@ -85,7 +85,7 @@ class SQLResourceRepository(ResourceRepository):
                     None if right_model is not None else str(right_id),
                 ),
             )
-            raise EntityNotFoundError(f"No Resource foun for ({','.join(nulls)})")
+            raise EntityNotFoundError(f"No Resource found for ({','.join(nulls)})")
 
         if left_model.repointed_to or right_model.repointed_to:
             msg = f"left: (id: {left_id}, repointed_to:  {left_model.repointed_to}), "
