@@ -46,8 +46,7 @@ class SQLMembershipRepository(MembershipRepository):
         """Create new memberships pointing to a different resource.
 
         Collect all memberships whose `resource_id` is in the `from_resoure_ids` argument. For each of these, create
-        a new membership where `resource_id` = `to_resource_id`. Update the status of the original memberships to
-        indicate that they've been repointed.
+        a new membership where `resource_id` = `to_resource_id`.
 
         This all takes place after a `merge_resources` operation where a new ResourceModel is created.
 
@@ -58,10 +57,10 @@ class SQLMembershipRepository(MembershipRepository):
         Returns:
             Sequence of newly created `MembershipEntity` objects.
         """
-        from_ = [extract_id(res) for res in from_resources]
-        to_ = extract_id(to_resource)
+        from_ids = [extract_id(res) for res in from_resources]
+        to_id = extract_id(to_resource)
         existing_memberships = self._session.scalars(
-            select(MembershipModel).where(MembershipModel.resource_id.in_(from_))
+            select(MembershipModel).where(MembershipModel.resource_id.in_(from_ids))
         ).all()
         if any((mem.status is not None for mem in existing_memberships)):
             invalid = filter(lambda m: m.status is not None, existing_memberships)
@@ -70,12 +69,12 @@ class SQLMembershipRepository(MembershipRepository):
                 f"Cannot repoint memberships that have already been repointed. {repr_}"
             )
 
-        def _new_membership_from_existing(mem: MembershipModel):
-            return MembershipModel(
-                resource_id=to_, source=mem.source, source_pk=mem.source_pk
-            )
-
-        new_memberships = map(_new_membership_from_existing, existing_memberships)
+        new_memberships = map(
+            lambda mem: self.create(
+                resource_id=to_id, source=mem.source, source_pk=mem.source_pk
+            ),
+            existing_memberships,
+        )
         self._session.add_all(new_memberships)
         self._session.flush()
         return [m.as_entity() for m in new_memberships]

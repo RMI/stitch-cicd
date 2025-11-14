@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from select import select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from stitch.core.resources.adapters.sql.common import extract_id
