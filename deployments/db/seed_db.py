@@ -20,17 +20,17 @@ logger = logging.getLogger(__name__)
 def main():
     # Read DB config from environment variables
     config = PostgresConfig()
-    logger.debug(f"PostGresConfig: {config}")
+    logger.info(f"PostGresConfig: {config}")
 
     # Create engine and session factory using adapter
     session_factory = Session(config)
-    logger.debug(f"Session factory created with config: {config}")
+    logger.info(f"Session factory created with config: {config}")
 
     # Create tables
     logger.debug("Creating tables...")
     engine = session_factory.kw["bind"]
     Base.metadata.create_all(engine)
-    logger.debug("Tables created.")
+    logger.info("Tables created.")
 
     # Create a session
     session = session_factory()
@@ -46,7 +46,7 @@ def main():
             longitude=-122.4194,
             created_by="seed_script",
         )
-        logger.debug(f"Resource created: {resource_id}")
+        logger.info(f"Resource created: {resource_id}")
 
         # Create Membership
         membership_repo = SQLMembershipRepository(session)
@@ -56,11 +56,11 @@ def main():
             source="gem",
             source_pk="123",
         )
-        logger.debug(f"Membership created: {membership_id}")
+        logger.info(f"Membership created: {membership_id}")
 
         # Commit all changes
         session.commit()
-        logger.debug("Committed all changes to the database.")
+        logger.info("Committed all changes to the database.")
 
         # Debug: Print all resources
         resources = session.query(ResourceModel).all()
