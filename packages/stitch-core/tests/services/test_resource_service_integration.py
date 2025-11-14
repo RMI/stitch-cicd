@@ -11,12 +11,6 @@ from unittest.mock import MagicMock
 
 from stitch.core.resources.adapters.sql.model.membership import MembershipModel
 from stitch.core.resources.adapters.sql.model.resource import ResourceModel
-from stitch.core.resources.adapters.sql.sql_membership_repository import (
-    SQLMembershipRepository,
-)
-from stitch.core.resources.adapters.sql.sql_resource_repository import (
-    SQLResourceRepository,
-)
 from stitch.core.resources.adapters.sql.sql_transaction_context import (
     SQLTransactionContext,
 )
@@ -41,12 +35,14 @@ class TestResourceServiceCreateResourceIntegration:
         mock_source_repo.write.return_value = "gem_12345"
 
         # Act
-        resource_id = resource_service_integration.create_resource(
+        resource_entity = resource_service_integration.create_resource(
             source="gem", data={"id": "12345", "name": "Permian Basin Field"}
         )
 
         # Assert - verify resource created
-        resource = db_session.query(ResourceModel).filter_by(id=resource_id).first()
+        resource = (
+            db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        )
         assert resource is not None
         assert resource.name == "Permian Basin Field"
         assert resource.country == "USA"
@@ -55,7 +51,9 @@ class TestResourceServiceCreateResourceIntegration:
 
         # Assert - verify membership created
         membership = (
-            db_session.query(MembershipModel).filter_by(resource_id=resource_id).first()
+            db_session.query(MembershipModel)
+            .filter_by(resource_id=resource_entity.id)
+            .first()
         )
         assert membership is not None
         assert membership.source == "gem"
@@ -75,12 +73,14 @@ class TestResourceServiceCreateResourceIntegration:
         mock_source_repo.write.return_value = "min_001"
 
         # Act
-        resource_id = resource_service_integration.create_resource(
+        resource_entity = resource_service_integration.create_resource(
             source="test_source", data={"id": "001"}
         )
 
         # Assert
-        resource = db_session.query(ResourceModel).filter_by(id=resource_id).first()
+        resource = (
+            db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        )
         assert resource.name == "Minimal Field"
         assert resource.country is None
         assert resource.latitude is None
@@ -140,10 +140,10 @@ class TestResourceServiceCreateResourceIntegration:
             }
             mock_source_repo.write.return_value = f"source_{i}"
 
-            resource_id = resource_service_integration.create_resource(
+            resource_entity = resource_service_integration.create_resource(
                 source="test_source", data={"id": str(i)}
             )
-            resource_ids.append(resource_id)
+            resource_ids.append(resource_entity.id)
 
         # Assert - all resources created with unique IDs
         assert len(set(resource_ids)) == 3
@@ -154,17 +154,24 @@ class TestResourceServiceCreateResourceIntegration:
 
     @pytest.mark.parametrize("source_data,expected_fields", UNICODE_TEST_CASES)
     def test_unicode_characters_persist_correctly(
-        self, resource_service_integration, db_session, mock_source_repo, source_data, expected_fields
+        self,
+        resource_service_integration,
+        db_session,
+        mock_source_repo,
+        source_data,
+        expected_fields,
     ):
         """Verify unicode characters handled correctly by real database."""
         mock_source_repo.row_to_record_data.return_value = source_data
         mock_source_repo.write.return_value = "unicode_test"
 
-        resource_id = resource_service_integration.create_resource(
+        resource_entity = resource_service_integration.create_resource(
             source="gem", data={"id": "UNICODE_TEST"}
         )
 
-        resource = db_session.query(ResourceModel).filter_by(id=resource_id).first()
+        resource = (
+            db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        )
         assert resource is not None
 
         for field, expected_value in expected_fields.items():
@@ -185,7 +192,7 @@ class TestResourceServiceCreateResourceIntegration:
         }
         mock_source_repo.write.return_value = "test_001"
 
-        first_resource_id = resource_service_integration.create_resource(
+        first_resource_entity = resource_service_integration.create_resource(
             source="test_source", data={"id": "001"}
         )
 
@@ -205,7 +212,7 @@ class TestResourceServiceCreateResourceIntegration:
 
                 def create_duplicate(**kwargs):
                     return original_create(
-                        resource_id=first_resource_id,
+                        resource_id=first_resource_entity.id,
                         source=kwargs["source"],
                         source_pk=kwargs["source_pk"],
                     )

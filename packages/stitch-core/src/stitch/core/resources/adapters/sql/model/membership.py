@@ -34,6 +34,31 @@ class MembershipModel(Base, TimestampMixin):
 
     resource = relationship("ResourceModel", back_populates="memberships")
 
+    @classmethod
+    def create(
+        cls,
+        resource_id: int,
+        source: str,
+        source_pk: str,
+        status: str | None = None,
+        created_by: str | None = None,
+    ):
+        return cls(
+            resource_id=resource_id,
+            source=source,
+            source_pk=source_pk,
+            status=status,
+            created_by=created_by,
+        )
+
+    def copy(self):
+        return self.__class__.create(
+            resource_id=self.resource_id,
+            source_pk=self.source_pk,
+            source=self.source,
+            created_by=self.created_by,
+        )
+
     def as_entity(self) -> MembershipEntity:
         return MembershipEntity(
             id=self.id,

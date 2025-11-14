@@ -3,8 +3,10 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from stitch.core.resources.adapters.sql.common import extract_id
+from stitch.core.resources.adapters.sql.errors import MembershipIntegrityError
 from stitch.core.resources.adapters.sql.model.membership import MembershipModel
-from stitch.core.resources.domain.entities import MembershipEntity
+from stitch.core.resources.domain.entities import MembershipEntity, ResourceEntity
 from stitch.core.resources.domain.ports import MembershipRepository
 
 
@@ -35,3 +37,45 @@ class SQLMembershipRepository(MembershipRepository):
         stmt = select(MembershipModel).where(MembershipModel.resource_id == resource_id)
 
         return self._session.execute(stmt).scalars().all()
+
+    def create_repointed_memberships(
+        self,
+        from_resources: Sequence[ResourceEntity | int],
+        to_resource: ResourceEntity | int,
+    ):
+        """Create new memberships pointing to a different resource.
+
+        Collect all memberships whose `resource_id` is in the `from_resoure_ids` argument. For each of these, create
+        a new membership where `resource_id` = `to_resource_id`. Update the status of the original memberships to
+        indicate that they've been repointed.
+
+        This all takes place after a `merge_resources` operation where a new ResourceModel is created.
+
+        Args:
+            from_resoure_ids: the original resource_ids
+            to_resource_id: the new resource id
+
+        Returns:
+            Sequence of newly created `MembershipEntity` objects.
+        """
+        from_ = [extract_id(res) for res in from_resources]
+        to_ = extract_id(to_resource)
+        existing_memberships = self._session.scalars(
+            select(MembershipModel).where(MembershipModel.resource_id.in_(from_))
+        ).all()
+        if any((mem.status is not None for mem in existing_memberships)):
+            invalid = filter(lambda m: m.status is not None, existing_memberships)
+            repr_ = f"({','.join(map(repr, invalid))})"
+            raise MembershipIntegrityError(
+                f"Cannot repoint memberships that have already been repointed. {repr_}"
+            )
+
+        def _new_membership_from_existing(mem: MembershipModel):
+            return MembershipModel(
+                resource_id=to_, source=mem.source, source_pk=mem.source_pk
+            )
+
+        new_memberships = map(_new_membership_from_existing, existing_memberships)
+        self._session.add_all(new_memberships)
+        self._session.flush()
+        return [m.as_entity() for m in new_memberships]

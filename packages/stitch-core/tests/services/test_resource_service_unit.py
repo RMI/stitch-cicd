@@ -7,7 +7,6 @@ behavior in isolation.
 
 import pytest
 
-from stitch.core.resources.errors import InvalidDataTypeError, MalformedSourceDataError
 from tests.data.parameter_sets import (
     DATA_TYPE_ERROR_CASES,
     MALFORMED_DATA_CASES,
@@ -18,7 +17,6 @@ from tests.utils.assertions import (
     assert_no_downstream_calls,
     assert_resource_created_with,
     assert_transaction_entered_and_exited,
-    get_create_kwargs,
 )
 from tests.utils.mock_helpers import configure_source_mock
 
@@ -69,7 +67,9 @@ class TestResourceServiceCreateResourceUnit:
             source_pk="source_123",
         )
 
-        assert result == 42
+        # Verify that result is a ResourceEntity with the expected ID
+        assert result.id == 42
+        mock_transaction_context.resources.get.assert_called_once_with(resource_id=42)
 
     def test_transaction_context_usage(
         self, resource_service, mock_transaction_context
@@ -118,15 +118,31 @@ class TestResourceServiceCreateResourceUnit:
 
         assert_no_downstream_calls(mock_transaction_context)
 
-    def test_returns_resource_id(self, resource_service, mock_transaction_context):
-        """Verify service returns the resource ID from repository."""
+    def test_returns_resource_entity(self, resource_service, mock_transaction_context):
+        """Verify service returns ResourceEntity from repository."""
+        from stitch.core.resources.domain.entities import ResourceEntity
+        from datetime import datetime, timezone
+
+        mock_entity = ResourceEntity(
+            id=999,
+            repointed_to=None,
+            name="Test",
+            country="USA",
+            latitude=30.0,
+            longitude=-95.0,
+            created=datetime.now(timezone.utc),
+            last_updated=datetime.now(timezone.utc),
+            created_by=None,
+        )
         mock_transaction_context.resources.create.return_value = 999
+        mock_transaction_context.resources.get.return_value = mock_entity
 
         result = resource_service.create_resource(
             source="test_source", data={"id": "TEST"}
         )
 
-        assert result == 999
+        assert result == mock_entity
+        assert result.id == 999
 
 
 class TestResourceServiceErrorHandling:
@@ -263,28 +279,6 @@ class TestResourceServiceDataScenarios:
             mock_transaction_context.resources.create.assert_called_once()
 
     @pytest.mark.parametrize(
-        "resource_id_input,expected_result",
-        [
-            (None, 42),
-            (100, 42),
-            (999, 42),
-        ],
-    )
-    def test_resource_id_handling(
-        self,
-        resource_service,
-        mock_transaction_context,
-        resource_id_input,
-        expected_result,
-    ):
-        """Verify resource_id parameter is handled correctly."""
-        result = resource_service.create_resource(
-            source="test_source", data={"id": "TEST"}, resource_id=resource_id_input
-        )
-
-        assert result == expected_result
-
-    @pytest.mark.parametrize(
         "source",
         ["gem", "woodmac", "custom_source", "test-source-123"],
     )
@@ -328,15 +322,13 @@ class TestResourceServiceUnicodeHandling:
             mock_transaction_context,
             **expected_fields,
         )
-        assert result == 42
+        assert result.id == 42
 
 
 class TestResourceServiceDataTypeValidation:
     """Unit tests for data type validation errors."""
 
-    @pytest.mark.parametrize(
-        "source_data,error_type,field_name", DATA_TYPE_ERROR_CASES
-    )
+    @pytest.mark.parametrize("source_data,error_type,field_name", DATA_TYPE_ERROR_CASES)
     def test_invalid_data_type_raises_error(
         self,
         resource_service,
@@ -347,7 +339,9 @@ class TestResourceServiceDataTypeValidation:
     ):
         """Verify service raises InvalidDataTypeError for incorrect field types."""
         source_repo = configure_source_mock(
-            mock_transaction_context, source_data, write_error=error_type(f"Invalid type for {field_name}")
+            mock_transaction_context,
+            source_data,
+            write_error=error_type(f"Invalid type for {field_name}"),
         )
         source_repo.row_to_record_data.side_effect = error_type(
             f"Invalid type for {field_name}"

@@ -2,6 +2,7 @@ from typing import Protocol
 from collections.abc import Sequence
 
 from stitch.core.resources.domain.entities import (
+    AggregateResourceEntity,
     ResourceEntity,
     UserPlaceholder,
 )
@@ -25,7 +26,7 @@ class ResourceRepository(Protocol):
     ) -> int:
         """Create new Resource and return unique resource identifier"""
 
-    def get_by_id(self, resource_id: int) -> ResourceEntity | None:
+    def get(self, resource_id: int) -> ResourceEntity | None:
         """Retrieve resource by identifier
 
         Args:
@@ -36,8 +37,22 @@ class ResourceRepository(Protocol):
 
         Raises:
             EntityNotFoundError if no Resource with `resource_id` is found
-
         """
+
+    def get_aggregate_resource(
+        self, resource: ResourceEntity | int
+    ) -> AggregateResourceEntity | None:
+        """Fetch the AggregateResourceEntity identified by the passed `ResourceEntity`/`resource_id`."""
+
+    def merge_resources(
+        self, *resources: Sequence[ResourceEntity | int]
+    ) -> ResourceEntity:
+        """Merge two or more resources and repoint them to the newly created resource."""
+
+    def merge_resources_(
+        self, left: ResourceEntity | int, right: ResourceEntity | int
+    ) -> ResourceEntity:
+        """Merge two resources and repoint them to the newly created resource."""
 
     def find_root_resource_by_id(self, resource_id: int) -> ResourceEntity:
         """Follow the id repointing until we find an "unrepointed" resource"""
@@ -86,5 +101,9 @@ class MembershipRepository(Protocol):
     ) -> ResourceEntity:
         pass
 
-    def repoint_memberships(ids: Sequence[int], to_resource_id: int):
+    def create_repointed_memberships(
+        self,
+        from_resources: Sequence[ResourceEntity | int],
+        to_resource: ResourceEntity | int,
+    ) -> Sequence[MembershipEntity]:
         """Updates all memberships to point to the provided id."""

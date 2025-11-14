@@ -8,12 +8,6 @@ from stitch.core.resources.app.services.resource_service import ResourceService
 from stitch.core.resources.adapters.sql.sql_transaction_context import (
     SQLTransactionContext,
 )
-from stitch.core.resources.adapters.sql.sql_resource_repository import (
-    SQLResourceRepository,
-)
-from stitch.core.resources.adapters.sql.sql_membership_repository import (
-    SQLMembershipRepository,
-)
 
 
 @pytest.fixture
