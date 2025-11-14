@@ -55,7 +55,7 @@ class SQLMembershipRepository(MembershipRepository):
         self,
         from_resources: Sequence[ResourceEntity | int],
         to_resource: ResourceEntity | int,
-    ):
+    ) -> Sequence[MembershipEntity]:
         """Create new memberships pointing to a different resource.
 
         Collect all memberships whose `resource_id` is in the `from_resoure_ids` argument. For each of these, create
