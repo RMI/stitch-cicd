@@ -11,12 +11,6 @@ from unittest.mock import MagicMock
 
 from stitch.core.resources.adapters.sql.model.membership import MembershipModel
 from stitch.core.resources.adapters.sql.model.resource import ResourceModel
-from stitch.core.resources.adapters.sql.sql_membership_repository import (
-    SQLMembershipRepository,
-)
-from stitch.core.resources.adapters.sql.sql_resource_repository import (
-    SQLResourceRepository,
-)
 from stitch.core.resources.adapters.sql.sql_transaction_context import (
     SQLTransactionContext,
 )
@@ -46,7 +40,9 @@ class TestResourceServiceCreateResourceIntegration:
         )
 
         # Assert - verify resource created
-        resource = db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        resource = (
+            db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        )
         assert resource is not None
         assert resource.name == "Permian Basin Field"
         assert resource.country == "USA"
@@ -55,7 +51,9 @@ class TestResourceServiceCreateResourceIntegration:
 
         # Assert - verify membership created
         membership = (
-            db_session.query(MembershipModel).filter_by(resource_id=resource_entity.id).first()
+            db_session.query(MembershipModel)
+            .filter_by(resource_id=resource_entity.id)
+            .first()
         )
         assert membership is not None
         assert membership.source == "gem"
@@ -80,7 +78,9 @@ class TestResourceServiceCreateResourceIntegration:
         )
 
         # Assert
-        resource = db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        resource = (
+            db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        )
         assert resource.name == "Minimal Field"
         assert resource.country is None
         assert resource.latitude is None
@@ -154,7 +154,12 @@ class TestResourceServiceCreateResourceIntegration:
 
     @pytest.mark.parametrize("source_data,expected_fields", UNICODE_TEST_CASES)
     def test_unicode_characters_persist_correctly(
-        self, resource_service_integration, db_session, mock_source_repo, source_data, expected_fields
+        self,
+        resource_service_integration,
+        db_session,
+        mock_source_repo,
+        source_data,
+        expected_fields,
     ):
         """Verify unicode characters handled correctly by real database."""
         mock_source_repo.row_to_record_data.return_value = source_data
@@ -164,7 +169,9 @@ class TestResourceServiceCreateResourceIntegration:
             source="gem", data={"id": "UNICODE_TEST"}
         )
 
-        resource = db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        resource = (
+            db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        )
         assert resource is not None
 
         for field, expected_value in expected_fields.items():

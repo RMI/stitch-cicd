@@ -4,7 +4,6 @@ These tests verify that the bidirectional relationships between resources
 and memberships work correctly, including lazy loading and the identity map.
 """
 
-import pytest
 from sqlalchemy.orm import sessionmaker
 
 from stitch.core.resources.adapters.sql.sql_membership_repository import (
@@ -36,7 +35,9 @@ class TestResourceMembershipRelationships:
         )
 
         # Load ResourceModel directly to test relationship
-        resource = db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        resource = (
+            db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        )
 
         # Assert - access memberships relationship (triggers lazy load)
         memberships = resource.memberships
@@ -65,7 +66,9 @@ class TestResourceMembershipRelationships:
 
         # Load MembershipModel directly to test relationship
         membership = (
-            db_session.query(MembershipModel).filter_by(resource_id=resource_entity.id).first()
+            db_session.query(MembershipModel)
+            .filter_by(resource_id=resource_entity.id)
+            .first()
         )
 
         # Assert - access resource relationship (triggers lazy load)
@@ -102,7 +105,9 @@ class TestResourceMembershipRelationships:
         repo_session.commit()
 
         # Act - load resource and check relationships
-        resource = db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        resource = (
+            db_session.query(ResourceModel).filter_by(id=resource_entity.id).first()
+        )
 
         # Assert - should have 2 memberships
         assert len(resource.memberships) == 2

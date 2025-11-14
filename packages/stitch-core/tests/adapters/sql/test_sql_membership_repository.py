@@ -1,7 +1,6 @@
 """Tests for SQLMembershipRepository."""
 
 from datetime import datetime
-import time
 
 import pytest
 from sqlalchemy.orm import Session

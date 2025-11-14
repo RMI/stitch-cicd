@@ -99,4 +99,6 @@ def assert_resource_matches_expected(actual: Any, expected: dict[str, Any]):
     """
     for key, value in expected.items():
         actual_value = getattr(actual, key)
-        assert actual_value == value, f"Field {key} mismatch: expected {value!r}, got {actual_value!r}"
+        assert actual_value == value, (
+            f"Field {key} mismatch: expected {value!r}, got {actual_value!r}"
+        )

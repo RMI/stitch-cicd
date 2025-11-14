@@ -7,7 +7,6 @@ behavior in isolation.
 
 import pytest
 
-from stitch.core.resources.errors import InvalidDataTypeError, MalformedSourceDataError
 from tests.data.parameter_sets import (
     DATA_TYPE_ERROR_CASES,
     MALFORMED_DATA_CASES,
@@ -18,7 +17,6 @@ from tests.utils.assertions import (
     assert_no_downstream_calls,
     assert_resource_created_with,
     assert_transaction_entered_and_exited,
-    get_create_kwargs,
 )
 from tests.utils.mock_helpers import configure_source_mock
 
@@ -330,9 +328,7 @@ class TestResourceServiceUnicodeHandling:
 class TestResourceServiceDataTypeValidation:
     """Unit tests for data type validation errors."""
 
-    @pytest.mark.parametrize(
-        "source_data,error_type,field_name", DATA_TYPE_ERROR_CASES
-    )
+    @pytest.mark.parametrize("source_data,error_type,field_name", DATA_TYPE_ERROR_CASES)
     def test_invalid_data_type_raises_error(
         self,
         resource_service,
@@ -343,7 +339,9 @@ class TestResourceServiceDataTypeValidation:
     ):
         """Verify service raises InvalidDataTypeError for incorrect field types."""
         source_repo = configure_source_mock(
-            mock_transaction_context, source_data, write_error=error_type(f"Invalid type for {field_name}")
+            mock_transaction_context,
+            source_data,
+            write_error=error_type(f"Invalid type for {field_name}"),
         )
         source_repo.row_to_record_data.side_effect = error_type(
             f"Invalid type for {field_name}"

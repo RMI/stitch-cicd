@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 
 from stitch.core.resources.adapters.sql.common import extract_id
 from stitch.core.resources.adapters.sql.errors import (
-    EntityNotFoundError,
     ResourceIntegrityError,
 )
 from .model.resource import ResourceModel
