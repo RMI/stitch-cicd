@@ -6,7 +6,11 @@ from sqlalchemy.orm import Session
 from stitch.core.resources.adapters.sql.common import extract_id
 from stitch.core.resources.adapters.sql.errors import MembershipIntegrityError
 from stitch.core.resources.adapters.sql.model.membership import MembershipModel
-from stitch.core.resources.domain.entities import MembershipEntity, ResourceEntity
+from stitch.core.resources.domain.entities import (
+    MembershipEntity,
+    ResourceEntity,
+    UserPlaceholder,
+)
 from stitch.core.resources.domain.ports import MembershipRepository
 
 
@@ -16,11 +20,20 @@ class SQLMembershipRepository(MembershipRepository):
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def create(self, resource_id: int, source: str, source_pk: str):
+    def create(
+        self,
+        resource_id: int,
+        source: str,
+        source_pk: str,
+        status: str | None = None,
+        created_by: UserPlaceholder | None = None,
+    ) -> int:
         model = MembershipModel(
             resource_id=resource_id,
             source=source,
             source_pk=source_pk,
+            status=status,
+            created_by=created_by,
         )
 
         self._session.add(model)
@@ -59,6 +72,18 @@ class SQLMembershipRepository(MembershipRepository):
         """
         from_ids = [extract_id(res) for res in from_resources]
         to_id = extract_id(to_resource)
+
+        target_memberships = self._session.scalars(
+            select(MembershipModel).where(MembershipModel.resource_id == to_id)
+        ).all()
+        if target_memberships:
+            raise MembershipIntegrityError(
+                (
+                    f"Target resource (id={to_id}) already has memberships. "
+                    + "Cannot repoint to a resource with existing memberships."
+                )
+            )
+
         existing_memberships = self._session.scalars(
             select(MembershipModel).where(MembershipModel.resource_id.in_(from_ids))
         ).all()
@@ -69,11 +94,24 @@ class SQLMembershipRepository(MembershipRepository):
                 f"Cannot repoint memberships that have already been repointed. {repr_}"
             )
 
-        new_memberships = map(
-            lambda mem: self.create(
-                resource_id=to_id, source=mem.source, source_pk=mem.source_pk
-            ),
-            existing_memberships,
+        def _model_factory(to_id: int):
+            def _fn(m: MembershipModel):
+                nonlocal to_id
+                return MembershipModel.create(
+                    resource_id=to_id,
+                    source_pk=m.source_pk,
+                    source=m.source,
+                    status=None,
+                    created_by="user",
+                )
+
+            return _fn
+
+        new_memberships = list(
+            map(
+                _model_factory(to_id=to_id),
+                existing_memberships,
+            )
         )
         self._session.add_all(new_memberships)
         self._session.flush()
