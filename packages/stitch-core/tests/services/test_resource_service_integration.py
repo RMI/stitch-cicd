@@ -420,3 +420,184 @@ class TestResourceServiceMergeResourcesIntegration:
 
         resource1_check = db_session.query(ResourceModel).filter_by(id=resource1.id).first()
         assert resource1_check.repointed_to is None
+
+    def test_end_to_end_merge_with_heterogeneous_sources(
+        self, db_session, mock_source_registry
+    ):
+        """End-to-end test: merge resources with heterogeneous data from multiple sources."""
+        gem_data = {
+            "GEM001": {
+                "name": "Permian Basin Field",
+                "country": "USA",
+                "latitude": 32.0,
+                "longitude": -102.5,
+                "operator": "ExxonMobil",
+                "status": "Operating",
+            },
+            "GEM002": {
+                "name": "North Sea Platform",
+                "country": "NOR",
+                "latitude": 60.5,
+                "longitude": 4.2,
+                "operator": "Equinor",
+                "status": "Operating",
+            },
+        }
+
+        woodmac_data = {
+            "WM001": {
+                "name": "Permian Field Complex",
+                "country": "US",
+                "latitude": 32.1,
+                "longitude": -102.6,
+                "field_type": "Onshore",
+                "reserves_mmboe": 1500,
+            },
+            "WM002": {
+                "name": "Bakken Formation",
+                "country": "US",
+                "latitude": None,
+                "longitude": None,
+                "field_type": "Shale",
+                "reserves_mmboe": 2300,
+            },
+        }
+
+        rystad_data = {
+            "RY001": {
+                "name": "West Texas Complex",
+                "country": "USA",
+                "latitude": 32.05,
+                "longitude": -102.55,
+                "discovery_year": 1920,
+                "water_depth": None,
+            },
+            "RY002": {
+                "name": "Johan Sverdrup",
+                "country": "NO",
+                "latitude": 58.87,
+                "longitude": 2.05,
+                "discovery_year": 2010,
+                "water_depth": 110,
+            },
+        }
+
+        source_repos = {}
+        for source_name, dataset in [
+            ("gem", gem_data),
+            ("woodmac", woodmac_data),
+            ("rystad", rystad_data),
+        ]:
+            repo = MagicMock()
+            repo.source = source_name
+            source_entities = {}
+            call_tracker = {}
+
+            for record_id, record_data in dataset.items():
+                source_pk = f"{source_name}_{record_id}"
+                mock_entity = MagicMock()
+                mock_entity.source = source_name
+                mock_entity.source_pk = source_pk
+                mock_entity.data = record_data
+                source_entities[source_pk] = mock_entity
+
+            def make_row_to_record(data_map, tracker):
+                def row_to_record(row):
+                    record_id = row["id"]
+                    rec_data = {
+                        "name": data_map[record_id]["name"],
+                        "country": data_map[record_id]["country"],
+                        "latitude": data_map[record_id].get("latitude"),
+                        "longitude": data_map[record_id].get("longitude"),
+                    }
+                    tracker["last_id"] = record_id
+                    return rec_data
+                return row_to_record
+
+            def make_write(source_prefix, tracker):
+                def write(rec_data):
+                    record_id = tracker.get("last_id")
+                    return f"{source_prefix}_{record_id}"
+                return write
+
+            def make_fetch(entities_map):
+                def fetch(source_pk):
+                    if source_pk in entities_map:
+                        return entities_map[source_pk]
+                    raise ValueError(f"Unknown source_pk: {source_pk}")
+                return fetch
+
+            repo.row_to_record_data.side_effect = make_row_to_record(dataset, call_tracker)
+            repo.write.side_effect = make_write(source_name, call_tracker)
+            repo.fetch.side_effect = make_fetch(source_entities)
+            source_repos[source_name] = (repo, source_entities)
+
+        def get_source_repo(source_name):
+            return source_repos[source_name][0]
+
+        mock_source_registry.get_source_repository.side_effect = get_source_repo
+
+        session_factory = sessionmaker(bind=db_session.get_bind())
+
+        def _registry_factory(session):
+            return mock_source_registry
+
+        tx_context = SQLTransactionContext(session_factory, _registry_factory)
+        service = ResourceService(tx_context)
+
+        gem_resource = service.create_resource(source="gem", data={"id": "GEM001"})
+        woodmac_resource = service.create_resource(source="woodmac", data={"id": "WM001"})
+        rystad_resource = service.create_resource(source="rystad", data={"id": "RY001"})
+
+        aggregate = service.merge_resources(gem_resource, woodmac_resource, rystad_resource)
+
+        assert aggregate.root is not None
+        assert aggregate.root.id is not None
+        assert len(aggregate.constituents) == 3
+        assert set(aggregate.constituents) == {gem_resource, woodmac_resource, rystad_resource}
+
+        assert len(aggregate.source_data) == 3
+        assert "gem" in aggregate.source_data
+        assert "woodmac" in aggregate.source_data
+        assert "rystad" in aggregate.source_data
+
+        gem_source_entity = aggregate.source_data["gem"]["gem_GEM001"]
+        assert gem_source_entity.source == "gem"
+        assert gem_source_entity.source_pk == "gem_GEM001"
+        assert gem_source_entity.data["operator"] == "ExxonMobil"
+        assert gem_source_entity.data["status"] == "Operating"
+
+        woodmac_source_entity = aggregate.source_data["woodmac"]["woodmac_WM001"]
+        assert woodmac_source_entity.source == "woodmac"
+        assert woodmac_source_entity.source_pk == "woodmac_WM001"
+        assert woodmac_source_entity.data["field_type"] == "Onshore"
+        assert woodmac_source_entity.data["reserves_mmboe"] == 1500
+
+        rystad_source_entity = aggregate.source_data["rystad"]["rystad_RY001"]
+        assert rystad_source_entity.source == "rystad"
+        assert rystad_source_entity.source_pk == "rystad_RY001"
+        assert rystad_source_entity.data["discovery_year"] == 1920
+        assert rystad_source_entity.data["water_depth"] is None
+
+        check_session = session_factory()
+        merged_resource = check_session.query(ResourceModel).filter_by(id=aggregate.root.id).first()
+        assert merged_resource is not None
+        assert merged_resource.repointed_to is None
+
+        for constituent in aggregate.constituents:
+            resource = check_session.query(ResourceModel).filter_by(id=constituent.id).first()
+            assert resource.repointed_to == aggregate.root.id
+
+        all_memberships = check_session.query(MembershipModel).all()
+        merged_memberships = [m for m in all_memberships if m.resource_id == aggregate.root.id]
+        assert len(merged_memberships) == 3
+
+        membership_keys = {(m.source, m.source_pk) for m in merged_memberships}
+        expected_keys = {
+            ("gem", "gem_GEM001"),
+            ("woodmac", "woodmac_WM001"),
+            ("rystad", "rystad_RY001"),
+        }
+        assert membership_keys == expected_keys
+
+        check_session.close()
