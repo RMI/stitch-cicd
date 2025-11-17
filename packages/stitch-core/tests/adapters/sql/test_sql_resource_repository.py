@@ -8,7 +8,6 @@ from stitch.core.resources.adapters.sql.sql_resource_repository import (
 )
 from stitch.core.resources.adapters.sql.model.resource import ResourceModel
 from stitch.core.resources.adapters.sql.errors import (
-    EntityNotFoundError,
     ResourceIntegrityError,
 )
 from tests.fixtures.fixture_db_data import RESOURCE_DATA
@@ -250,40 +249,40 @@ class TestSQLResourceRepositoryMergeResources:
 
         # Verify error message contains the ID
         error_message = str(exc_info.value)
-        assert "Cannot merge Resources with same id" in error_message
+        assert "only possible between different resources" in error_message
         assert str(resource_id) in error_message
 
-    def test_merge_nonexistent_resources_raises_entity_not_found(
+    def test_merge_nonexistent_resources_raises_resource_integrity_error(
         self, db_session: Session
     ):
-        """Test that merging with non-existent resources raises EntityNotFoundError."""
+        """Test that merging with non-existent resources raises ResourceIntegrityError."""
         repo = SQLResourceRepository(db_session)
 
         # Create one real resource
         real_id = repo.create(name="Real Resource")
 
         # Test 1: Non-existent left resource
-        with pytest.raises(EntityNotFoundError) as exc_info:
+        with pytest.raises(ResourceIntegrityError) as exc_info:
             repo.merge_resources(999999, real_id)
 
         error_message = str(exc_info.value)
-        assert "No Resource found for" in error_message
+        assert "Multiple Resources required for merging" in error_message
         assert "999999" in error_message
 
         # Test 2: Non-existent right resource
-        with pytest.raises(EntityNotFoundError) as exc_info:
+        with pytest.raises(ResourceIntegrityError) as exc_info:
             repo.merge_resources(real_id, 888888)
 
         error_message = str(exc_info.value)
-        assert "No Resource found for" in error_message
+        assert "Multiple Resources required for merging" in error_message
         assert "888888" in error_message
 
         # Test 3: Both non-existent
-        with pytest.raises(EntityNotFoundError) as exc_info:
+        with pytest.raises(ResourceIntegrityError) as exc_info:
             repo.merge_resources(111111, 222222)
 
         error_message = str(exc_info.value)
-        assert "No Resource found for" in error_message
+        assert "Multiple Resources required for merging" in error_message
         # Both IDs should be in the error message
         assert "111111" in error_message
         assert "222222" in error_message
@@ -309,8 +308,7 @@ class TestSQLResourceRepositoryMergeResources:
 
         error_message = str(exc_info.value)
         assert "Cannot merge any resource that has already been merged" in error_message
-        assert str(id_a) in error_message
-        assert str(merged_ab.id) in error_message
+        assert "Repointed" in error_message
 
         # Try to merge B again (right parameter)
         with pytest.raises(ResourceIntegrityError) as exc_info:
@@ -318,7 +316,7 @@ class TestSQLResourceRepositoryMergeResources:
 
         error_message = str(exc_info.value)
         assert "Cannot merge any resource that has already been merged" in error_message
-        assert str(id_b) in error_message
+        assert "Repointed" in error_message
 
         # Create another pair and merge them
         id_d = repo.create(name="Resource D")

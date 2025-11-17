@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from select import select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from stitch.core.resources.adapters.sql.common import extract_id
@@ -22,9 +22,9 @@ class SQLResourceRepository(ResourceRepository):
 
     def create(
         self,
-        repointed_to: int | None = None,
         name: str | None = None,
         country: str | None = None,
+        repointed_to: int | None = None,
         latitude: float | None = None,
         longitude: float | None = None,
         created_by: UserPlaceholder | None = None,
@@ -108,7 +108,9 @@ class SQLResourceRepository(ResourceRepository):
         # commit happens in the TransactionContext
         return new_resource.as_entity()
 
-    def get_root_resource(self, resource_id: int):
+    def get_root_resource(
+        self, resource: ResourceEntity | int
+    ) -> ResourceEntity | None:
         """Trace the `repointed_to` values until reaching a `ResourceModel` where  repointed_to is None/null"""
         pass
 

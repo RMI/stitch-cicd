@@ -17,8 +17,8 @@ class ResourceRepository(Protocol):
 
     def create(
         self,
-        name: str,
-        country: str,
+        name: str | None = None,
+        country: str | None = None,
         repointed_to: int | None = None,
         latitude: float | None = None,
         longitude: float | None = None,
@@ -49,12 +49,9 @@ class ResourceRepository(Protocol):
     ) -> ResourceEntity:
         """Merge two or more resources and repoint them to the newly created resource."""
 
-    def merge_resources_(
-        self, left: ResourceEntity | int, right: ResourceEntity | int
-    ) -> ResourceEntity:
-        """Merge two resources and repoint them to the newly created resource."""
-
-    def find_root_resource_by_id(self, resource_id: int) -> ResourceEntity:
+    def get_root_resource(
+        self, resource: ResourceEntity | int
+    ) -> ResourceEntity | None:
         """Follow the id repointing until we find an "unrepointed" resource"""
 
     def split_resources_by_id(
@@ -77,17 +74,14 @@ class MembershipRepository(Protocol):
     Interface for data storage operations around Memberships.
     """
 
-    def get(self, membership_id: int) -> MembershipEntity:
+    def get(self, membership_id: int) -> MembershipEntity | None:
         """Retrieve membership by id.
 
         Args:
             membership_id: unique identifier for the membership
 
         Returns:
-            The associated Membership
-
-        Raises:
-            EntityNotFoundError if no Membership is found
+            The associated Membership, or None if not found
         """
         pass
 
@@ -98,7 +92,7 @@ class MembershipRepository(Protocol):
         source_pk: str,
         status: str | None = None,
         created_by: UserPlaceholder | None = None,
-    ) -> ResourceEntity:
+    ) -> int:
         pass
 
     def create_repointed_memberships(
