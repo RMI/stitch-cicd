@@ -1,25 +1,18 @@
 from abc import ABC
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
-from functools import reduce
-import re
 from typing import Any, Mapping
 
 
 from stitch.core.resources.adapters.sql.errors import (
-    EntityNotFoundError,
     ResourceIntegrityError,
 )
 from stitch.core.resources.app.mapping import source_record_to_resource_data
 from stitch.core.resources.domain.entities import (
     AggregateResourceEntity,
-    MembershipEntity,
     ResourceEntity,
     SourceEntity,
 )
 from stitch.core.resources.domain.ports import (
-    MembershipRepository,
-    SourceRegistry,
     TransactionContext,
 )
 
@@ -29,19 +22,6 @@ class AbstractService(ABC):
 
     def __init__(self, tx_ctx: TransactionContext) -> None:
         self.tx = tx_ctx
-
-
-def aggregate_resource_data(
-    resource_id: int, src_reg: SourceRegistry, mem_repo: MembershipRepository
-):
-    refs = mem_repo.get_source_refs(resource_id=resource_id)
-    data: dict[str, dict[str, SourceEntity]] = {}
-    for source, source_pks in refs.items():
-        data[source] = {
-            str(src_ent.id): src_ent
-            for src_ent in src_reg.get_source_repository(source).fecth_many(source_pks)
-        }
-    return data
 
 
 class ResourceService(AbstractService):
