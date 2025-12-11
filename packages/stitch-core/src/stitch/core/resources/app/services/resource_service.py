@@ -114,6 +114,6 @@ class ResourceService(AbstractService):
         for source, source_pks in refs.items():
             src_repo = self.tx.source_registry.get_source_repository(source)
             data[source] = {
-                str(src_ent.id): src_ent for src_ent in src_repo.fecth_many(source_pks)
+                str(src_ent.id): src_ent for src_ent in src_repo.fetch_many(source_pks)
             }
         return data

@@ -38,7 +38,7 @@ class SourceRepository(Protocol):
         """Retrieve entity record by id. Return `None` if it doesn't exist."""
         ...
 
-    def fecth_many(self, source_pks: Sequence[str]) -> Sequence[SourceEntity]:
+    def fetch_many(self, source_pks: Sequence[str]) -> Sequence[SourceEntity]:
         """Retrieve multiple source entities"""
         ...
 
