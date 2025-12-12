@@ -7,7 +7,6 @@ behavior in isolation.
 
 import pytest
 
-from stitch.core.resources.errors import InvalidDataTypeError, MalformedSourceDataError
 from tests.data.parameter_sets import (
     DATA_TYPE_ERROR_CASES,
     MALFORMED_DATA_CASES,
@@ -18,7 +17,6 @@ from tests.utils.assertions import (
     assert_no_downstream_calls,
     assert_resource_created_with,
     assert_transaction_entered_and_exited,
-    get_create_kwargs,
 )
 from tests.utils.mock_helpers import configure_source_mock
 
@@ -69,7 +67,9 @@ class TestResourceServiceCreateResourceUnit:
             source_pk="source_123",
         )
 
-        assert result == 42
+        # Verify that result is a ResourceEntity with the expected ID
+        assert result.id == 42
+        mock_transaction_context.resources.get.assert_called_once_with(resource_id=42)
 
     def test_transaction_context_usage(
         self, resource_service, mock_transaction_context
@@ -118,15 +118,31 @@ class TestResourceServiceCreateResourceUnit:
 
         assert_no_downstream_calls(mock_transaction_context)
 
-    def test_returns_resource_id(self, resource_service, mock_transaction_context):
-        """Verify service returns the resource ID from repository."""
+    def test_returns_resource_entity(self, resource_service, mock_transaction_context):
+        """Verify service returns ResourceEntity from repository."""
+        from stitch.core.resources.domain.entities import ResourceEntity
+        from datetime import datetime, timezone
+
+        mock_entity = ResourceEntity(
+            id=999,
+            repointed_to=None,
+            name="Test",
+            country="USA",
+            latitude=30.0,
+            longitude=-95.0,
+            created=datetime.now(timezone.utc),
+            last_updated=datetime.now(timezone.utc),
+            created_by=None,
+        )
         mock_transaction_context.resources.create.return_value = 999
+        mock_transaction_context.resources.get.return_value = mock_entity
 
         result = resource_service.create_resource(
             source="test_source", data={"id": "TEST"}
         )
 
-        assert result == 999
+        assert result == mock_entity
+        assert result.id == 999
 
 
 class TestResourceServiceErrorHandling:
@@ -263,28 +279,6 @@ class TestResourceServiceDataScenarios:
             mock_transaction_context.resources.create.assert_called_once()
 
     @pytest.mark.parametrize(
-        "resource_id_input,expected_result",
-        [
-            (None, 42),
-            (100, 42),
-            (999, 42),
-        ],
-    )
-    def test_resource_id_handling(
-        self,
-        resource_service,
-        mock_transaction_context,
-        resource_id_input,
-        expected_result,
-    ):
-        """Verify resource_id parameter is handled correctly."""
-        result = resource_service.create_resource(
-            source="test_source", data={"id": "TEST"}, resource_id=resource_id_input
-        )
-
-        assert result == expected_result
-
-    @pytest.mark.parametrize(
         "source",
         ["gem", "woodmac", "custom_source", "test-source-123"],
     )
@@ -328,15 +322,13 @@ class TestResourceServiceUnicodeHandling:
             mock_transaction_context,
             **expected_fields,
         )
-        assert result == 42
+        assert result.id == 42
 
 
 class TestResourceServiceDataTypeValidation:
     """Unit tests for data type validation errors."""
 
-    @pytest.mark.parametrize(
-        "source_data,error_type,field_name", DATA_TYPE_ERROR_CASES
-    )
+    @pytest.mark.parametrize("source_data,error_type,field_name", DATA_TYPE_ERROR_CASES)
     def test_invalid_data_type_raises_error(
         self,
         resource_service,
@@ -347,7 +339,9 @@ class TestResourceServiceDataTypeValidation:
     ):
         """Verify service raises InvalidDataTypeError for incorrect field types."""
         source_repo = configure_source_mock(
-            mock_transaction_context, source_data, write_error=error_type(f"Invalid type for {field_name}")
+            mock_transaction_context,
+            source_data,
+            write_error=error_type(f"Invalid type for {field_name}"),
         )
         source_repo.row_to_record_data.side_effect = error_type(
             f"Invalid type for {field_name}"
@@ -383,3 +377,124 @@ class TestResourceServiceMalformedDataHandling:
             resource_service.create_resource(source="gem", data={"id": "TEST"})
 
         assert_no_downstream_calls(mock_transaction_context)
+
+
+class TestResourceServiceMergeResourcesUnit:
+    """Unit tests for merge_resources with mocked dependencies."""
+
+    def test_merge_orchestration_flow(self, resource_service, mock_transaction_context):
+        """Verify repositories are called in correct sequence during merge."""
+        from stitch.core.resources.domain.entities import (
+            ResourceEntity,
+            MembershipEntity,
+            SourceEntity,
+        )
+        from unittest.mock import MagicMock
+        from datetime import datetime, UTC
+
+        resource1 = ResourceEntity(
+            id=1,
+            name="Resource 1",
+            country="US",
+            repointed_to=None,
+            last_updated=datetime.now(UTC),
+            created=datetime.now(UTC),
+        )
+        resource2 = ResourceEntity(
+            id=2,
+            name="Resource 2",
+            country="CA",
+            repointed_to=None,
+            last_updated=datetime.now(UTC),
+            created=datetime.now(UTC),
+        )
+        merged_resource = ResourceEntity(
+            id=3,
+            name="",
+            country="",
+            repointed_to=None,
+            last_updated=datetime.now(UTC),
+            created=datetime.now(UTC),
+        )
+
+        new_memberships = [
+            MembershipEntity(
+                id=1,
+                resource_id=3,
+                source="gem",
+                source_pk="GEM001",
+                created=datetime.now(UTC),
+                updated=datetime.now(UTC),
+            ),
+            MembershipEntity(
+                id=2,
+                resource_id=3,
+                source="woodmac",
+                source_pk="WM001",
+                created=datetime.now(UTC),
+                updated=datetime.now(UTC),
+            ),
+        ]
+
+        mock_transaction_context.resources.merge_resources.return_value = (
+            merged_resource
+        )
+        mock_transaction_context.memberships.create_repointed_memberships.return_value = new_memberships
+
+        mock_gem_source = MagicMock(spec=SourceEntity)
+        mock_wm_source = MagicMock(spec=SourceEntity)
+
+        mock_gem_repo = MagicMock()
+        mock_gem_repo.fetch.return_value = mock_gem_source
+        mock_wm_repo = MagicMock()
+        mock_wm_repo.fetch.return_value = mock_wm_source
+
+        def get_source_repo(source_name):
+            if source_name == "gem":
+                return mock_gem_repo
+            elif source_name == "woodmac":
+                return mock_wm_repo
+            raise ValueError(f"Unknown source: {source_name}")
+
+        mock_transaction_context.source_registry.get_source_repository.side_effect = (
+            get_source_repo
+        )
+
+        result = resource_service.merge_resources(resource1, resource2)
+
+        assert_transaction_entered_and_exited(mock_transaction_context)
+
+        mock_transaction_context.resources.merge_resources.assert_called_once_with(
+            resource1, resource2
+        )
+
+        mock_transaction_context.memberships.create_repointed_memberships.assert_called_once_with(
+            from_resources=(resource1, resource2), to_resource=merged_resource
+        )
+
+        mock_gem_repo.fetch.assert_called_once_with(source_pk="GEM001")
+        mock_wm_repo.fetch.assert_called_once_with(source_pk="WM001")
+
+        assert result.root == merged_resource
+        assert result.constituents == (resource1, resource2)
+
+        assert "gem" in result.source_data
+        assert "woodmac" in result.source_data
+        assert result.source_data["gem"]["GEM001"] == mock_gem_source
+        assert result.source_data["woodmac"]["WM001"] == mock_wm_source
+
+    def test_transaction_rollback_on_repository_error(
+        self, resource_service, mock_transaction_context
+    ):
+        """Verify transaction rolls back when repository operation fails."""
+        from stitch.core.resources.adapters.sql.errors import ResourceIntegrityError
+
+        mock_transaction_context.resources.merge_resources.side_effect = (
+            ResourceIntegrityError("Cannot merge already merged resource")
+        )
+
+        with pytest.raises(ResourceIntegrityError, match="Cannot merge already merged"):
+            resource_service.merge_resources(1, 2)
+
+        assert_transaction_entered_and_exited(mock_transaction_context)
+        mock_transaction_context.memberships.create_repointed_memberships.assert_not_called()
