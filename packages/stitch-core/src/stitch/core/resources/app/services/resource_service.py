@@ -1,25 +1,18 @@
 from abc import ABC
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
-from functools import reduce
-import re
 from typing import Any, Mapping
 
 
 from stitch.core.resources.adapters.sql.errors import (
-    EntityNotFoundError,
     ResourceIntegrityError,
 )
 from stitch.core.resources.app.mapping import source_record_to_resource_data
 from stitch.core.resources.domain.entities import (
     AggregateResourceEntity,
-    MembershipEntity,
     ResourceEntity,
     SourceEntity,
 )
 from stitch.core.resources.domain.ports import (
-    MembershipRepository,
-    SourceRegistry,
     TransactionContext,
 )
 
@@ -29,19 +22,6 @@ class AbstractService(ABC):
 
     def __init__(self, tx_ctx: TransactionContext) -> None:
         self.tx = tx_ctx
-
-
-def aggregate_resource_data(
-    resource_id: int, src_reg: SourceRegistry, mem_repo: MembershipRepository
-):
-    refs = mem_repo.get_source_refs(resource_id=resource_id)
-    data: dict[str, dict[str, SourceEntity]] = {}
-    for source, source_pks in refs.items():
-        data[source] = {
-            str(src_ent.id): src_ent
-            for src_ent in src_reg.get_source_repository(source).fecth_many(source_pks)
-        }
-    return data
 
 
 class ResourceService(AbstractService):
@@ -92,6 +72,27 @@ class ResourceService(AbstractService):
         with self.tx:
             return self.tx.resources.get(resource_id=resource_id)
 
+    def get_root_resource(self, resource_id: int) -> AggregateResourceEntity:
+        """Fetch the root/parent aggregate resource for a given resource id
+
+        If the resource_id is already a root, we return it with its aggregate data.
+        If the resource_id hasn't been repointed, return it as an aggregate with empty constituent
+        and source data.
+
+        Args:
+            resource_id: the
+
+        Returns:
+            The final `AggregateResourceEntity`
+        """
+        with self.tx:
+            resource = self.tx.resources.get_root_resource(resource_id)
+            return AggregateResourceEntity(
+                root=resource,
+                constituents=self.tx.resources.get_constituents(resource),
+                source_data=self._aggregate_resource_data(resource.id),
+            )
+
     def create_resource(self, source: str, data: Mapping[str, Any]):
         with self.tx:
             src_repo = self.tx.source_registry.get_source_repository(source)
@@ -132,10 +133,8 @@ class ResourceService(AbstractService):
         refs = self.tx.memberships.get_source_refs(resource_id=resource_id)
         data: dict[str, dict[str, SourceEntity]] = {}
         for source, source_pks in refs.items():
+            src_repo = self.tx.source_registry.get_source_repository(source)
             data[source] = {
-                str(src_ent.id): src_ent
-                for src_ent in self.tx.source_registry.get_source_repository(
-                    source
-                ).fecth_many(source_pks)
+                str(src_ent.id): src_ent for src_ent in src_repo.fetch_many(source_pks)
             }
         return data
