@@ -1,16 +1,47 @@
-# React + Vite
+# Stitch Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React frontend application styled with Tailwind CSS and built with Vite.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19.2.0** - UI library
+- **Vite 7.2.4** - Build tool and dev server
+- **Tailwind CSS 4.1.18** - Utility-first CSS framework
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+stitch-frontend/
+├── public/              # Static assets
+├── src/
+│   ├── App.jsx         # Root application component
+│   ├── main.jsx        # Application entry point
+│   └── index.css       # Global styles and Tailwind imports
+├── dist/               # Production build output
+├── index.html          # HTML template
+├── vite.config.js      # Vite configuration
+├── eslint.config.js    # ESLint configuration
+└── package.json        # Dependencies and scripts
+```
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Create production build
+npm run build
+
+# Preview the production build locally
+npm run preview
+
+# Run ESLint
+npm run lint
+```
+
+
