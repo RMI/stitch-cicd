@@ -1,4 +1,3 @@
-from collections.abc import Mapping
 from stitch.core.resources.domain.entities import ResourceEntityData, SourceRecord
 
 

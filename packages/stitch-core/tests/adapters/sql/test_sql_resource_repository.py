@@ -133,7 +133,7 @@ class TestSQLResourceRepositoryGet:
         repo = SQLResourceRepository(db_session)
 
         with pytest.raises(EntityNotFoundError) as exc_info:
-            result = repo.get(999999)
+            repo.get(999999)
 
         assert "999999" in str(exc_info.value)
 
