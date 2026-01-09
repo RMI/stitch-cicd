@@ -1,7 +1,7 @@
 from collections.abc import Mapping
-from typing import Final, Literal
+from typing import Final
 from sqlalchemy.orm import Mapped, mapped_column
-from stitch.api.db.model import PORTABLE_BIGINT, Base
+from stitch.api.db.model import PORTABLE_BIGINT
 from stitch.api.entities import (
     ManualSource,
     SourceKey,

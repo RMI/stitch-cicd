@@ -1,10 +1,11 @@
 from collections.abc import Sequence
-from fastapi import APIRouter, HTTPException
+
+from fastapi import APIRouter
+
+import stitch.api.db.resources as resource_repo
 from stitch.api.db.config import UnitOfWorkDep
-from stitch.api.db.model import ResourceModel
 from stitch.api.deps import CurrentUser
 from stitch.api.entities import CreateResource, Resource
-import stitch.api.db.resources as resource_repo
 
 
 router = APIRouter(

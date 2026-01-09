@@ -26,6 +26,21 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "stitch.api"
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-anyio>=0.0.0",
+    "aiosqlite>=0.21.0",
+    "httpx>=0.28.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = ["-v", "--strict-markers", "--tb=short"]
+
 [tool.uv.sources]
 stitch-core = { workspace = true }
 stitch-cli = { workspace = true }

@@ -1,4 +1,3 @@
-from collections.abc import Sequence
 from datetime import datetime
 from sqlalchemy import (
     JSON,
@@ -7,7 +6,6 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
-    Numeric,
     String,
     UniqueConstraint,
     literal,
@@ -80,7 +78,7 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
     # latitude: Mapped[float | None] = mapped_column(Numeric(9, 6), nullable=True)
     # longitude: Mapped[float | None] = mapped_column(Numeric(9, 6), nullable=True)
 
-    memberships: Mapped[Sequence["MembershipModel"]] = relationship(
+    memberships: Mapped[list["MembershipModel"]] = relationship(
         "MembershipModel", back_populates="resource"
     )
 
@@ -99,7 +97,7 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
             country=country,
             # latitude=latitude,
             # longitude=longitude,
-            repointed_to=repointed_to,
+            repointed_id=repointed_to,
             created_by_id=created_by.id,
             last_updated_by_id=created_by.id,
         )

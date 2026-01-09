@@ -12,7 +12,7 @@ from typing import (
     runtime_checkable,
 )
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field
 
 IdType = int | str | UUID
 

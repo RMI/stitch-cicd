@@ -29,21 +29,15 @@ async def get(session: AsyncSession, id: int):
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail=f"No Resource with id `{id}` found."
         )
-
+    await session.refresh(model, ["memberships"])
     return await resource_model_to_entity(session, model)
 
 
 async def create(session: AsyncSession, user: CurrentUser, resource: CreateResource):
-    model = ResourceModel(
-        name=resource.name,
-        country=resource.country,
-        created_by_id=user.id,
-        last_updated_by_id=user.id,
-    )
-
     model = ResourceModel.create(
         created_by=user, name=resource.name, country=resource.country
     )
     session.add(model)
     await session.flush()
+    await session.refresh(model, ["memberships"])
     return await resource_model_to_entity(session, model)
