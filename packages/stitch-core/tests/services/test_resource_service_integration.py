@@ -406,7 +406,7 @@ class TestResourceServiceMergeResourcesIntegration:
         resource1 = service.create_resource(source="test_source", data={"id": "001"})
 
         mock_source_repo.write.return_value = "test_002"
-        resource2 = service.create_resource(source="test_source", data={"id": "002"})
+        service.create_resource(source="test_source", data={"id": "002"})
 
         initial_resource_count = db_session.query(ResourceModel).count()
         initial_membership_count = db_session.query(MembershipModel).count()
