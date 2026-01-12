@@ -1,4 +1,4 @@
-Tn:
+on:
   workflow_call:
 
 jobs:
