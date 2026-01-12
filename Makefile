@@ -41,8 +41,8 @@ uv-sync-all:
 # ---------------------------------------------------------------------
 # Packages and source discovery
 # ---------------------------------------------------------------------
-all: build cli frontend
-build: schema stitch-core
+all: build-python cli frontend
+build-python: schema stitch-core
 clean: clean-build clean-cache
 
 clean-build:
