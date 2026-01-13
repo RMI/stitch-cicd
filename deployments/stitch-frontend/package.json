@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
+    "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"
   },
@@ -35,5 +36,8 @@
     "jsdom": "^27.0.1",
     "vite": "^7.2.4",
     "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
