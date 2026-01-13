@@ -23,5 +23,10 @@ services:
       db:
         condition: service_healthy
 
+  frontend:
+    build: deployments/stitch-frontend/Dockerfile
+    ports:
+      - "8080:80"
+
 volumes:
   db_data:
