@@ -6,7 +6,7 @@ RUFF := $(UV) run ruff
 check: lint test format-check
 	@echo "All checks passed."
 
-lint: uv-lint
+lint: uv-lint frontend-lint
 
 test: uv-test frontend-test
 
@@ -127,6 +127,9 @@ $(FRONTEND_BUILD_STAMP): $(FRONTEND_INSTALL_STAMP) $(FRONTEND_BUILD_INPUTS)
 frontend-test: $(FRONTEND_INSTALL_STAMP)
 	$(NPM) run test:run
 
+frontend-lint: $(FRONTEND_INSTALL_STAMP)
+	$(NPM) run lint
+
 frontend-dev: $(FRONTEND_INSTALL_STAMP)
 	$(NPM) run dev
 
@@ -142,4 +145,4 @@ frontend-clean:
         uv-dev \
         schema stitch-core cli \
         clean-build clean-cache \
-        frontend frontend-install frontend-build frontend-test frontend-dev frontend-clean
+        frontend frontend-install frontend-build frontend-test frontend-lint frontend-dev frontend-clean
