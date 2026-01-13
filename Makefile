@@ -43,7 +43,7 @@ uv-sync-all:
 # ---------------------------------------------------------------------
 all: build-python cli frontend
 build-python: schema stitch-core
-clean: clean-build clean-cache
+clean: clean-build clean-cache frontend-clean
 
 clean-build:
 	rm -rf build dist
