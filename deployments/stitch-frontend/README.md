@@ -274,4 +274,3 @@ When adding new endpoints:
 
 - [TanStack Query Docs: Query Keys](https://tanstack.com/query/latest/docs/react/guides/query-keys)
 - [Effective React Query Keys](https://tkdodo.eu/blog/effective-react-query-keys)
-```
