@@ -1,7 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export async function getResources() {
-  const url = `${API_BASE_URL}/resources`;
+  const url = `${API_BASE_URL}/resources/`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);

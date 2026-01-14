@@ -21,7 +21,7 @@ describe('API Functions', () => {
 
       const result = await getResources();
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/v1/resources');
+      expect(global.fetch).toHaveBeenCalledWith('/api/v1/resources/');
       expect(result).toEqual(mockResources);
     });
 
