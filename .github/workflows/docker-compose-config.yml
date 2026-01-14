@@ -9,4 +9,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Set up example Env file
+        run: cp .env.example .env
+
       - run: docker compose config
