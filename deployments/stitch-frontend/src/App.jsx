@@ -1,12 +1,13 @@
-// import './App.css'
+import ResourcesView from "./components/ResourcesView";
 
 function App() {
 
   return (
-    <div className="flex justify-center items-center h-screen w-screen">
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
+    <div className="min-h-screen w-screen bg-gray-100 p-8">
+      <ResourcesView endpoint="/api/v1/resources/" />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
+
