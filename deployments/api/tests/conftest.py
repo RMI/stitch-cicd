@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from stitch.api.db.config import UnitOfWork, get_uow
-from stitch.api.db.model import Base, User as UserModel
+from stitch.api.db.model import StitchBase, UserModel
 from stitch.api.deps import get_current_user
 from stitch.api.entities import User
 from stitch.api.main import app
@@ -99,7 +99,7 @@ async def integration_engine():
         echo=False,
     )
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(StitchBase.metadata.create_all)
     yield engine
     await engine.dispose()
 

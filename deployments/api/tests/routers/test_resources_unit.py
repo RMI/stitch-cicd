@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from starlette.status import HTTP_404_NOT_FOUND
 
 from stitch.api.db.config import get_uow
-from stitch.api.entities import Resource
+from stitch.api.entities import Resource, SourceData
 from stitch.api.main import app
 
 
@@ -23,7 +23,7 @@ def make_resource(
         id=id,
         name=name,
         country=country,
-        source_data={},
+        source_data=SourceData(),
         constituents=[],
         created=now,
         updated=now,
@@ -43,7 +43,7 @@ class TestGetResourceUnit:
 
         app.dependency_overrides[get_uow] = override_get_uow
 
-        with patch("stitch.api.routers.resources.resource_repo") as mock_repo:
+        with patch("stitch.api.routers.resources.resource_actions") as mock_repo:
             mock_repo.get = AsyncMock(return_value=expected)
 
             response = await async_client.get("/resources/42")
@@ -62,7 +62,7 @@ class TestGetResourceUnit:
 
         app.dependency_overrides[get_uow] = override_get_uow
 
-        with patch("stitch.api.routers.resources.resource_repo") as mock_repo:
+        with patch("stitch.api.routers.resources.resource_actions") as mock_repo:
             mock_repo.get = AsyncMock(
                 side_effect=HTTPException(
                     status_code=HTTP_404_NOT_FOUND,
@@ -89,7 +89,7 @@ class TestCreateResourceUnit:
 
         app.dependency_overrides[get_uow] = override_get_uow
 
-        with patch("stitch.api.routers.resources.resource_repo") as mock_repo:
+        with patch("stitch.api.routers.resources.resource_actions") as mock_repo:
             mock_repo.create = AsyncMock(return_value=expected)
 
             response = await async_client.post(
@@ -125,7 +125,7 @@ class TestCreateResourceUnit:
 
         app.dependency_overrides[get_uow] = override_get_uow
 
-        with patch("stitch.api.routers.resources.resource_repo") as mock_repo:
+        with patch("stitch.api.routers.resources.resource_actions") as mock_repo:
             mock_repo.create = AsyncMock(return_value=expected)
 
             response = await async_client.post(
