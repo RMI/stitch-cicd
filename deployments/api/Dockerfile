@@ -1,4 +1,4 @@
-FROM python:3.14.2-slim
+FROM python:3.14.2-slim as builder
 
 # better console streaming for docker logs
 ENV PYTHONUNBUFFERED=1
@@ -44,4 +44,19 @@ COPY deployments/api/src deployments/api/src
 
 ENV PYTHONPATH=/repo/deployments/api
 
-CMD ["fastapi", "run", "deployments/api/src/stitch/api/main.py"]
+# -------------------------------------------------------
+
+FROM python:3.14.2-slim AS runtime
+
+ENV PYTHONUNBUFFERED=1
+WORKDIR /app
+
+# Copy the ready-to-run virtualenv
+COPY --from=builder /repo/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Copy only the API source (runtime code)
+COPY deployments/api/src /app/src
+ENV PYTHONPATH=/app/src
+
+CMD ["fastapi", "run", "stitch/api/main.py"]
