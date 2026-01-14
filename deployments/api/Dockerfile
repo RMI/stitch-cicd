@@ -4,7 +4,6 @@ FROM python:3.14.2-slim
 ENV PYTHONUNBUFFERED=1
 WORKDIR /repo
 
-
 # Install uv
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
 COPY --from=ghcr.io/astral-sh/uv:0.9.25 /uv /uvx /bin/
@@ -21,21 +20,20 @@ ENV UV_COMPILE_BYTECODE=1
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#caching
 ENV UV_LINK_MODE=copy
 
-
-# --- Copy workspace metadata first (better caching)
+# --- Copy workspace metadata
 COPY pyproject.toml uv.lock ./
 
-# # Copy the member pyprojects (and/or whole packages) that are needed to resolve deps
-# COPY deployments/api/pyproject.toml deployments/api/pyproject.toml
-# COPY packages/stitch-core/pyproject.toml packages/stitch-core/pyproject.toml
-# COPY packages/stitch-core/pyproject.toml packages/stitch-core/pyproject.toml
-# COPY dev/stitch-cli/pyproject.toml dev/stitch-cli/pyproject.toml
+# Copy the member pyprojects (and/or whole packages) that are needed to resolve deps
+COPY deployments/api/pyproject.toml deployments/api/pyproject.toml
+COPY dev/stitch-cli/pyproject.toml dev/stitch-cli/pyproject.toml
+COPY packages/schema/pyproject.toml packages/schema/pyproject.toml
+COPY packages/stitch-core/pyproject.toml packages/stitch-core/pyproject.toml
 
-# # If uv needs source trees to build/editable install, copy them too:
-# COPY packages/stitch-core packages/stitch-core
-# COPY dev/stitch-cli dev/stitch-cli
-
-COPY . .
+# If uv needs source trees to build/editable install, copy them too:
+COPY deployments deployments
+COPY dev/stitch-cli dev/stitch-cli
+COPY packages/schema packages/schema
+COPY packages/stitch-core packages/stitch-core
 
 # Install deps for the api project (important: target the subproject)
 RUN --mount=type=cache,target=/root/.cache/uv \
