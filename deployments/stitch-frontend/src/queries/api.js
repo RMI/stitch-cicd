@@ -14,7 +14,9 @@ export async function getResource(id) {
   const url = `${API_BASE_URL}/api/v1/resources/${id}`;
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    const error = new Error(`HTTP error! status: ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
   const data = await response.json();
   return data;
