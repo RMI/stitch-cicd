@@ -1,0 +1,12 @@
+on:
+  workflow_call:
+
+jobs:
+  config:
+    name: "docker compose config"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - run: docker compose config
