@@ -125,18 +125,16 @@ class CreateSourceData(BaseModel):
 
 
 class CreateResourceSourceData(BaseModel):
-    """Allows for creating source data. We won't have internal ids yet, but the assumption
-    is that the data will already be ingested into a "raw" table, thus having a unique id there
-    before being transformed and inserted into our internal source table.
+    """Allows for creating source data or referencing existing sources by ID.
 
     It can be used in isolation to insert source data or used with a new/existing resource to automatically add
     memberships to the resource.
     """
 
-    gem: Sequence[GemSource | int] = Field(default_factory=list)
-    wm: Sequence[WMSource | int] = Field(default_factory=list)
-    rmi: Sequence[RMIManualSource | int] = Field(default_factory=list)
-    cc: Sequence[CCReservoirsSource | int] = Field(default_factory=list)
+    gem: Sequence[GemData | int] = Field(default_factory=list)
+    wm: Sequence[WMData | int] = Field(default_factory=list)
+    rmi: Sequence[RMIManualData | int] = Field(default_factory=list)
+    cc: Sequence[CCReservoirsData | int] = Field(default_factory=list)
 
     def get(self, key: SourceKey):
         if key == "gem":
