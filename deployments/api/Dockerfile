@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
 
-WORKDIR /repo
+WORKDIR /app
 
 # Install uv
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
@@ -42,7 +42,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Copy the ready-to-run virtualenv
-COPY --from=builder /repo/.venv /app/.venv
+COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy only the API source (runtime code)
