@@ -47,4 +47,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY deployments/api/src /app/src
 ENV PYTHONPATH=/app/src
 
-CMD ["fastapi", "run", "src/stitch/api/main.py"]
+CMD ["uvicorn", "stitch.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
