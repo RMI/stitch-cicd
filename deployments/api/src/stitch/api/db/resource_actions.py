@@ -1,6 +1,9 @@
+import asyncio
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
+from functools import partial
 from fastapi import HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_404_NOT_FOUND
 
@@ -70,6 +73,13 @@ async def resource_model_to_entity(
         created=model.created,
         updated=model.updated,
     )
+
+
+async def get_all(session: AsyncSession) -> Sequence[Resource]:
+    stmt = select(ResourceModel).where(ResourceModel.repointed_id.is_(None))
+    models = (await session.scalars(stmt)).all()
+    fn = partial(resource_model_to_entity, session)
+    return await asyncio.gather([fn(m) for m in models])
 
 
 async def get(session: AsyncSession, id: int):

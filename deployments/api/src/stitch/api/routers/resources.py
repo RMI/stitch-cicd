@@ -15,7 +15,8 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_all_resources() -> Sequence[Resource]: ...
+async def get_all_resources(*, uow: UnitOfWorkDep) -> Sequence[Resource]:
+    return await resource_actions.get_all(session=uow.session)
 
 
 @router.get("/{id}", response_model=Resource)
@@ -30,7 +31,3 @@ async def create_resource(
     return await resource_actions.create(
         session=uow.session, user=user, resource=resource_in
     )
-
-
-@router.post("/merge/...")
-async def merge_resource(): ...
