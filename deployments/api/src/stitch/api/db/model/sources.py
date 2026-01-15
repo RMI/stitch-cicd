@@ -1,7 +1,7 @@
 # pyright: reportAssignmentType=false
 
 from collections.abc import Mapping, MutableMapping
-from typing import Final, Generic, Self, TypeVar, TypedDict, get_args, get_origin
+from typing import Final, Generic, TypeVar, TypedDict, get_args, get_origin
 from pydantic import BaseModel
 from sqlalchemy import CheckConstraint, inspect
 from sqlalchemy.orm import Mapped, mapped_column
@@ -67,7 +67,7 @@ class SourceBase(Base, Generic[TModelIn, TModelOut]):
         return self.__entity_class_out__.model_validate(self)
 
     @classmethod
-    def from_entity(cls, entity: TModelIn) -> Self:
+    def from_entity(cls, entity: TModelIn) -> "SourceBase":
         mapper = inspect(cls)
         column_keys = {col.key for col in mapper.columns}
         filtered = {k: v for k, v in entity.model_dump().items() if k in column_keys}
