@@ -1,7 +1,7 @@
 # pyright: reportAssignmentType=false
 
 from collections.abc import Mapping, MutableMapping
-from typing import Final, Generic, Self, TypeVar, TypedDict, get_args, get_origin
+from typing import Final, Generic, TypeVar, TypedDict, get_args, get_origin
 from pydantic import BaseModel
 from sqlalchemy import CheckConstraint, inspect
 from sqlalchemy.orm import Mapped, mapped_column

@@ -56,7 +56,9 @@ def get_model_values(model: Any) -> dict[str, Any]:
 
         # Handle JSON/JSONB types
         type_name = col.type.__class__.__name__
-        impl_name = getattr(getattr(col.type, "impl", None), "__class__", type(None)).__name__
+        impl_name = getattr(
+            getattr(col.type, "impl", None), "__class__", type(None)
+        ).__name__
         if type_name in ("JSON", "JSONB") or impl_name in ("JSON", "JSONB"):
             if val is not None:
                 val = text(f"'{json.dumps(val)}'::jsonb")
@@ -132,7 +134,9 @@ def create_seed_sources() -> tuple[
 
     wm_sources = [
         WMSourceModel.from_entity(
-            WMData(field_name="Eagle Ford Shale", field_country="USA", production=125000.5)
+            WMData(
+                field_name="Eagle Ford Shale", field_country="USA", production=125000.5
+            )
         ),
         WMSourceModel.from_entity(
             WMData(field_name="Ghawar Field", field_country="SAU", production=500000.0)
@@ -162,7 +166,12 @@ def create_seed_sources() -> tuple[
                 name="Alberta Deep Basin",
                 basin="Western Canadian Sedimentary",
                 depth=3500.0,
-                geofence=[(56.0, -115.0), (56.0, -110.0), (54.0, -110.0), (54.0, -115.0)],
+                geofence=[
+                    (56.0, -115.0),
+                    (56.0, -110.0),
+                    (54.0, -110.0),
+                    (54.0, -115.0),
+                ],
             )
         ),
     ]
@@ -213,7 +222,11 @@ def generate_seed_data() -> list[str]:
     statements.append(compile_insert(user_model))
 
     # Create UserEntity for factory methods that need it
-    user_entity = UserEntity(id=user_model.id, email=user_model.email, name=f"{user_model.first_name} {user_model.last_name}")
+    user_entity = UserEntity(
+        id=user_model.id,
+        email=user_model.email,
+        name=f"{user_model.first_name} {user_model.last_name}",
+    )
 
     # Create sources
     gem_sources, wm_sources, rmi_sources, cc_sources = create_seed_sources()

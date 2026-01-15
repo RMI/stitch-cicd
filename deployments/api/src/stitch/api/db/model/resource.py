@@ -1,5 +1,5 @@
 from collections import defaultdict
-from enum import StrEnum, auto
+from enum import StrEnum
 from sqlalchemy import (
     ForeignKey,
     Index,
