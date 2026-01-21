@@ -149,6 +149,7 @@ def release_lock(conn) -> None:
         # Best-effort unlock: ignore errors when releasing the lock to avoid masking original exceptions.
         pass
 
+
 def ensure_meta_tables(engine) -> None:
     with engine.begin() as conn:
         conn.execute(
