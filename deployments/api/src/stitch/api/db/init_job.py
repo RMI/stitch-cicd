@@ -345,12 +345,12 @@ def seed(engine, profile: str) -> None:
 
 
 def main() -> None:
-    s = load_settings()
-    engine = create_engine(s.database_url, pool_pre_ping=True)
+    settings = load_settings()
+    engine = create_engine(settings.database_url, pool_pre_ping=True)
 
     print("[db-init] waiting for DB...", flush=True)
     wait_for_db(
-        engine, timeout_s=s.connect_timeout_s, interval_s=s.connect_retry_interval_s
+        engine, timeout_s=settings.connect_timeout_s, interval_s=settings.connect_retry_interval_s
     )
 
     print("[db-init] acquiring advisory lock...", flush=True)
@@ -360,15 +360,15 @@ def main() -> None:
         state, existing = classify_db_state(engine, expected)
         print(f"[db-init] schema state: {state}", flush=True)
 
-        if s.schema_mode == "never":
+        if settings.schema_mode == "never":
             if state == "partial_or_mismatch":
                 fail_partial(existing, expected)
-        elif s.schema_mode == "assert-only":
+        elif settings.schema_mode == "assert-only":
             if state == "empty":
                 raise RuntimeError("DB is empty but STITCH_DB_SCHEMA_MODE=assert-only.")
             if state == "partial_or_mismatch":
                 fail_partial(existing, expected)
-        elif s.schema_mode == "if-empty":
+        elif settings.schema_mode == "if-empty":
             if state == "partial_or_mismatch":
                 fail_partial(existing, expected)
 
@@ -380,20 +380,20 @@ def main() -> None:
             else:
                 ensure_meta_tables(engine)
         else:
-            raise RuntimeError(f"Unknown STITCH_DB_SCHEMA_MODE: {s.schema_mode}")
+            raise RuntimeError(f"Unknown STITCH_DB_SCHEMA_MODE: {settings.schema_mode}")
 
-        if s.seed_mode != "never" and s.seed_profile:
+        if settings.seed_mode != "never" and settings.seed_profile:
             ensure_meta_tables(engine)
-            if seed_already_applied(engine, s.seed_profile):
+            if seed_already_applied(engine, settings.seed_profile):
                 print(
-                    f"[db-init] seed '{s.seed_profile}' already applied; skipping.",
+                    f"[db-init] seed '{settings.seed_profile}' already applied; skipping.",
                     flush=True,
                 )
             else:
-                print(f"[db-init] seeding '{s.seed_profile}'...", flush=True)
-                seed(engine, s.seed_profile)
-                mark_seed_applied(engine, s.seed_profile)
-                print(f"[db-init] seed '{s.seed_profile}' applied.", flush=True)
+                print(f"[db-init] seeding '{settings.seed_profile}'...", flush=True)
+                seed(engine, settings.seed_profile)
+                mark_seed_applied(engine, settings.seed_profile)
+                print(f"[db-init] seed '{settings.seed_profile}' applied.", flush=True)
 
         print("[db-init] done.", flush=True)
     finally:
