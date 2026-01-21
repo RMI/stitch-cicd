@@ -34,9 +34,9 @@ META_SEED_TABLE = "stitch_seed_meta"
 
 @dataclass(frozen=True)
 class Settings:
-    schema_mode: str          # "if-empty" | "assert-only" | "never"
-    seed_profile: str         # "" | "dev" | "perf" | etc.
-    seed_mode: str            # "if-needed" | "never"
+    schema_mode: str  # "if-empty" | "assert-only" | "never"
+    seed_profile: str  # "" | "dev" | "perf" | etc.
+    seed_mode: str  # "if-needed" | "never"
     connect_timeout_s: int
     connect_retry_interval_s: float
     database_url: str
@@ -73,7 +73,9 @@ def load_settings() -> Settings:
         seed_profile=_env("STITCH_DB_SEED_PROFILE", "dev"),
         seed_mode=_env("STITCH_DB_SEED_MODE", "if-needed"),
         connect_timeout_s=int(_env("STITCH_DB_CONNECT_TIMEOUT_S", "60")),
-        connect_retry_interval_s=float(_env("STITCH_DB_CONNECT_RETRY_INTERVAL_S", "1.0")),
+        connect_retry_interval_s=float(
+            _env("STITCH_DB_CONNECT_RETRY_INTERVAL_S", "1.0")
+        ),
         database_url=build_db_url(),
     )
 
@@ -96,9 +98,11 @@ def acquire_lock(engine) -> None:
     with engine.connect() as conn:
         conn.execute(text("SELECT pg_advisory_lock(hashtext('stitch_db_init'), 0)"))
 
+
 def release_lock(engine) -> None:
     with engine.connect() as conn:
         conn.execute(text("SELECT pg_advisory_unlock(hashtext('stitch_db_init'), 0)"))
+
 
 def ensure_meta_tables(engine) -> None:
     ddl = f"""
@@ -150,7 +154,9 @@ def seed_already_applied(engine, profile: str) -> bool:
 def mark_seed_applied(engine, profile: str) -> None:
     with engine.begin() as conn:
         conn.execute(
-            text(f"INSERT INTO {META_SEED_TABLE}(profile) VALUES (:p) ON CONFLICT DO NOTHING"),
+            text(
+                f"INSERT INTO {META_SEED_TABLE}(profile) VALUES (:p) ON CONFLICT DO NOTHING"
+            ),
             {"p": profile},
         )
 
@@ -189,6 +195,7 @@ def fail_partial(existing_tables: set[str], expected: set[str]) -> None:
 # Seed dataset(s)
 # -------------------------
 
+
 def create_seed_user() -> UserModel:
     return UserModel(
         id=1,
@@ -212,7 +219,9 @@ def create_seed_sources():
 
     wm_sources = [
         WMSourceModel.from_entity(
-            WMData(field_name="Eagle Ford Shale", field_country="USA", production=125000.5)
+            WMData(
+                field_name="Eagle Ford Shale", field_country="USA", production=125000.5
+            )
         ),
         WMSourceModel.from_entity(
             WMData(field_name="Ghawar Field", field_country="SAU", production=500000.0)
@@ -300,7 +309,9 @@ def seed_dev(engine) -> None:
         resources = create_seed_resources(user_entity)
         session.add_all(resources)
 
-        memberships = create_seed_memberships(user_entity, resources, gem_sources, wm_sources, rmi_sources)
+        memberships = create_seed_memberships(
+            user_entity, resources, gem_sources, wm_sources, rmi_sources
+        )
         session.add_all(memberships)
 
         session.commit()
@@ -330,7 +341,9 @@ def main() -> None:
     engine = create_engine(s.database_url, pool_pre_ping=True)
 
     print("[db-init] waiting for DB...", flush=True)
-    wait_for_db(engine, timeout_s=s.connect_timeout_s, interval_s=s.connect_retry_interval_s)
+    wait_for_db(
+        engine, timeout_s=s.connect_timeout_s, interval_s=s.connect_retry_interval_s
+    )
 
     print("[db-init] acquiring advisory lock...", flush=True)
     acquire_lock(engine)
@@ -364,7 +377,10 @@ def main() -> None:
         if s.seed_mode != "never" and s.seed_profile:
             ensure_meta_tables(engine)
             if seed_already_applied(engine, s.seed_profile):
-                print(f"[db-init] seed '{s.seed_profile}' already applied; skipping.", flush=True)
+                print(
+                    f"[db-init] seed '{s.seed_profile}' already applied; skipping.",
+                    flush=True,
+                )
             else:
                 print(f"[db-init] seeding '{s.seed_profile}'...", flush=True)
                 seed(engine, s.seed_profile)
@@ -383,4 +399,3 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[db-init] ERROR: {e}", file=sys.stderr, flush=True)
         raise
-
