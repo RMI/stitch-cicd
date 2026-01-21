@@ -166,6 +166,14 @@ def expected_table_names() -> set[str]:
 
 
 def classify_db_state(engine, expected: set[str]) -> tuple[str, set[str]]:
+    """
+    Classify DB based only on presence of expected tables.
+
+    Returns:
+      - "empty": none of the expected tables exist
+      - "ok": all expected tables exist (columns/constraints not checked)
+      - "partial_or_mismatch": some but not all expected tables exist
+    """
     insp = inspect(engine)
     existing = set(insp.get_table_names(schema="public"))
 
