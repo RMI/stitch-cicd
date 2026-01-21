@@ -1,24 +1,5 @@
 from __future__ import annotations
 
-"""
-DB init/seed job.
-
-This module is intended to be run as a one-shot job (e.g. a `db-init` service)
-*before* the API starts. It can:
-  - create schema from SQLAlchemy metadata if the DB is empty
-  - fail fast on partial/mismatched schemas (no auto-healing)
-  - apply a seed profile once and record that it ran
-
-Role separation / env vars:
-  - The recommended setup uses two Postgres roles:
-      * migrator/seeder role: DDL + seed (used by the init job)
-      * app role: no DDL (used by the API)
-  - Set STITCH_DB_USER / STITCH_DB_PASSWORD on a per-service basis to choose
-    which role connects (migrator for `db-init`, app for `api`).
-  - POSTGRES_* variables are supported as a fallback for local convenience and
-    backwards compatibility.
-"""
-
 import os
 import sys
 import time
@@ -46,6 +27,25 @@ from stitch.api.entities import (
     User as UserEntity,
     WMData,
 )
+
+"""
+DB init/seed job.
+
+This module is intended to be run as a one-shot job (e.g. a `db-init` service)
+*before* the API starts. It can:
+  - create schema from SQLAlchemy metadata if the DB is empty
+  - fail fast on partial/mismatched schemas (no auto-healing)
+  - apply a seed profile once and record that it ran
+
+Role separation / env vars:
+  - The recommended setup uses two Postgres roles:
+      * migrator/seeder role: DDL + seed (used by the init job)
+      * app role: no DDL (used by the API)
+  - Set STITCH_DB_USER / STITCH_DB_PASSWORD on a per-service basis to choose
+    which role connects (migrator for `db-init`, app for `api`).
+  - POSTGRES_* variables are supported as a fallback for local convenience and
+    backwards compatibility.
+"""
 
 META_SCHEMA_TABLE = "stitch_schema_meta"
 META_SEED_TABLE = "stitch_seed_meta"
