@@ -133,15 +133,21 @@ def wait_for_db(engine, timeout_s: int, interval_s: float) -> None:
     raise RuntimeError(f"DB not reachable within {timeout_s}s. Last error: {last_err}")
 
 
-def acquire_lock(engine) -> None:
-    with engine.connect() as conn:
-        conn.execute(text("SELECT pg_advisory_lock(hashtext('stitch_db_init'), 0)"))
+def acquire_lock(conn) -> None:
+    """
+    Acquire an advisory lock on the given *open* SQLAlchemy Connection.
+    The connection must remain open for the lock to be held.
+    """
+    conn.execute(text("SELECT pg_advisory_lock(hashtext('stitch_db_init'), 0)"))
 
 
-def release_lock(engine) -> None:
-    with engine.connect() as conn:
+def release_lock(conn) -> None:
+    """Release advisory lock on the given open connection."""
+    try:
         conn.execute(text("SELECT pg_advisory_unlock(hashtext('stitch_db_init'), 0)"))
-
+    except Exception:
+        # Best-effort unlock: ignore errors when releasing the lock to avoid masking original exceptions.
+        pass
 
 def ensure_meta_tables(engine) -> None:
     with engine.begin() as conn:
@@ -399,9 +405,11 @@ def main() -> None:
         interval_s=settings.connect_retry_interval_s,
     )
 
-    print("[db-init] acquiring advisory lock...", flush=True)
-    acquire_lock(engine)
+    print("[db-init] connecting db engine...", flush=True)
+    conn = engine.connect()
     try:
+        print("[db-init] acquiring advisory lock...", flush=True)
+        acquire_lock(conn)
         expected = expected_table_names()
         state, existing = classify_db_state(engine, expected)
         print(f"[db-init] schema state: {state}", flush=True)
@@ -447,13 +455,15 @@ def main() -> None:
     finally:
         print("[db-init] releasing advisory lock...", flush=True)
         try:
-            release_lock(engine)
+            release_lock(conn)
         except Exception as e:
             print(
                 f"[db-init] ERROR releasing advisory lock: {e}",
                 file=sys.stderr,
                 flush=True,
             )
+        finally:
+            conn.close()
         engine.dispose()
 
 
