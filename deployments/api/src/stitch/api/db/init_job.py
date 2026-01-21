@@ -15,7 +15,6 @@ from stitch.api.db.model import (
     CCReservoirsSourceModel,
     GemSourceModel,
     MembershipModel,
-    MembershipStatus,
     RMIManualSourceModel,
     ResourceModel,
     StitchBase,
@@ -23,7 +22,6 @@ from stitch.api.db.model import (
     WMSourceModel,
 )
 from stitch.api.entities import (
-    CCReservoirsData,
     GemData,
     RMIManualData,
     User as UserEntity,
