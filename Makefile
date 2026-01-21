@@ -166,5 +166,5 @@ dev-docker:
         schema stitch-core cli \
         clean-build clean-cache \
         lock-check uv-lock-check \
-				clean-docker dev-docker \
+        clean-docker dev-docker \
         frontend frontend-install frontend-build frontend-test frontend-lint frontend-dev frontend-clean frontend-format frontend-format-check
