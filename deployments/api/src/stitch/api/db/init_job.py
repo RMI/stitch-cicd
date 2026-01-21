@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import sys
 import time
+from enum import Enum
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -31,12 +32,23 @@ from stitch.api.entities import (
 META_SCHEMA_TABLE = "stitch_schema_meta"
 META_SEED_TABLE = "stitch_seed_meta"
 
+class SchemaMode(str, Enum):
+    IF_EMPTY = "if-empty"
+    ASSERT_ONLY = "assert-only"
+    NEVER = "never"
+
+class SeedProfile(str, Enum):
+    DEV = "dev"
+
+class SeedMode(str, Enum):
+    IF_NEEDED = "if-needed"
+    NEVER = "never"
 
 @dataclass(frozen=True)
 class Settings:
-    schema_mode: str  # "if-empty" | "assert-only" | "never"
-    seed_profile: str  # "" | "dev" | "perf" | etc.
-    seed_mode: str  # "if-needed" | "never"
+    schema_mode: SchemaMode
+    seed_profile: SeedProfile
+    seed_mode: SeedMode
     connect_timeout_s: int
     connect_retry_interval_s: float
     database_url: str
@@ -69,9 +81,15 @@ def build_db_url() -> str:
 
 def load_settings() -> Settings:
     return Settings(
-        schema_mode=_env("STITCH_DB_SCHEMA_MODE", "if-empty"),
-        seed_profile=_env("STITCH_DB_SEED_PROFILE", "dev"),
-        seed_mode=_env("STITCH_DB_SEED_MODE", "if-needed"),
+        schema_mode=SchemaMode(
+            _env("STITCH_DB_SCHEMA_MODE", SchemaMode.IF_EMPTY.value)
+        ),
+        seed_profile=SeedProfile(
+            _env("STITCH_DB_SEED_PROFILE", SeedProfile.DEV.value)
+        ),
+        seed_mode=SeedMode(
+            _env("STITCH_DB_SEED_MODE", SeedMode.IF_NEEDED.value)
+        ),
         connect_timeout_s=int(_env("STITCH_DB_CONNECT_TIMEOUT_S", "60")),
         connect_retry_interval_s=float(
             _env("STITCH_DB_CONNECT_RETRY_INTERVAL_S", "1.0")
@@ -360,15 +378,15 @@ def main() -> None:
         state, existing = classify_db_state(engine, expected)
         print(f"[db-init] schema state: {state}", flush=True)
 
-        if settings.schema_mode == "never":
+        if settings.schema_mode is SchemaMode.NEVER:
             if state == "partial_or_mismatch":
                 fail_partial(existing, expected)
-        elif settings.schema_mode == "assert-only":
+        elif settings.schema_mode is SchemaMode.ASSERT_ONLY:
             if state == "empty":
-                raise RuntimeError("DB is empty but STITCH_DB_SCHEMA_MODE=assert-only.")
+                raise RuntimeError(f"DB is empty but STITCH_DB_SCHEMA_MODE={SchemaMode.ASSERT_ONLY.value}.")
             if state == "partial_or_mismatch":
                 fail_partial(existing, expected)
-        elif settings.schema_mode == "if-empty":
+        elif settings.schema_mode is SchemaMode.IF_EMPTY:
             if state == "partial_or_mismatch":
                 fail_partial(existing, expected)
 
@@ -382,7 +400,7 @@ def main() -> None:
         else:
             raise RuntimeError(f"Unknown STITCH_DB_SCHEMA_MODE: {settings.schema_mode}")
 
-        if settings.seed_mode != "never" and settings.seed_profile:
+        if settings.seed_mode is not SeedMode.NEVER and settings.seed_profile:
             ensure_meta_tables(engine)
             if seed_already_applied(engine, settings.seed_profile):
                 print(
