@@ -1,10 +1,7 @@
 # deployments/api/tests/test_init_job.py
-import os
-import types
 import pytest
 from unittest.mock import MagicMock
 
-import sqlalchemy
 
 from stitch.api.db import init_job as ij
 
