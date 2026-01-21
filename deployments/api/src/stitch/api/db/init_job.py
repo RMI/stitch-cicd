@@ -32,7 +32,6 @@ from stitch.api.entities import (
 
 META_SCHEMA_TABLE = "stitch_schema_meta"
 META_SEED_TABLE = "stitch_seed_meta"
-ADVISORY_LOCK_KEY = 0x5354495443485F44425F494E4954  # "STITCH_DB_INIT" as int
 
 
 @dataclass(frozen=True)
