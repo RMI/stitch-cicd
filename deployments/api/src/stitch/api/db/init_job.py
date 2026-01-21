@@ -391,6 +391,7 @@ def main() -> None:
     finally:
         print("[db-init] releasing advisory lock...", flush=True)
         release_lock(engine)
+        engine.dispose()
 
 
 if __name__ == "__main__":
