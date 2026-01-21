@@ -147,7 +147,7 @@ def seed_already_applied(engine, profile: str) -> bool:
                 {"p": profile},
             ).first()
             return row is not None
-        except Exception:
+        except OperationalError:
             return False
 
 
