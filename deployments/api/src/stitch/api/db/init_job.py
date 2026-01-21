@@ -50,17 +50,21 @@ Role separation / env vars:
 META_SCHEMA_TABLE = "stitch_schema_meta"
 META_SEED_TABLE = "stitch_seed_meta"
 
+
 class SchemaMode(str, Enum):
     IF_EMPTY = "if-empty"
     ASSERT_ONLY = "assert-only"
     NEVER = "never"
 
+
 class SeedProfile(str, Enum):
     DEV = "dev"
+
 
 class SeedMode(str, Enum):
     IF_NEEDED = "if-needed"
     NEVER = "never"
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -105,12 +109,8 @@ def load_settings() -> Settings:
         schema_mode=SchemaMode(
             _env("STITCH_DB_SCHEMA_MODE", SchemaMode.IF_EMPTY.value)
         ),
-        seed_profile=SeedProfile(
-            _env("STITCH_DB_SEED_PROFILE", SeedProfile.DEV.value)
-        ),
-        seed_mode=SeedMode(
-            _env("STITCH_DB_SEED_MODE", SeedMode.IF_NEEDED.value)
-        ),
+        seed_profile=SeedProfile(_env("STITCH_DB_SEED_PROFILE", SeedProfile.DEV.value)),
+        seed_mode=SeedMode(_env("STITCH_DB_SEED_MODE", SeedMode.IF_NEEDED.value)),
         connect_timeout_s=int(_env("STITCH_DB_CONNECT_TIMEOUT_S", "60")),
         connect_retry_interval_s=float(
             _env("STITCH_DB_CONNECT_RETRY_INTERVAL_S", "1.0")
@@ -166,6 +166,7 @@ def ensure_meta_tables(engine) -> None:
                 """
             )
         )
+
 
 def mark_schema_version(engine, version: str) -> None:
     with engine.begin() as conn:
@@ -393,7 +394,9 @@ def main() -> None:
 
     print("[db-init] waiting for DB...", flush=True)
     wait_for_db(
-        engine, timeout_s=settings.connect_timeout_s, interval_s=settings.connect_retry_interval_s
+        engine,
+        timeout_s=settings.connect_timeout_s,
+        interval_s=settings.connect_retry_interval_s,
     )
 
     print("[db-init] acquiring advisory lock...", flush=True)
@@ -408,7 +411,9 @@ def main() -> None:
                 fail_partial(existing, expected)
         elif settings.schema_mode is SchemaMode.ASSERT_ONLY:
             if state == "empty":
-                raise RuntimeError(f"DB is empty but STITCH_DB_SCHEMA_MODE={SchemaMode.ASSERT_ONLY.value}.")
+                raise RuntimeError(
+                    f"DB is empty but STITCH_DB_SCHEMA_MODE={SchemaMode.ASSERT_ONLY.value}."
+                )
             if state == "partial_or_mismatch":
                 fail_partial(existing, expected)
         elif settings.schema_mode is SchemaMode.IF_EMPTY:
