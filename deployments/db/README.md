@@ -25,6 +25,9 @@ This directory contains resources for building and running the development Postg
   ```
   This deletes the volume and triggers reseeding.
 
+- Connection details (database name, user, password, host, port) are set via environment variables.
+- See `env.example` in the project root for sample configuration.
+
 ## Deployment
 
 ### Manual Process

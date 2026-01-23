@@ -1,6 +1,11 @@
 from contextlib import asynccontextmanager
-from fastapi import APIRouter, FastAPI
-from stitch.api.db.config import dispose_engine
+from fastapi import APIRouter, FastAPI, Request
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import OperationalError
+from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
+from .middleware import register_middlewares
+from .db.config import dispose_engine
+from .settings import get_settings
 
 from .routers.resources import router as resource_router
 from .routers.health import router as health_router
@@ -18,10 +23,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+settings = get_settings()
 
-@base_router.get("/")
-async def root():
-    return {"message": "Hello from Stitch API!"}
-
+register_middlewares(application=app, settings=settings)
 
 app.include_router(base_router)
+
+
+# Global exception handler
+# - this will catch all exceptions of this type, incl. things like db constraint violations
+# - we can refine and narrow the scope at a a later point
+@app.exception_handler(OperationalError)
+async def db_unavailable_handler(_request: Request, _exc: OperationalError):
+    return JSONResponse(
+        status_code=HTTP_503_SERVICE_UNAVAILABLE,
+        content={"detail": "Database unavailable."},
+    )
