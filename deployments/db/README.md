@@ -99,7 +99,7 @@ psql -c "\\q" -d stitch -U postgres -h stitch-deploy-test.postgres.database.azur
 
 ```
 
-Change the host above with the "Endpoint" from the resource main view,
+Change the host above with the "Endpoint" from the resource main view.
 
 If you cannot connect, check that your client IP address is added to the firewall rules under "Settings"/"Networking" on the left menu.
 
