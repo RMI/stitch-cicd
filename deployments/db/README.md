@@ -144,7 +144,7 @@ docker run \
 
 ```
 
-If you try to hit the API (i.e. visit `http://localhost:8000/api/v1/resources/2`, then you should get an `500 Internal Server Error`, with a sqlalchemy error along the lines of `realtion "resources" does not exist`.
+If you try to hit the API (i.e. visit `http://localhost:8000/api/v1/resources/2`, then you should get an `500 Internal Server Error`, with a sqlalchemy error along the lines of `relation "resources" does not exist`.
 This confirms that the API container can sucessfully connect to the DB, but the DDL operations and seeding have no been done by the `db-init` container.
 
 You can seed the database by connecting with the migrator role, and running the
