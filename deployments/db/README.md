@@ -79,3 +79,33 @@ Create a Resource: "Azure Database for PostgreSQL Flexible Server"
 #### Review and Create
 
 Click Create, then visit your new DB.
+
+#### After Deploy:
+
+
+##### Create Database
+
+In the Web UI, under "Settings"/"Databases" on the left menu, view the existing
+databases.
+If the `stitch` database does not exist, create it.
+
+##### Run init script
+
+test your connection (assuming you have psql tools installed locally):
+```bash
+pg_isready -d stitch -U postgres -h stitch-deploy-test.postgres.database.azure.com 
+```
+
+Change the host above with the "Endpoint" from the resource main view,
+
+If you cannot connect, check that your client IP address is added to the firewall rules under "Settings"/"Networking" on the left menu.
+
+Then run the init script against your new database:
+```bash
+POSTGRES_DB=stitch \
+    POSTGRES_USER=postgres \
+    PGHOST=stitch-deploy-test.postgres.database.azure.com \
+    STITCH_MIGRATOR_PASSWORD=CHANGE_ME123! \
+    STITCH_APP_PASSWORD=CHANGE_ME456! \
+    deployments/db/00-init-roles.sh
+```
