@@ -10,10 +10,19 @@ describe("App", () => {
     expect(heading).toBeInTheDocument();
   });
 
-  it("renders ResourcesView component", () => {
+  it("renders Resource heading", () => {
+    renderWithQueryClient(<App />);
+    const heading = screen.getByText(/^Resource ID: \d+$/i);
+    expect(heading).toBeInTheDocument();
+  });
+
+  it("renders both ResourcesView and ResourceView components", () => {
     renderWithQueryClient(<App />);
 
     // Check for ResourcesView content
     expect(screen.getByText(/^Resources$/i)).toBeInTheDocument();
+
+    // Check for ResourceView content
+    expect(screen.getByText(/^Resource ID: \d+$/i)).toBeInTheDocument();
   });
 });
