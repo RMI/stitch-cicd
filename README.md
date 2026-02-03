@@ -30,6 +30,9 @@ Edit `.env` as needed (passwords, seed settings, etc.).
 Start (and build) the stack:
 ```bash
 docker compose up --build
+
+# or, if you have make installed:
+make dev-docker
 ```
 
 or, if already built:
@@ -52,6 +55,9 @@ Note: The `db-init` service runs automatically (via `depends_on`) to apply schem
 Stop containers and delete the Postgres volume (this removes all local DB data):
 ```bash
 docker compose down -v
+
+# or, if you have make installed:
+make clean-docker
 ```
 
 Then start fresh:
