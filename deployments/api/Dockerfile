@@ -21,9 +21,6 @@ COPY deployments/api/src /app/src
 COPY packages/stitch-core/pyproject.toml packages/stitch-core/pyproject.toml
 COPY packages/stitch-core/src packages/stitch-core/src
 
-COPY dev/stitch-cli/pyproject.toml dev/stitch-cli/pyproject.toml
-COPY dev/stitch-cli/src dev/stitch-cli/src
-
 COPY packages/schema/pyproject.toml packages/schema/pyproject.toml
 COPY packages/schema/src packages/schema/src
 

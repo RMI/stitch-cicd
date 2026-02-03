@@ -39,16 +39,13 @@ uv-sync:
 uv-sync-dev:
 	$(UV) sync --group dev --all-packages
 
-uv-sync-all:
-	$(UV) sync --group dev --all-packages --extra cli
-
 uv-lock-check:
 	$(UV) lock --check
 
 # ---------------------------------------------------------------------
 # Packages and source discovery
 # ---------------------------------------------------------------------
-all: build-python cli frontend
+all: build-python frontend
 build-python: schema stitch-core
 clean: clean-build clean-cache frontend-clean clean-docker
 
@@ -74,20 +71,9 @@ STITCHCORE_STAMP := build/stitch-core.stamp
 
 stitch-core: $(STITCHCORE_STAMP)
 
-$(STITCHCORE_STAMP): $(STITCHCORE_SRCS) $(CLI_STAMP)
+$(STITCHCORE_STAMP): $(STITCHCORE_SRCS)
 	mkdir -p $(@D)
 	$(UV) build $(STITCHCORE_DIR)
-	touch $@
-
-CLI_DIR := dev/stitch-cli
-CLI_SRCS := $(shell find $(CLI_DIR) -name '*.py' -o -name 'pyproject.toml')
-CLI_STAMP := build/cli.stamp
-
-cli: $(CLI_STAMP)
-
-$(CLI_STAMP): $(CLI_SRCS)
-	mkdir -p $(@D)
-	$(UV) build $(CLI_DIR)
 	touch $@
 
 # ---------------------------------------------------------------------
@@ -163,7 +149,7 @@ dev-docker:
         uv-lint uv-test uv-format uv-format-check \
         uv-sync uv-sync-dev uv-sync-all \
         uv-dev \
-        schema stitch-core cli \
+        schema stitch-core \
         clean-build clean-cache \
         lock-check uv-lock-check \
         clean-docker dev-docker \

@@ -6,21 +6,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["stitch-core"]
 
-[project.optional-dependencies]
-cli = ["stitch-cli", "stitch-validator"]
-
 [tool.uv.workspace]
-members = [
-  "deployments/api",
-  "packages/stitch-core",
-  "packages/schema",
-  "dev/stitch-cli",
-]
+members = ["deployments/api", "packages/stitch-core"]
 
 [tool.uv.sources]
 stitch-core = { workspace = true }
-stitch-cli = { workspace = true }
-stitch-validator = { workspace = true }
 
 [dependency-groups]
 dev = ["pytest>=8.4.2", "ruff>=0.14.2"]
