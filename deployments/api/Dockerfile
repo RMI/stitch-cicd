@@ -44,7 +44,7 @@ RUN groupadd --system --gid 999 stitch-app \
 
 COPY --from=dev --chown=stitch-app:stitch-app /app/.venv /app/.venv
 COPY --from=dev --chown=stitch-app:stitch-app /app/deployments/api /app/deployments/api
-COPY --from=dev --chown=stitch-app:stitch-app /app/packages/stitch-core /app/packages/stitch-core
+COPY --from=dev --chown=stitch-app:stitch-app /app/packages /app/packages
 
 ENV PATH="/app/.venv/bin:$PATH"
 USER stitch-app
