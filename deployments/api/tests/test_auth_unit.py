@@ -68,7 +68,7 @@ class TestGetTokenClaims:
         with (
             patch("stitch.api.auth.get_settings", return_value=settings),
             patch(
-                "stitch.api.auth.validate_auth_config_at_startup",
+                "stitch.api.main.validate_auth_config_at_startup",
             ),
         ):
             with TestClient(app) as client:
@@ -83,7 +83,7 @@ class TestGetTokenClaims:
         with (
             patch("stitch.api.auth.get_settings", return_value=settings),
             patch(
-                "stitch.api.auth.validate_auth_config_at_startup",
+                "stitch.api.main.validate_auth_config_at_startup",
             ),
         ):
             with TestClient(app, raise_server_exceptions=False) as client:
@@ -101,7 +101,7 @@ class TestGetTokenClaims:
         with (
             patch("stitch.api.auth.get_settings", return_value=settings),
             patch(
-                "stitch.api.auth.validate_auth_config_at_startup",
+                "stitch.api.main.validate_auth_config_at_startup",
             ),
         ):
             with TestClient(app, raise_server_exceptions=False) as client:
