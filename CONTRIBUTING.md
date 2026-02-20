@@ -16,6 +16,19 @@ If you submit a change, you should be able to explain:
 
 Using AI tools is allowed. Submitting AI-generated changes you do not understand is not.
 
+## AI-Assisted Change Scope
+
+AI assistance does not change PR quality standards.
+
+- Keep AI-assisted PRs small and focused on a single concern.
+- Do not submit broad, architecture-wide rewrites unless that architectural change is explicitly planned and tracked.
+- Avoid mixing refactors with behavior changes in the same PR.
+- Split large AI-generated output into multiple PRs that can be reviewed independently.
+- In your PR description, explicitly call out:
+  - what AI was used for,
+  - what you verified manually,
+  - and what tests validate the change.
+
 ## How to Contribute
 
 ### External Contributors (without write access)
@@ -44,6 +57,10 @@ PRs are most likely to be accepted when they:
 - link related issues (`Closes #<number>` when appropriate).
 
 Avoid mixing unrelated refactors into feature/fix PRs.
+
+As a rule of thumb: a PR is a request for someone else's time and expertise. Respect that by making it easy to review.
+
+For more information, see RMI's pull request practices: https://rmi.github.io/practices/pull_request.html
 
 ## Commit and Branch Guidelines
 
@@ -76,3 +93,6 @@ Be respectful and constructive. Focus feedback on code and behavior.
 ## Licensing
 
 By contributing, you agree your contributions are licensed under this repository's license.
+
+## References
+
