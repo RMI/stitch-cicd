@@ -24,9 +24,7 @@ describe("config/env", () => {
     vi.stubEnv("VITE_AUTH0_CLIENT_ID", "");
     vi.stubEnv("VITE_AUTH0_AUDIENCE", "");
 
-    await expect(() => import("./env.js")).rejects.toThrow(
-      "VITE_AUTH0_DOMAIN",
-    );
+    await expect(() => import("./env.js")).rejects.toThrow("VITE_AUTH0_DOMAIN");
   });
 
   it("uses default API URL when VITE_API_URL is unset", async () => {
