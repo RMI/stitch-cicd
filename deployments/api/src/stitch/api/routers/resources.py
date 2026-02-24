@@ -41,7 +41,7 @@ async def create_resource(
     )
 
 class MergeRequest(BaseModel):
-    resource_ids: list[int] = Field(..., min_items=2)
+    resource_ids: list[int] = Field(..., items=2)
 
 @router.post("/merge", response_model=Resource)
 async def merge_resources_endpoint(
@@ -55,7 +55,7 @@ async def merge_resources_endpoint(
     ids = payload.resource_ids
     # preserve order but drop duplicates
     unique_ids = list(dict.fromkeys(ids))
-    if len(unique_ids) < 2:
+    if len(unique_ids) != 2:
         raise HTTPException(status_code=400, detail="Provide at least 2 unique resource IDs")
 
     logger.info("Merge requested by user=%s for resource_ids=%s", getattr(user, "sub", "<anon>"), unique_ids)
