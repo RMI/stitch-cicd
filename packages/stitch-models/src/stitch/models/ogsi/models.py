@@ -1,7 +1,8 @@
 from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
+from stitch.models.common import CountryCode, Latitude, Longitude, Percentage, Year
 from stitch.models.source import SourceBase, SourceCollection, SourcePayload
 
 
@@ -31,73 +32,64 @@ FieldStatus = Literal["Producing", "Non-Producing", "Abandoned", "Planned"]
 
 
 class Owner(BaseModel):
-    name: str = Field(..., description="Name of the company")
-    stake: float = Field(
-        ..., description="Ownership percentage (0-100)", ge=0.0, le=100
-    )
+    model_config = ConfigDict(use_attribute_docstrings=True)
+
+    name: str
+    """Name of the company."""
+    stake: Percentage
+    """Ownership percentage (0–100)."""
 
 
 class Operator(BaseModel):
-    name: str = Field(..., description="Name of the operating company")
-    stake: float = Field(
-        ..., description="Operating stake percentage (0-100)", ge=0.0, le=100
-    )
+    model_config = ConfigDict(use_attribute_docstrings=True)
+
+    name: str
+    """Name of the operating company."""
+    stake: Percentage
+    """Operating stake percentage (0–100)."""
 
 
 class OilAndGasFieldSourceData(BaseModel):
-    name: str | None = Field(
-        ..., description="Primary name of the resource", min_length=1
-    )
-    country: str | None = Field(
-        ..., description="ISO 3166-1 alpha-3 country code", pattern=r"^[A-Z]{3}$"
-    )
-    latitude: float | None = Field(
-        None, description="Latitude in WGS84 coordinate system", ge=-90.0, le=90
-    )
-    longitude: float | None = Field(
-        None, description="Longitude in WGS84 coordinate system", ge=-180.0, le=180.0
-    )
-    last_updated: AwareDatetime | None = Field(
-        None, description="ISO 8601 timestamp of most recent source data update"
-    )
-    name_local: str | None = Field(
-        None, description="Name in local script if different from primary name"
-    )
-    state_province: str | None = Field(
-        None, description="State or province where the resource is located"
-    )
-    region: str | None = Field(None, description="Geographic or administrative region")
-    basin: str | None = Field(None, description="Geological basin name")
-    owners: list[Owner] | None = Field(
-        None, description="List of owners and their ownership stakes"
-    )
-    operators: list[Operator] | None = Field(
-        None, description="List of operators and their operating stakes"
-    )
-    location_type: LocationType | None = Field(
-        None, description="Whether the resource is onshore or offshore"
-    )
-    production_conventionality: ProductionConventionality | None = Field(
-        None, description="Production conventionality classification"
-    )
-    primary_hydrocarbon_group: PrimaryHydrocarbonGroup | None = Field(
-        None, description="Primary hydrocarbon type aligned with OGSI nomenclature"
-    )
-    reservoir_formation: str | None = Field(
-        None, description="Name or description of the reservoir formation"
-    )
-    discovery_year: int | None = Field(
-        None, description="Year of discovery", ge=1800, le=2100
-    )
-    production_start_year: int | None = Field(
-        None, description="Actual or planned year of first production", ge=1800, le=2100
-    )
-    fid_year: int | None = Field(
-        None, description="Year of final investment decision (FID)", ge=1800, le=2100
-    )
-    field_status: FieldStatus | None = Field(
-        None, description="Current status of the field"
-    )
+    model_config = ConfigDict(use_attribute_docstrings=True)
+
+    name: str | None = Field(min_length=1)
+    """Primary name of the resource."""
+    country: CountryCode | None
+    """ISO 3166-1 alpha-3 country code."""
+    latitude: Latitude | None = None
+    """Latitude in WGS84 coordinate system."""
+    longitude: Longitude | None = None
+    """Longitude in WGS84 coordinate system."""
+    last_updated: AwareDatetime | None = None
+    """ISO 8601 timestamp of most recent source data update."""
+    name_local: str | None = None
+    """Name in local script if different from primary name."""
+    state_province: str | None = None
+    """State or province where the resource is located."""
+    region: str | None = None
+    """Geographic or administrative region."""
+    basin: str | None = None
+    """Geological basin name."""
+    owners: list[Owner] | None = None
+    """List of owners and their ownership stakes."""
+    operators: list[Operator] | None = None
+    """List of operators and their operating stakes."""
+    location_type: LocationType | None = None
+    """Whether the resource is onshore or offshore."""
+    production_conventionality: ProductionConventionality | None = None
+    """Production conventionality classification."""
+    primary_hydrocarbon_group: PrimaryHydrocarbonGroup | None = None
+    """Primary hydrocarbon type aligned with OGSI nomenclature."""
+    reservoir_formation: str | None = None
+    """Name or description of the reservoir formation."""
+    discovery_year: Year | None = None
+    """Year of discovery."""
+    production_start_year: Year | None = None
+    """Actual or planned year of first production."""
+    fid_year: Year | None = None
+    """Year of final investment decision."""
+    field_status: FieldStatus | None = None
+    """Current status of the field."""
 
 
 GEM_SRC = Literal["gem"]
