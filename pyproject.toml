@@ -12,6 +12,7 @@ members = [
   "packages/stitch-core",
   "packages/stitch-auth",
   "packages/stitch-models",
+  "packages/stitch-ogsi",
 ]
 
 [tool.uv.sources]

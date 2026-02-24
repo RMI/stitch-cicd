@@ -9,6 +9,7 @@ members = [
     "stitch-auth",
     "stitch-core",
     "stitch-models",
+    "stitch-ogsi",
 ]
 
 [[package]]
@@ -1196,6 +1197,21 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "pydantic", specifier = ">=2.12.5" }]
+
+[[package]]
+name = "stitch-ogsi"
+version = "0.1.0"
+source = { editable = "packages/stitch-ogsi" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "stitch-models" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pydantic", specifier = ">=2.12.5" },
+    { name = "stitch-models", editable = "packages/stitch-models" },
+]
 
 [[package]]
 name = "typer"
