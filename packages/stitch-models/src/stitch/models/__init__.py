@@ -1,4 +1,4 @@
-from typing import Sequence, NamedTuple, TypeVar, Mapping, MutableMapping
+from typing import Sequence, NamedTuple, TypeVar, Mapping, MutableMapping, Self
 from pydantic import BaseModel, Field, ConfigDict
 
 from .types import IdType
@@ -45,15 +45,18 @@ class SourceRef[TId: IdType, TSrcKey: str](NamedTuple):
 class ResourceBase(BaseModel):
     name: str | None = Field(default=None)
     country: str | None = Field(default=None)
-    repointed_to: "Resource | None" = Field(default=None)
+    repointed_to: Self | None = Field(default=None)
 
 
 class ConstituentProvenance[TSrcRef: SourceRef](NamedTuple):
+    """Maps resource identifier to source keys and ids to allow auditing of provenance for SourcePayloads"""
+
     id: int
     source_refs: Sequence[TSrcRef]
 
 
-class Resource[TSD: SourcePayload, TProv: ConstituentProvenance](ResourceBase):
+class Resource[TPayload: SourcePayload, TProv: ConstituentProvenance](ResourceBase):
     id: int
-    source_data: TSD
+    source_data: TPayload
     provenance: Sequence[TProv]
+    """Houses aggregate relationships between constituent/merged resources and their respective source payloads."""
