@@ -49,6 +49,10 @@ External contributors can open issues to report bugs or suggest features. Please
 
 ## Pull Request Expectations
 
+Work in this repo often happens in Draft PRs. These have the advantage of running the CI Suite and preparing preview environments that can be externally validated and inspected.
+
+When opening a PR, consider opening as Draft, and marking as ready for review once all checks are green.
+
 PRs are most likely to be accepted when they:
 - stay focused on one concern,
 - include tests for behavior changes,
