@@ -1,8 +1,7 @@
-from typing import Sequence
-from typing_extensions import Self
+from typing import Sequence, NamedTuple
 from pydantic import BaseModel, Field
 
-from stitch.models.source import SourcePayload
+from stitch.models.source import SourcePayload, SourceRef
 
 
 class ResourceBase(BaseModel):
@@ -11,7 +10,12 @@ class ResourceBase(BaseModel):
     repointed_to: "Resource | None" = Field(default=None)
 
 
-class Resource[TSD: SourcePayload](ResourceBase):
+class ConstituentProvenance[TSrcRef: SourceRef](NamedTuple):
+    id: int
+    source_refs: Sequence[TSrcRef]
+
+
+class Resource[TSD: SourcePayload, TProv: ConstituentProvenance](ResourceBase):
     id: int
     source_data: TSD
-    constituents: Sequence[Self]
+    provenance: Sequence[TProv]
