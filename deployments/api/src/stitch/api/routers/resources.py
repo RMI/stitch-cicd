@@ -39,6 +39,7 @@ async def create_resource(
         session=uow.session, user=user, resource=resource_in
     )
 
+
 class MergeRequest(BaseModel):
     resource_ids: list[int]
 
@@ -55,7 +56,9 @@ async def merge_resources_endpoint(
     # preserve order but drop duplicates
     unique_ids = list(dict.fromkeys(ids))
     if len(unique_ids) < 2:
-        raise HTTPException(status_code=400, detail="Provide at least 2 unique resource IDs")
+        raise HTTPException(
+            status_code=400, detail="Provide at least 2 unique resource IDs"
+        )
 
     logger.info(
         "Merge requested by user=%s for resource_ids=%s",

@@ -298,7 +298,11 @@ def create_seed_sources():
             WMData(field_name="Ghawar Field", field_country="SAU", production=500000.0)
         ),
         WMSourceModel.from_entity(
-            WMData(field_name="Merge Consumed Field", field_country="YYZ", production=1337.0)
+            WMData(
+                field_name="Merge Consumed Field",
+                field_country="YYZ",
+                production=1337.0,
+            )
         ),
     ]
     for i, src in enumerate(wm_sources, start=1):

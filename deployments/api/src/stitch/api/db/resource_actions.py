@@ -155,6 +155,7 @@ async def create_source_data(session: AsyncSession, data: CreateSourceData):
         cc={cc.id: cc.as_entity() for cc in ccs},
     )
 
+
 async def merge_resources(
     session: AsyncSession,
     user: CurrentUser,
@@ -172,7 +173,9 @@ async def merge_resources(
     # preserve order but drop duplicates
     unique_ids = list(dict.fromkeys(ids))
     if len(unique_ids) < 2:
-        raise HTTPException(status_code=400, detail="Provide at least 2 unique resource IDs.")
+        raise HTTPException(
+            status_code=400, detail="Provide at least 2 unique resource IDs."
+        )
 
     target_id = unique_ids[0]
     other_ids = unique_ids[1:]
