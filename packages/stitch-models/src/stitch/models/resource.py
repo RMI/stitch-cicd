@@ -2,7 +2,7 @@ from typing import Sequence
 from typing_extensions import Self
 from pydantic import BaseModel, Field
 
-from stitch.models.source import SourceData
+from stitch.models.source import SourcePayload
 
 
 class ResourceBase(BaseModel):
@@ -11,7 +11,7 @@ class ResourceBase(BaseModel):
     repointed_to: "Resource | None" = Field(default=None)
 
 
-class Resource[TSD: SourceData](ResourceBase):
+class Resource[TSD: SourcePayload](ResourceBase):
     id: int
     source_data: TSD
     constituents: Sequence[Self]

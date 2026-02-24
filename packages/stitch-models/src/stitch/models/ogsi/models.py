@@ -1,7 +1,8 @@
-from pydantic import AwareDatetime, BaseModel, Field
-from typing import Literal
+from typing import Annotated, Literal
 
-from stitch.models.source import SourceBase, SourceCollection, SourceData
+from pydantic import AwareDatetime, BaseModel, Field
+
+from stitch.models.source import SourceBase, SourceCollection, SourcePayload
 
 
 LocationType = Literal["Onshore", "Offshore", "Unknown"]
@@ -99,27 +100,42 @@ class OilAndGasFieldSourceData(BaseModel):
     )
 
 
-class OilAndGasFieldSource[TSrcKey: str](SourceBase[int, TSrcKey], OilAndGasFieldSourceData):
+GEM_SRC = Literal["gem"]
+WM_SRC = Literal["wm"]
+RMI_SRC = Literal["rmi"]
+CC_SRC = Literal["cc"]
+OGSISourceKey = GEM_SRC | WM_SRC | RMI_SRC | CC_SRC
+
+
+class OilAndGasFieldSource[TSrcKey: OGSISourceKey](
+    SourceBase[int, TSrcKey], OilAndGasFieldSourceData
+):
     """Persisted OGSI field source = SourceBase (id, source) + data fields."""
 
 
-class GemOGSISource(OilAndGasFieldSource[Literal["gem"]]):
-    pass
+class GemOGSISource(OilAndGasFieldSource[GEM_SRC]):
+    source: GEM_SRC = "gem"
 
 
-class WMOGSISource(OilAndGasFieldSource[Literal["wm"]]):
-    pass
+class WMOGSISource(OilAndGasFieldSource[WM_SRC]):
+    source: WM_SRC = "wm"
 
 
-class RMIOGSISource(OilAndGasFieldSource[Literal["rmi"]]):
-    pass
+class RMIOGSISource(OilAndGasFieldSource[RMI_SRC]):
+    source: RMI_SRC = "rmi"
 
 
-class CCOGSISource(OilAndGasFieldSource[Literal["cc"]]):
-    pass
+class CCOGSISource(OilAndGasFieldSource[CC_SRC]):
+    source: CC_SRC = "cc"
 
 
-class OGSISourceData(SourceData):
+OGSISource = Annotated[
+    GemOGSISource | WMOGSISource | RMIOGSISource | CCOGSISource,
+    Field(discriminator="source"),
+]
+
+
+class OGSISourcePayload(SourcePayload):
     gem: SourceCollection[int, GemOGSISource] = Field(default_factory=dict)
     wm: SourceCollection[int, WMOGSISource] = Field(default_factory=dict)
     rmi: SourceCollection[int, RMIOGSISource] = Field(default_factory=dict)

@@ -17,8 +17,8 @@ SourceCollection = Mapping[TId, TSrc]
 MutableSourceCollection = MutableMapping[TId, TSrc]
 
 
-class SourceData(BaseModel):
-    """Base for domain-specific source data containers.
+class SourcePayload(BaseModel):
+    """Base for domain-specific source payload containers.
 
     Subclass and declare attributes typed as SourceCollection[TId, TSrc].
     """

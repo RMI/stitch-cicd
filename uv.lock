@@ -8,6 +8,7 @@ members = [
     "stitch-api",
     "stitch-auth",
     "stitch-core",
+    "stitch-models",
 ]
 
 [[package]]
@@ -1184,6 +1185,17 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.11.0" },
     { name = "sqlalchemy", specifier = ">=2.0.44" },
 ]
+
+[[package]]
+name = "stitch-models"
+version = "0.1.0"
+source = { editable = "packages/stitch-models" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.12.5" }]
 
 [[package]]
 name = "typer"
