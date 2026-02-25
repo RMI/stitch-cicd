@@ -22,9 +22,9 @@ from tests.conftest import (
 
 
 def assert_has_error(errors: list[dict], *, type: str, loc: tuple) -> None:
-    assert any(
-        e["type"] == type and e["loc"] == loc for e in errors
-    ), f"Expected {type} at {loc}, got: {[e['type'] + ' @ ' + str(e['loc']) for e in errors]}"
+    assert any(e["type"] == type and e["loc"] == loc for e in errors), (
+        f"Expected {type} at {loc}, got: {[e['type'] + ' @ ' + str(e['loc']) for e in errors]}"
+    )
 
 
 # ---------------------------------------------------------------------------
