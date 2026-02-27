@@ -1,10 +1,7 @@
-from abc import ABC
 from collections import defaultdict
-from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
 from typing import (
     ClassVar,
-    Self,
-    TypeVar,
+    Hashable,
 )
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -12,14 +9,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from .types import IdType, Provenance
 
 __all__ = [
-    "ManagedResource",
     "Resource",
     "Source",
     "SourcePayload",
 ]
 
 
-class Source[TSrcKey: str](BaseModel, ABC):
+class Source[TId: IdType, TSrcKey: str](BaseModel):
     """Base class for dependent, canonical `Source` data declarations.
 
     Used for creational patterns and to handle use cases where identifiers should NOT be present.
@@ -28,18 +24,11 @@ class Source[TSrcKey: str](BaseModel, ABC):
         source: key for identifying the data source
     """
 
+    id: TId | None = None
     source: TSrcKey
 
     # we set `from_attributes=True` to accommodate ORM or other object mappings
     model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
-
-
-Ts = TypeVar("Ts", bound=str)
-Tid = TypeVar("Tid", bound=IdType)
-SourceSequence = Sequence[Source[Ts]]
-MutableSourceSequence = MutableSequence[Source[Ts]]
-SourceMapping = Mapping[Tid, Source[Ts]]
-MutableSourceMapping = MutableMapping[Tid, Source[Ts]]
 
 
 class SourcePayload(BaseModel):
@@ -51,23 +40,15 @@ class SourcePayload(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
 
 
-class Resource[TPayload: SourcePayload](BaseModel, ABC):
-    """Base class for `Resource` objects without identifiers.
-
-    Used for creational patterns or other use cases where identifiers should NOT be present (e.g. ETL).
-
-    Attributes:
-        source_data: instance of `SourcePayload` subclass (note: be sure to use `SourceBaseCollection` variants here)
-    """
-
+class Resource[
+    TResId: IdType,
+    TSrcId: IdType,
+    TSrcKey: str,
+    TPayload: SourcePayload,
+](BaseModel):
+    id: TResId | None = None
     source_data: TPayload
-    repointed_to: Self | None = Field(default=None)
-
-
-class ManagedResource[TResId: IdType, TSrcId: IdType, TSrcKey: str, TPl: SourcePayload](
-    Resource[TPl]
-):
-    id: TResId
+    repointed_to: Hashable | None = Field(default=None)
     provenance: Provenance[TResId, TSrcId, TSrcKey] = Field(
         default_factory=lambda: defaultdict(list)
     )
