@@ -54,6 +54,4 @@ class Resource[
     id: TResId | None = None
     source_data: TPayload
     repointed_to: TResId | None = Field(default=None)
-    provenance: Mapping[TResId, Sequence[SourceRef[TSrcId, TSrcKey]]] = Field(
-        default_factory=dict
-    )
+    constituents: Sequence[TResId] = Field(default_factory=list)
