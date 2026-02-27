@@ -3,7 +3,6 @@ from typing import Annotated, Final
 
 from pydantic import Field
 from stitch.models import (
-    ManagedResource,
     Resource,
     Source,
     SourcePayload,
@@ -43,36 +42,20 @@ RMI_SRC: Final[RMISrcKey] = "rmi"
 WM_SRC: Final[WMSrcKey] = "wm"
 
 
-class GemSource(Source[GEMSrcKey], OilAndGasFieldBase):
+class GemSource(Source[int, GEMSrcKey], OilAndGasFieldBase):
     source = GEM_SRC
 
 
-class WoodMacSource(Source[WMSrcKey], OilAndGasFieldBase):
+class WoodMacSource(Source[int, WMSrcKey], OilAndGasFieldBase):
     source = WM_SRC
 
 
-class RMISource(Source[RMISrcKey], OilAndGasFieldBase):
+class RMISource(Source[int, RMISrcKey], OilAndGasFieldBase):
     source = RMI_SRC
 
 
-class LLMSource(Source[LLMSrcKey], OilAndGasFieldBase):
+class LLMSource(Source[int, LLMSrcKey], OilAndGasFieldBase):
     source = LLM_SRC
-
-
-class ManagedGemSource(GemSource):
-    id: int
-
-
-class ManagedWoodMacSource(WoodMacSource):
-    id: int
-
-
-class ManagedRMISource(RMISource):
-    id: int
-
-
-class ManagedLLMSource(LLMSource):
-    id: int
 
 
 OilAndGasFieldSource = Annotated[
@@ -88,16 +71,10 @@ class OGSourcePayload(SourcePayload):
     cc: Sequence[LLMSource] = Field(default_factory=list)
 
 
-class OGManagedSourcePayload(SourcePayload):
-    gem: Mapping[int, ManagedGemSource] = Field(default_factory=dict)
-    wm: Mapping[int, ManagedWoodMacSource] = Field(default_factory=dict)
-    rmi: Mapping[int, ManagedRMISource] = Field(default_factory=dict)
-    cc: Mapping[int, ManagedLLMSource] = Field(default_factory=dict)
-
-
-class OGFieldResource(OilAndGasFieldBase, Resource[SourcePayload]): ...
-
-
-class ManagedOGFieldResource(
-    OilAndGasFieldBase, ManagedResource[int, int, OGSISrcKey, OGManagedSourcePayload]
+class OGFieldResource(
+    OilAndGasFieldBase, Resource[int, int, OGSISrcKey, SourcePayload]
 ): ...
+
+
+class OilAndGasFieldFlat(OilAndGasFieldBase):
+    id: int | None
