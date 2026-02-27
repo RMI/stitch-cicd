@@ -74,7 +74,7 @@ We use the standard **merge commit** strategy for GitHub Pull Requests.
 
 - Do **not** use squash merge.
 - Do **not** use rebase merge.
-- Preserve the branch’s commit history.
+- Preserve the branch's commit history.
 
 Maintaining merge commits keeps feature branches visible in project history and preserves meaningful intermediate commits for future debugging and auditing.
 
