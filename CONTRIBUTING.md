@@ -66,6 +66,18 @@ As a rule of thumb: a PR is a request for someone else's time and expertise. Res
 
 For more information, see RMI's pull request practices: https://rmi.github.io/practices/pull_request.html
 
+All changes must be submitted via Pull Request.
+
+### Merge Strategy
+
+We use the standard **merge commit** strategy for GitHub Pull Requests.
+
+- Do **not** use squash merge.
+- Do **not** use rebase merge.
+- Preserve the branch's commit history.
+
+Maintaining merge commits keeps feature branches visible in project history and preserves meaningful intermediate commits for future debugging and auditing.
+
 ## Commit and Branch Guidelines
 
 - Prefer Conventional Commits (for example: `feat(api): add resource ownership filter`).
