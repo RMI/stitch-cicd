@@ -87,6 +87,8 @@ Maintaining merge commits keeps feature branches visible in project history and 
 - Keep commit messages clear and specific.
 - Use short, descriptive branch names (for example: `docs/add-contributing-guide`, `fix/api-auth-header`).
 
+For more information, see RMI's git practices: https://rmi.github.io/practices/git.html
+
 ## Development and Testing
 
 Before opening a PR, run checks from the repository root:
@@ -115,3 +117,4 @@ By contributing, you agree your contributions are licensed under this repository
 
 ## References
 
+- RMI engineering practices: https://rmi.github.io/practices/
