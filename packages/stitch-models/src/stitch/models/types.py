@@ -24,4 +24,4 @@ class SourceRef[TId: IdType, TSrcKey: str](Identified[TId], Protocol):
     def source(self) -> TSrcKey: ...
 
 
-ResourceRef = Identified
+type ResourceRef[TId: IdType] = Identified[TId]
