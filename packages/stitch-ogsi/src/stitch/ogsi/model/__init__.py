@@ -67,7 +67,7 @@ class OGSourcePayload(SourcePayload):
     cc: Sequence[LLMSource] = Field(default_factory=lambda: [])
 
 
-class OGFieldResource(OilAndGasFieldBase, Resource[int, SourcePayload]): ...
+class OGFieldResource(OilAndGasFieldBase, Resource[int, OGSourcePayload]): ...
 
 
 class OGFieldView(OilAndGasFieldBase):
