@@ -14,17 +14,23 @@ jobs:
           # Build a simple JSON payload Jira automation can consume as webhookData.*
           # We send 'summary' and 'description' directly for easy mapping.
           jq -n \
-            --arg repo "${{ github.repository }}" \
+            --arg action "opened" \
+            --arg repository "${{ github.repository }}" \
+            --arg issue_number "${{ github.event.issue.number }}" \
             --arg title "${{ github.event.issue.title }}" \
             --arg url "${{ github.event.issue.html_url }}" \
             --arg author "${{ github.event.issue.user.login }}" \
             --arg body "${{ github.event.issue.body }}" \
             '{
-              summary: ("[" + $repo + "] " + $title),
-              description: ("GitHub issue: " + $url + "\n" +
-                            "Repo: " + $repo + "\n" +
-                            "Author: " + $author + "\n\n" +
-                            ($body // ""))
+              action: $action,
+              repository: $repository,
+              issue_number: ($issue_number | tonumber),
+              issue: {
+                title: $title,
+                url: $url,
+                author: $author,
+                body: ($body // "")
+              }
             }' > payload.json
 
           echo "Payload preview:"
