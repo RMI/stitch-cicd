@@ -12,6 +12,7 @@ dependencies = [
   "pydantic-settings>=2.12.0",
   "sqlalchemy>=2.0.44",
   "stitch-auth",
+  "stitch-models",
 ]
 
 [project.scripts]
@@ -41,3 +42,4 @@ addopts = ["-v", "--strict-markers", "--tb=short"]
 
 [tool.uv.sources]
 stitch-auth = { workspace = true }
+stitch-models = { workspace = true }

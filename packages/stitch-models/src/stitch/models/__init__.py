@@ -13,6 +13,8 @@ __all__ = [
     "Source",
     "SourcePayload",
     "SourceRefTuple",
+    "EmptySourcePayload",
+    "BaseResource",
 ]
 
 
@@ -64,3 +66,12 @@ class Resource[
             if self.repointed_to == self.id:
                 raise ValueError("A resource cannot be repointed to itself")
         return self
+
+
+class EmptySourcePayload(SourcePayload):
+    """Domain-agnostic source payload container (no sources)."""
+
+
+# A concrete, domain-agnostic Resource you can use everywhere.
+# Domains can replace `EmptySourcePayload` with their own payload type.
+type BaseResource[TResId: IdType] = Resource[TResId, EmptySourcePayload]

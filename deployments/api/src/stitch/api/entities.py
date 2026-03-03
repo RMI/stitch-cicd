@@ -5,21 +5,10 @@ from typing import (
     Generic,
     Literal,
     Mapping,
-    Protocol,
     TypeVar,
-    runtime_checkable,
 )
-from uuid import UUID
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-
-IdType = int | str | UUID
-
-
-@runtime_checkable
-class HasId(Protocol):
-    @property
-    def id(self) -> IdType: ...
-
+from stitch.models.types import IdType
 
 GEM_SRC = Literal["gem"]
 WM_SRC = Literal["wm"]
