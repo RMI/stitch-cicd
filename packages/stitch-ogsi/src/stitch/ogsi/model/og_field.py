@@ -17,7 +17,7 @@ from .types import (
 )
 
 
-class Owner(BaseModel):
+class OilGasOwner(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(use_attribute_docstrings=True)
 
     name: str
