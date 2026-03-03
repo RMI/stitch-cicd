@@ -1,0 +1,1463 @@
+[
+  {
+    "id": 1,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Burgan Field",
+          "country": "NOR",
+          "latitude": 61.18,
+          "longitude": 4.67,
+          "last_updated": "2023-11-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Western Siberia",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Equinor",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Conventional",
+          "primary_hydrocarbon_group": "Light Oil",
+          "reservoir_formation": "Asmari",
+          "discovery_year": 1933,
+          "production_start_year": 1944,
+          "fid_year": 1934,
+          "field_status": "Non-Producing",
+          "id": 101,
+          "source": "gem"
+        }
+      ],
+      "wm": [],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": null,
+    "constituents": [],
+    "name": "Burgan Field",
+    "country": "NOR",
+    "latitude": 61.18,
+    "longitude": 4.67,
+    "last_updated": "2023-11-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Western Siberia",
+    "owners": [
+      {
+        "name": "Petrobras",
+        "stake": 100.0
+      }
+    ],
+    "operators": [
+      {
+        "name": "Equinor",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Onshore",
+    "production_conventionality": "Conventional",
+    "primary_hydrocarbon_group": "Light Oil",
+    "reservoir_formation": "Asmari",
+    "discovery_year": 1933,
+    "production_start_year": 1944,
+    "fid_year": 1934,
+    "field_status": "Non-Producing"
+  },
+  {
+    "id": 2,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Karachaganak",
+          "country": "ARE",
+          "latitude": 23.8,
+          "longitude": 52.39,
+          "last_updated": "2023-03-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Carnarvon",
+          "owners": [
+            {
+              "name": "Chevron",
+              "stake": 25.35
+            },
+            {
+              "name": "TotalEnergies",
+              "stake": 74.65
+            }
+          ],
+          "operators": [
+            {
+              "name": "Shell",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Offshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Ultra-Light Oil",
+          "reservoir_formation": "Vaca Muerta",
+          "discovery_year": 1983,
+          "production_start_year": 1998,
+          "fid_year": 1986,
+          "field_status": "Abandoned",
+          "id": 102,
+          "source": "gem"
+        }
+      ],
+      "wm": [
+        {
+          "name": "Karachaganak",
+          "country": "ARE",
+          "latitude": 23.8,
+          "longitude": 52.39,
+          "last_updated": "2023-03-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Carnarvon",
+          "owners": [
+            {
+              "name": "Chevron",
+              "stake": 25.35
+            },
+            {
+              "name": "TotalEnergies",
+              "stake": 74.65
+            }
+          ],
+          "operators": [
+            {
+              "name": "Shell",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Offshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Ultra-Light Oil",
+          "reservoir_formation": "Vaca Muerta",
+          "discovery_year": 1983,
+          "production_start_year": 1998,
+          "fid_year": 1986,
+          "field_status": "Abandoned",
+          "id": 103,
+          "source": "wm"
+        }
+      ],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": null,
+    "constituents": [],
+    "name": "Karachaganak",
+    "country": "ARE",
+    "latitude": 23.8,
+    "longitude": 52.39,
+    "last_updated": "2023-03-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Carnarvon",
+    "owners": [
+      {
+        "name": "Chevron",
+        "stake": 25.35
+      },
+      {
+        "name": "TotalEnergies",
+        "stake": 74.65
+      }
+    ],
+    "operators": [
+      {
+        "name": "Shell",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Offshore",
+    "production_conventionality": "Unconventional",
+    "primary_hydrocarbon_group": "Ultra-Light Oil",
+    "reservoir_formation": "Vaca Muerta",
+    "discovery_year": 1983,
+    "production_start_year": 1998,
+    "fid_year": 1986,
+    "field_status": "Abandoned"
+  },
+  {
+    "id": 3,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Kashagan",
+          "country": "KAZ",
+          "latitude": 28.75,
+          "longitude": -78.5,
+          "last_updated": "2024-11-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Caspian",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 23.06
+            },
+            {
+              "name": "ExxonMobil",
+              "stake": 12.13
+            },
+            {
+              "name": "Woodside",
+              "stake": 64.81
+            }
+          ],
+          "operators": [
+            {
+              "name": "Woodside",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Conventional",
+          "primary_hydrocarbon_group": "Condensate",
+          "reservoir_formation": "Bakken/Three Forks",
+          "discovery_year": 1988,
+          "production_start_year": 2003,
+          "fid_year": 1989,
+          "field_status": "Producing",
+          "id": 104,
+          "source": "gem"
+        }
+      ],
+      "wm": [
+        {
+          "name": "Kashagan Phase 1",
+          "country": "KAZ",
+          "latitude": 28.75,
+          "longitude": -78.5,
+          "last_updated": "2023-09-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Caspian",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 23.06
+            },
+            {
+              "name": "ExxonMobil",
+              "stake": 12.13
+            },
+            {
+              "name": "Woodside",
+              "stake": 64.81
+            }
+          ],
+          "operators": [
+            {
+              "name": "Woodside",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Offshore",
+          "production_conventionality": "Conventional",
+          "primary_hydrocarbon_group": "Condensate",
+          "reservoir_formation": "Bakken/Three Forks",
+          "discovery_year": 1988,
+          "production_start_year": 2003,
+          "fid_year": 1989,
+          "field_status": "Non-Producing",
+          "id": 105,
+          "source": "wm"
+        }
+      ],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": null,
+    "constituents": [],
+    "name": "Kashagan Field",
+    "country": "KAZ",
+    "latitude": 28.75,
+    "longitude": -78.5,
+    "last_updated": "2023-09-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Caspian",
+    "owners": [
+      {
+        "name": "Petrobras",
+        "stake": 23.06
+      },
+      {
+        "name": "ExxonMobil",
+        "stake": 12.13
+      },
+      {
+        "name": "Woodside",
+        "stake": 64.81
+      }
+    ],
+    "operators": [
+      {
+        "name": "Woodside",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Offshore",
+    "production_conventionality": "Conventional",
+    "primary_hydrocarbon_group": "Condensate",
+    "reservoir_formation": "Bakken/Three Forks",
+    "discovery_year": 1988,
+    "production_start_year": 2003,
+    "fid_year": 1989,
+    "field_status": "Producing"
+  },
+  {
+    "id": 4,
+    "source_data": {
+      "gem": [],
+      "wm": [],
+      "rmi": [
+        {
+          "name": "Leviathan Field",
+          "country": "KAZ",
+          "latitude": null,
+          "longitude": null,
+          "last_updated": null,
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": null,
+          "owners": null,
+          "operators": null,
+          "location_type": null,
+          "production_conventionality": null,
+          "primary_hydrocarbon_group": null,
+          "reservoir_formation": null,
+          "discovery_year": null,
+          "production_start_year": null,
+          "fid_year": null,
+          "field_status": "Abandoned",
+          "id": 106,
+          "source": "rmi"
+        }
+      ],
+      "llm": []
+    },
+    "repointed_to": null,
+    "constituents": [],
+    "name": "Leviathan Field",
+    "country": "KAZ",
+    "latitude": null,
+    "longitude": null,
+    "last_updated": null,
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": null,
+    "owners": null,
+    "operators": null,
+    "location_type": null,
+    "production_conventionality": null,
+    "primary_hydrocarbon_group": null,
+    "reservoir_formation": null,
+    "discovery_year": null,
+    "production_start_year": null,
+    "fid_year": null,
+    "field_status": "Abandoned"
+  },
+  {
+    "id": 5,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Agbami Field",
+          "country": "BRA",
+          "latitude": -18.81,
+          "longitude": -49.66,
+          "last_updated": "2025-11-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": null,
+          "owners": [
+            {
+              "name": "CNOOC",
+              "stake": 54.06
+            },
+            {
+              "name": "TotalEnergies",
+              "stake": 15.63
+            },
+            {
+              "name": "Saudi Aramco",
+              "stake": 30.31
+            }
+          ],
+          "operators": [
+            {
+              "name": "CNOOC",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Mixed",
+          "primary_hydrocarbon_group": "Medium Oil",
+          "reservoir_formation": null,
+          "discovery_year": null,
+          "production_start_year": null,
+          "fid_year": 1978,
+          "field_status": "Abandoned",
+          "id": 107,
+          "source": "gem"
+        }
+      ],
+      "wm": [],
+      "rmi": [],
+      "llm": [
+        {
+          "name": "Agbami Field",
+          "country": "BRA",
+          "latitude": null,
+          "longitude": null,
+          "last_updated": "2025-11-15T00:00:00Z",
+          "name_local": "\u5927\u5e86\u6cb9\u7530",
+          "state_province": null,
+          "region": null,
+          "basin": "North Sea",
+          "owners": null,
+          "operators": null,
+          "location_type": null,
+          "production_conventionality": "Mixed",
+          "primary_hydrocarbon_group": "Medium Oil",
+          "reservoir_formation": "Wolfcamp A",
+          "discovery_year": 1977,
+          "production_start_year": 1982,
+          "fid_year": 1978,
+          "field_status": null,
+          "id": 108,
+          "source": "llm"
+        }
+      ]
+    },
+    "repointed_to": null,
+    "constituents": [],
+    "name": "Agbami Field",
+    "country": "BRA",
+    "latitude": -18.81,
+    "longitude": -49.66,
+    "last_updated": "2025-11-15T00:00:00Z",
+    "name_local": "\u5927\u5e86\u6cb9\u7530",
+    "state_province": null,
+    "region": null,
+    "basin": "North Sea",
+    "owners": [
+      {
+        "name": "CNOOC",
+        "stake": 54.06
+      },
+      {
+        "name": "TotalEnergies",
+        "stake": 15.63
+      },
+      {
+        "name": "Saudi Aramco",
+        "stake": 30.31
+      }
+    ],
+    "operators": [
+      {
+        "name": "CNOOC",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Onshore",
+    "production_conventionality": "Mixed",
+    "primary_hydrocarbon_group": "Medium Oil",
+    "reservoir_formation": "Wolfcamp A",
+    "discovery_year": 1977,
+    "production_start_year": 1982,
+    "fid_year": 1978,
+    "field_status": "Abandoned"
+  },
+  {
+    "id": 6,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Ghawar South",
+          "country": "SAU",
+          "latitude": 52.11,
+          "longitude": 1.54,
+          "last_updated": "2025-06-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Arabian",
+          "owners": [
+            {
+              "name": "Eni",
+              "stake": 44.9
+            },
+            {
+              "name": "ConocoPhillips",
+              "stake": 28.33
+            },
+            {
+              "name": "CNOOC",
+              "stake": 26.77
+            }
+          ],
+          "operators": [
+            {
+              "name": "Saudi Aramco",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Offshore",
+          "production_conventionality": "Mixed",
+          "primary_hydrocarbon_group": "Dry Gas",
+          "reservoir_formation": "Khuff",
+          "discovery_year": 1964,
+          "production_start_year": 1975,
+          "fid_year": 1968,
+          "field_status": "Producing",
+          "id": 109,
+          "source": "gem"
+        }
+      ],
+      "wm": [],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": 12,
+    "constituents": [],
+    "name": "Ghawar South",
+    "country": "SAU",
+    "latitude": 52.11,
+    "longitude": 1.54,
+    "last_updated": "2025-06-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Arabian",
+    "owners": [
+      {
+        "name": "Eni",
+        "stake": 44.9
+      },
+      {
+        "name": "ConocoPhillips",
+        "stake": 28.33
+      },
+      {
+        "name": "CNOOC",
+        "stake": 26.77
+      }
+    ],
+    "operators": [
+      {
+        "name": "Saudi Aramco",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Offshore",
+    "production_conventionality": "Mixed",
+    "primary_hydrocarbon_group": "Dry Gas",
+    "reservoir_formation": "Khuff",
+    "discovery_year": 1964,
+    "production_start_year": 1975,
+    "fid_year": 1968,
+    "field_status": "Producing"
+  },
+  {
+    "id": 7,
+    "source_data": {
+      "gem": [],
+      "wm": [
+        {
+          "name": "Ghawar North",
+          "country": "SAU",
+          "latitude": 24.91,
+          "longitude": 50.36,
+          "last_updated": "2023-03-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Cooper-Eromanga",
+          "owners": [
+            {
+              "name": "Woodside",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Heavy Oil",
+          "reservoir_formation": "Brent Group",
+          "discovery_year": 1947,
+          "production_start_year": 1956,
+          "fid_year": 1952,
+          "field_status": "Producing",
+          "id": 110,
+          "source": "wm"
+        }
+      ],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": 12,
+    "constituents": [],
+    "name": "Ghawar North",
+    "country": "SAU",
+    "latitude": 24.91,
+    "longitude": 50.36,
+    "last_updated": "2023-03-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Cooper-Eromanga",
+    "owners": [
+      {
+        "name": "Woodside",
+        "stake": 100.0
+      }
+    ],
+    "operators": [
+      {
+        "name": "Petrobras",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Onshore",
+    "production_conventionality": "Unconventional",
+    "primary_hydrocarbon_group": "Heavy Oil",
+    "reservoir_formation": "Brent Group",
+    "discovery_year": 1947,
+    "production_start_year": 1956,
+    "fid_year": 1952,
+    "field_status": "Producing"
+  },
+  {
+    "id": 12,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Ghawar South",
+          "country": "SAU",
+          "latitude": 52.11,
+          "longitude": 1.54,
+          "last_updated": "2025-06-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Arabian",
+          "owners": [
+            {
+              "name": "Eni",
+              "stake": 44.9
+            },
+            {
+              "name": "ConocoPhillips",
+              "stake": 28.33
+            },
+            {
+              "name": "CNOOC",
+              "stake": 26.77
+            }
+          ],
+          "operators": [
+            {
+              "name": "Saudi Aramco",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Offshore",
+          "production_conventionality": "Mixed",
+          "primary_hydrocarbon_group": "Dry Gas",
+          "reservoir_formation": "Khuff",
+          "discovery_year": 1964,
+          "production_start_year": 1975,
+          "fid_year": 1968,
+          "field_status": "Producing",
+          "id": 109,
+          "source": "gem"
+        }
+      ],
+      "wm": [
+        {
+          "name": "Ghawar North",
+          "country": "SAU",
+          "latitude": 24.91,
+          "longitude": 50.36,
+          "last_updated": "2023-03-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Cooper-Eromanga",
+          "owners": [
+            {
+              "name": "Woodside",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Heavy Oil",
+          "reservoir_formation": "Brent Group",
+          "discovery_year": 1947,
+          "production_start_year": 1956,
+          "fid_year": 1952,
+          "field_status": "Producing",
+          "id": 110,
+          "source": "wm"
+        }
+      ],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": null,
+    "constituents": [
+      6,
+      7
+    ],
+    "name": "Ghawar Complex",
+    "country": "SAU",
+    "latitude": 52.11,
+    "longitude": 1.54,
+    "last_updated": "2025-06-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Arabian",
+    "owners": [
+      {
+        "name": "Eni",
+        "stake": 44.9
+      },
+      {
+        "name": "ConocoPhillips",
+        "stake": 28.33
+      },
+      {
+        "name": "CNOOC",
+        "stake": 26.77
+      }
+    ],
+    "operators": [
+      {
+        "name": "Saudi Aramco",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Offshore",
+    "production_conventionality": "Mixed",
+    "primary_hydrocarbon_group": "Dry Gas",
+    "reservoir_formation": "Khuff",
+    "discovery_year": 1964,
+    "production_start_year": 1975,
+    "fid_year": 1968,
+    "field_status": "Producing"
+  },
+  {
+    "id": 8,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Rumaila North",
+          "country": "IRQ",
+          "latitude": 24.73,
+          "longitude": 53.68,
+          "last_updated": "2024-11-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Niger Delta",
+          "owners": [
+            {
+              "name": "Chevron",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Eni",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Mixed",
+          "primary_hydrocarbon_group": "Wet Gas",
+          "reservoir_formation": "Niobrara",
+          "discovery_year": 1931,
+          "production_start_year": 1941,
+          "fid_year": 1933,
+          "field_status": "Producing",
+          "id": 111,
+          "source": "gem"
+        }
+      ],
+      "wm": [],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": 13,
+    "constituents": [],
+    "name": "Rumaila North",
+    "country": "IRQ",
+    "latitude": 24.73,
+    "longitude": 53.68,
+    "last_updated": "2024-11-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Niger Delta",
+    "owners": [
+      {
+        "name": "Chevron",
+        "stake": 100.0
+      }
+    ],
+    "operators": [
+      {
+        "name": "Eni",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Onshore",
+    "production_conventionality": "Mixed",
+    "primary_hydrocarbon_group": "Wet Gas",
+    "reservoir_formation": "Niobrara",
+    "discovery_year": 1931,
+    "production_start_year": 1941,
+    "fid_year": 1933,
+    "field_status": "Producing"
+  },
+  {
+    "id": 9,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Rumaila South",
+          "country": "IRQ",
+          "latitude": 49.13,
+          "longitude": 53.11,
+          "last_updated": "2023-09-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Western Siberia",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Equinor",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Condensate",
+          "reservoir_formation": "Niobrara",
+          "discovery_year": 2011,
+          "production_start_year": 2016,
+          "fid_year": 2012,
+          "field_status": "Producing",
+          "id": 112,
+          "source": "gem"
+        }
+      ],
+      "wm": [
+        {
+          "name": "Rumaila South",
+          "country": "IRQ",
+          "latitude": 49.13,
+          "longitude": 53.11,
+          "last_updated": "2023-09-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Western Siberia",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Equinor",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Condensate",
+          "reservoir_formation": "Niobrara",
+          "discovery_year": 2011,
+          "production_start_year": 2016,
+          "fid_year": 2012,
+          "field_status": "Producing",
+          "id": 113,
+          "source": "wm"
+        }
+      ],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": 13,
+    "constituents": [],
+    "name": "Rumaila South",
+    "country": "IRQ",
+    "latitude": 49.13,
+    "longitude": 53.11,
+    "last_updated": "2023-09-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Western Siberia",
+    "owners": [
+      {
+        "name": "Petrobras",
+        "stake": 100.0
+      }
+    ],
+    "operators": [
+      {
+        "name": "Equinor",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Onshore",
+    "production_conventionality": "Unconventional",
+    "primary_hydrocarbon_group": "Condensate",
+    "reservoir_formation": "Niobrara",
+    "discovery_year": 2011,
+    "production_start_year": 2016,
+    "fid_year": 2012,
+    "field_status": "Producing"
+  },
+  {
+    "id": 13,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Rumaila North",
+          "country": "IRQ",
+          "latitude": 24.73,
+          "longitude": 53.68,
+          "last_updated": "2024-11-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Niger Delta",
+          "owners": [
+            {
+              "name": "Chevron",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Eni",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Mixed",
+          "primary_hydrocarbon_group": "Wet Gas",
+          "reservoir_formation": "Niobrara",
+          "discovery_year": 1931,
+          "production_start_year": 1941,
+          "fid_year": 1933,
+          "field_status": "Producing",
+          "id": 111,
+          "source": "gem"
+        },
+        {
+          "name": "Rumaila South",
+          "country": "IRQ",
+          "latitude": 49.13,
+          "longitude": 53.11,
+          "last_updated": "2023-09-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Western Siberia",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Equinor",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Condensate",
+          "reservoir_formation": "Niobrara",
+          "discovery_year": 2011,
+          "production_start_year": 2016,
+          "fid_year": 2012,
+          "field_status": "Producing",
+          "id": 112,
+          "source": "gem"
+        }
+      ],
+      "wm": [
+        {
+          "name": "Rumaila South",
+          "country": "IRQ",
+          "latitude": 49.13,
+          "longitude": 53.11,
+          "last_updated": "2023-09-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Western Siberia",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Equinor",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Condensate",
+          "reservoir_formation": "Niobrara",
+          "discovery_year": 2011,
+          "production_start_year": 2016,
+          "fid_year": 2012,
+          "field_status": "Producing",
+          "id": 113,
+          "source": "wm"
+        }
+      ],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": 14,
+    "constituents": [
+      8,
+      9
+    ],
+    "name": "Rumaila Combined",
+    "country": "IRQ",
+    "latitude": 24.73,
+    "longitude": 53.68,
+    "last_updated": "2024-11-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Niger Delta",
+    "owners": [
+      {
+        "name": "Chevron",
+        "stake": 100.0
+      }
+    ],
+    "operators": [
+      {
+        "name": "Eni",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Onshore",
+    "production_conventionality": "Mixed",
+    "primary_hydrocarbon_group": "Wet Gas",
+    "reservoir_formation": "Niobrara",
+    "discovery_year": 1931,
+    "production_start_year": 1941,
+    "fid_year": 1933,
+    "field_status": "Producing"
+  },
+  {
+    "id": 10,
+    "source_data": {
+      "gem": [],
+      "wm": [],
+      "rmi": [
+        {
+          "name": "Rumaila West",
+          "country": "IRQ",
+          "latitude": 32.17,
+          "longitude": 8.14,
+          "last_updated": "2025-03-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Santos",
+          "owners": [
+            {
+              "name": "Eni",
+              "stake": 18.84
+            },
+            {
+              "name": "Saudi Aramco",
+              "stake": 53.34
+            },
+            {
+              "name": "TotalEnergies",
+              "stake": 27.82
+            }
+          ],
+          "operators": [
+            {
+              "name": "BP",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Mixed",
+          "primary_hydrocarbon_group": "Medium Oil",
+          "reservoir_formation": "Khuff",
+          "discovery_year": 1940,
+          "production_start_year": 1952,
+          "fid_year": 1943,
+          "field_status": "Producing",
+          "id": 114,
+          "source": "rmi"
+        }
+      ],
+      "llm": []
+    },
+    "repointed_to": 14,
+    "constituents": [],
+    "name": "Rumaila West",
+    "country": "IRQ",
+    "latitude": 32.17,
+    "longitude": 8.14,
+    "last_updated": "2025-03-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Santos",
+    "owners": [
+      {
+        "name": "Eni",
+        "stake": 18.84
+      },
+      {
+        "name": "Saudi Aramco",
+        "stake": 53.34
+      },
+      {
+        "name": "TotalEnergies",
+        "stake": 27.82
+      }
+    ],
+    "operators": [
+      {
+        "name": "BP",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Onshore",
+    "production_conventionality": "Mixed",
+    "primary_hydrocarbon_group": "Medium Oil",
+    "reservoir_formation": "Khuff",
+    "discovery_year": 1940,
+    "production_start_year": 1952,
+    "fid_year": 1943,
+    "field_status": "Producing"
+  },
+  {
+    "id": 14,
+    "source_data": {
+      "gem": [
+        {
+          "name": "Rumaila North",
+          "country": "IRQ",
+          "latitude": 24.73,
+          "longitude": 53.68,
+          "last_updated": "2024-11-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Niger Delta",
+          "owners": [
+            {
+              "name": "Chevron",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Eni",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Mixed",
+          "primary_hydrocarbon_group": "Wet Gas",
+          "reservoir_formation": "Niobrara",
+          "discovery_year": 1931,
+          "production_start_year": 1941,
+          "fid_year": 1933,
+          "field_status": "Producing",
+          "id": 111,
+          "source": "gem"
+        },
+        {
+          "name": "Rumaila South",
+          "country": "IRQ",
+          "latitude": 49.13,
+          "longitude": 53.11,
+          "last_updated": "2023-09-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Western Siberia",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Equinor",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Condensate",
+          "reservoir_formation": "Niobrara",
+          "discovery_year": 2011,
+          "production_start_year": 2016,
+          "fid_year": 2012,
+          "field_status": "Producing",
+          "id": 112,
+          "source": "gem"
+        }
+      ],
+      "wm": [
+        {
+          "name": "Rumaila South",
+          "country": "IRQ",
+          "latitude": 49.13,
+          "longitude": 53.11,
+          "last_updated": "2023-09-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Western Siberia",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Equinor",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Unconventional",
+          "primary_hydrocarbon_group": "Condensate",
+          "reservoir_formation": "Niobrara",
+          "discovery_year": 2011,
+          "production_start_year": 2016,
+          "fid_year": 2012,
+          "field_status": "Producing",
+          "id": 113,
+          "source": "wm"
+        }
+      ],
+      "rmi": [
+        {
+          "name": "Rumaila West",
+          "country": "IRQ",
+          "latitude": 32.17,
+          "longitude": 8.14,
+          "last_updated": "2025-03-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Santos",
+          "owners": [
+            {
+              "name": "Eni",
+              "stake": 18.84
+            },
+            {
+              "name": "Saudi Aramco",
+              "stake": 53.34
+            },
+            {
+              "name": "TotalEnergies",
+              "stake": 27.82
+            }
+          ],
+          "operators": [
+            {
+              "name": "BP",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Mixed",
+          "primary_hydrocarbon_group": "Medium Oil",
+          "reservoir_formation": "Khuff",
+          "discovery_year": 1940,
+          "production_start_year": 1952,
+          "fid_year": 1943,
+          "field_status": "Producing",
+          "id": 114,
+          "source": "rmi"
+        }
+      ],
+      "llm": []
+    },
+    "repointed_to": null,
+    "constituents": [
+      10,
+      13
+    ],
+    "name": "Rumaila Complex",
+    "country": "IRQ",
+    "latitude": 24.73,
+    "longitude": 53.68,
+    "last_updated": "2024-11-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Niger Delta",
+    "owners": [
+      {
+        "name": "Chevron",
+        "stake": 100.0
+      }
+    ],
+    "operators": [
+      {
+        "name": "Eni",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Onshore",
+    "production_conventionality": "Mixed",
+    "primary_hydrocarbon_group": "Wet Gas",
+    "reservoir_formation": "Niobrara",
+    "discovery_year": 1931,
+    "production_start_year": 1941,
+    "fid_year": 1933,
+    "field_status": "Producing"
+  },
+  {
+    "id": 11,
+    "source_data": {
+      "gem": [],
+      "wm": [
+        {
+          "name": "Gorgon Field",
+          "country": "ARE",
+          "latitude": 22.99,
+          "longitude": 51.32,
+          "last_updated": "2023-10-15T00:00:00Z",
+          "name_local": null,
+          "state_province": null,
+          "region": null,
+          "basin": "Western Siberia",
+          "owners": [
+            {
+              "name": "Petrobras",
+              "stake": 100.0
+            }
+          ],
+          "operators": [
+            {
+              "name": "Shell",
+              "stake": 100.0
+            }
+          ],
+          "location_type": "Onshore",
+          "production_conventionality": "Conventional",
+          "primary_hydrocarbon_group": "Ultra-Light Oil",
+          "reservoir_formation": "Wolfcamp A",
+          "discovery_year": 1987,
+          "production_start_year": null,
+          "fid_year": 1990,
+          "field_status": "Planned",
+          "id": 115,
+          "source": "wm"
+        }
+      ],
+      "rmi": [],
+      "llm": []
+    },
+    "repointed_to": null,
+    "constituents": [],
+    "name": "Gorgon Field",
+    "country": "ARE",
+    "latitude": 22.99,
+    "longitude": 51.32,
+    "last_updated": "2023-10-15T00:00:00Z",
+    "name_local": null,
+    "state_province": null,
+    "region": null,
+    "basin": "Western Siberia",
+    "owners": [
+      {
+        "name": "Petrobras",
+        "stake": 100.0
+      }
+    ],
+    "operators": [
+      {
+        "name": "Shell",
+        "stake": 100.0
+      }
+    ],
+    "location_type": "Onshore",
+    "production_conventionality": "Conventional",
+    "primary_hydrocarbon_group": "Ultra-Light Oil",
+    "reservoir_formation": "Wolfcamp A",
+    "discovery_year": 1987,
+    "production_start_year": null,
+    "fid_year": 1990,
+    "field_status": "Planned"
+  }
+]
