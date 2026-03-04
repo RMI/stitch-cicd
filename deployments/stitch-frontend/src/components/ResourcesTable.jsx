@@ -1,33 +1,88 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SourceMixBar from "./SourceMixBar";
 
+// sortType: "string" | "number" — extend here when numeric columns are added.
+// Omit sortable (or set false) to disable sorting for a column.
 const COLUMNS = [
-  { label: "Name", key: "name", className: "font-medium text-gray-900" },
-  { label: "State/Province", key: "state_province", className: "text-gray-500" },
-  { label: "Region", key: "region", className: "text-gray-500" },
-  { label: "Basin", key: "basin", className: "text-gray-500" },
+  { label: "Name", key: "name", className: "font-medium text-gray-900", sortable: true, sortType: "string" },
+  { label: "State/Province", key: "state_province", className: "text-gray-500", sortable: true, sortType: "string" },
+  { label: "Region", key: "region", className: "text-gray-500", sortable: true, sortType: "string" },
+  { label: "Basin", key: "basin", className: "text-gray-500", sortable: true, sortType: "string" },
 ];
+
+// Pure sort utility — accepts the sort config object so it can be
+// reused / moved server-side when pagination is introduced.
+function applySort(data, sortConfig) {
+  if (!sortConfig.column) return data;
+  const col = COLUMNS.find((c) => c.key === sortConfig.column);
+  if (!col?.sortable) return data;
+
+  return [...data].sort((a, b) => {
+    const aVal = a[sortConfig.column];
+    const bVal = b[sortConfig.column];
+
+    // Nulls always last, regardless of direction
+    if (aVal == null && bVal == null) return 0;
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
+
+    const cmp = col.sortType === "number" ? aVal - bVal : String(aVal).localeCompare(String(bVal));
+
+    return sortConfig.direction === "asc" ? cmp : -cmp;
+  });
+}
+
+function SortIndicator({ column, sortConfig }) {
+  if (sortConfig.column !== column) {
+    return <span className="ml-1 text-gray-300">⬍</span>;
+  }
+  return <span className="ml-1 text-gray-600">{sortConfig.direction === "asc" ? "▲" : "▼"}</span>;
+}
 
 export default function ResourcesTable({ resources }) {
   const navigate = useNavigate();
+  // sortConfig is isolated here for now; lift to parent + pass as prop
+  // when server-side sort params are needed for pagination.
+  const [sortConfig, setSortConfig] = useState({ column: null, direction: "asc" });
 
   if (!resources?.length) return null;
+
+  function handleSort(key) {
+    setSortConfig((prev) => ({
+      column: key,
+      direction: prev.column === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  }
+
+  const sorted = applySort(resources, sortConfig);
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-200 text-left text-xs font-medium tracking-wide text-gray-500">
-            {COLUMNS.map((col) => (
-              <th key={col.key} className="py-2 pr-6">
-                {col.label}
-              </th>
-            ))}
+            {COLUMNS.map((col) =>
+              col.sortable ? (
+                <th
+                  key={col.key}
+                  className="py-2 pr-6 cursor-pointer select-none hover:text-gray-800"
+                  onClick={() => handleSort(col.key)}
+                >
+                  {col.label}
+                  <SortIndicator column={col.key} sortConfig={sortConfig} />
+                </th>
+              ) : (
+                <th key={col.key} className="py-2 pr-6">
+                  {col.label}
+                </th>
+              ),
+            )}
             <th className="py-2 min-w-32">Data source mix</th>
           </tr>
         </thead>
         <tbody>
-          {resources.map((resource) => (
+          {sorted.map((resource) => (
             <tr
               key={resource.id}
               onClick={() => navigate(`/resources/${resource.id}`)}
