@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+@theme {
+  --color-gray-light: #F7F8F9;
+  --color-gray-medium: #E0E1E2;
+  --color-gray-dark: #111827;
+  --color-gray-button-outline: #DDE3E5;
+  --font-family-inter: "Inter", sans-serif;
+}
