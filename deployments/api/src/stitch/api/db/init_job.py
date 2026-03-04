@@ -5,7 +5,6 @@ import sys
 import time
 from enum import Enum
 from dataclasses import dataclass
-from typing import Iterable
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import OperationalError
@@ -15,10 +14,14 @@ from stitch.api.db.model import (
     ResourceModel,
     StitchBase,
     UserModel,
+    OilGasFieldModel,
 )
 from stitch.api.entities import (
     User as UserEntity,
 )
+
+# Domain model from stitch-ogsi package
+from stitch.ogsi.model.og_field import OilGasFieldBase
 
 """
 DB init/seed job.
@@ -249,7 +252,6 @@ def fail_partial(existing_tables: set[str], expected: set[str]) -> None:
 
 def create_seed_user() -> UserModel:
     return UserModel(
-        id=1,
         sub="seed|system",
         name="Seed User",
         email="seed@example.com",
@@ -258,7 +260,6 @@ def create_seed_user() -> UserModel:
 
 def create_dev_user() -> UserModel:
     return UserModel(
-        id=2,
         sub="dev|local-placeholder",
         name="Dev Deverson",
         email="dev@example.com",
@@ -270,21 +271,41 @@ def create_seed_resources(user: UserEntity) -> list[ResourceModel]:
         ResourceModel.create(user, name="Resource Foo01"),
         ResourceModel.create(user, name="Resource Bar01"),
     ]
-    for i, res in enumerate(resources, start=1):
-        res.id = i
     return resources
 
 
-def reset_sequences(engine, tables: Iterable[str]) -> None:
-    with engine.begin() as conn:
-        for t in tables:
-            conn.execute(
-                text(
-                    f"SELECT setval('{t}_id_seq', "
-                    f"(SELECT COALESCE(MAX(id), 0) + 1 FROM {t}), false);"
-                )
-            )
+def create_seed_oil_gas_fields(
+    user: UserEntity,
+    resources: list[ResourceModel],
+) -> list[OilGasFieldModel]:
+    """Create example OilGasField rows linked 1:1 with seeded resources."""
 
+    # Construct payloads using the package model
+    payloads = [
+        OilGasFieldBase(
+            name="Permian Alpha",
+            country="USA",
+            basin="Permian",
+        ),
+        OilGasFieldBase(
+            name="North Sea Bravo",
+            country="GBR",
+            basin="North Sea",
+        ),
+    ]
+
+    og_models: list[OilGasFieldModel] = []
+
+    for resource, payload in zip(resources, payloads):
+        model = OilGasFieldModel(
+            resource_id=resource.id,
+            created_by_id=user.id,
+            last_updated_by_id=user.id,
+        )
+        model.payload = payload
+        og_models.append(model)
+
+    return og_models
 
 def seed_dev(engine) -> None:
     with Session(engine) as session:
@@ -305,18 +326,13 @@ def seed_dev(engine) -> None:
 
         resources = create_seed_resources(user_entity)
         session.add_all(resources)
+        session.flush()
+        #
+        # Add sample OilGasField rows for the first two resources only
+        og_fields = create_seed_oil_gas_fields(user_entity, resources)
+        session.add_all(og_fields)
 
         session.commit()
-
-    reset_sequences(
-        engine,
-        tables=[
-            "users",
-            "resources",
-            "memberships",
-        ],
-    )
-
 
 def seed(engine, profile: SeedProfile | str) -> None:
     if profile == "dev":
