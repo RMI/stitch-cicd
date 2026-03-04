@@ -1127,6 +1127,7 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "stitch-auth" },
     { name = "stitch-models" },
+    { name = "stitch-ogsi" },
 ]
 
 [package.dev-dependencies]
@@ -1146,6 +1147,7 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.44" },
     { name = "stitch-auth", editable = "packages/stitch-auth" },
     { name = "stitch-models", editable = "packages/stitch-models" },
+    { name = "stitch-ogsi", editable = "packages/stitch-ogsi" },
 ]
 
 [package.metadata.requires-dev]
