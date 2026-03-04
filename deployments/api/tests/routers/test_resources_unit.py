@@ -1,6 +1,5 @@
 """Unit tests for resources router with mocked dependencies."""
 
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -8,31 +7,22 @@ from fastapi import HTTPException
 from starlette.status import HTTP_404_NOT_FOUND
 
 from stitch.api.db.config import get_uow
-from stitch.api.entities import Resource, SourceData
 from stitch.api.main import app
 
-from tests.utils import (
-    make_gem_data,
-    make_resource_with_new_sources,
-    make_wm_data,
-)
+from tests.utils import make_create_resource
+
+# Import the response model used by the router (domain-agnostic).
+from stitch.api.resources.entities import Resource
 
 
 def make_resource(
     id: int = 1,
-    name: str = "Test Resource",
-    country: str = "USA",
+    name: str | None = "Test Resource",
 ) -> Resource:
     """Factory for creating Resource entities for tests."""
-    now = datetime.now(timezone.utc)
     return Resource(
         id=id,
         name=name,
-        country=country,
-        source_data=SourceData(),
-        constituents=[],
-        created=now,
-        updated=now,
     )
 
 
@@ -88,14 +78,8 @@ class TestCreateResourceUnit:
     @pytest.mark.anyio
     async def test_creates_resource_with_user(self, async_client, mock_uow, test_user):
         """POST /resources/ calls repo.create with user and data."""
-        expected = make_resource(id=123, name="New Resource", country="CAN")
-        resource_in = make_resource_with_new_sources(
-            gem=make_gem_data(
-                name="GEM Field", lat=45.0, lon=-120.0, country="CAN"
-            ).model,
-            name="New Resource",
-            country="CAN",
-        )
+        expected = make_resource(id=123, name="New Resource")
+        resource_in = make_create_resource(name="New Resource")
 
         async def override_get_uow():
             yield mock_uow
@@ -116,12 +100,7 @@ class TestCreateResourceUnit:
     async def test_returns_created_resource(self, async_client, mock_uow):
         """POST /resources/ returns the created resource entity."""
         expected = make_resource(id=456, name="Created Resource")
-        resource_in = make_resource_with_new_sources(
-            wm=make_wm_data(
-                field_name="WM Field", field_country="USA", production=1000.0
-            ).model,
-            name="Created Resource",
-        )
+        resource_in = make_create_resource(name="Created Resource")
 
         async def override_get_uow():
             yield mock_uow
@@ -147,14 +126,6 @@ class TestCreateResourceUnit:
 
         app.dependency_overrides[get_uow] = override_get_uow
 
-        response = await async_client.post(
-            "/resources/",
-            json={
-                "name": "Test Resource",
-                "source_data": {
-                    "gem": [{"invalid_field": "bad"}],
-                },
-            },
-        )
+        response = await async_client.post("/resources/", json={"label": 123})
 
         assert response.status_code == 422

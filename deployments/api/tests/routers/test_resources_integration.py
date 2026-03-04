@@ -5,12 +5,7 @@ from sqlalchemy import select
 
 from stitch.api.db.model import ResourceModel
 
-from tests.utils import (
-    make_empty_resource,
-    make_gem_data,
-    make_resource_with_new_sources,
-    make_wm_data,
-)
+from tests.utils import make_empty_resource, make_create_resource
 
 
 class TestResourcesIntegration:
@@ -27,31 +22,20 @@ class TestResourcesIntegration:
     @pytest.mark.anyio
     async def test_create_resource_returns_resource(self, integration_client):
         """POST /resources/ returns the created resource."""
-        resource_in = make_resource_with_new_sources(
-            gem=make_gem_data(name="GEM Integration Field", lat=40.0, lon=-100.0).model,
-            name="Integration Test Resource",
-            country="USA",
-        )
+        resource_in = make_create_resource(name="Integration Test Resource")
 
         response = await integration_client.post("/resources/", json=resource_in.data)
 
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "Integration Test Resource"
-        assert data["country"] == "USA"
         assert "id" in data
         assert data["id"] > 0
 
     @pytest.mark.anyio
     async def test_create_and_get_resource(self, integration_client):
         """POST creates resource, GET retrieves it."""
-        resource_in = make_resource_with_new_sources(
-            wm=make_wm_data(
-                field_name="WM Roundtrip Field", field_country="CAN", production=5000.0
-            ).model,
-            name="Roundtrip Resource",
-            country="CAN",
-        )
+        resource_in = make_create_resource(name="Roundtrip Resource")
 
         create_response = await integration_client.post(
             "/resources/", json=resource_in.data
@@ -66,20 +50,13 @@ class TestResourcesIntegration:
         data = get_response.json()
         assert data["id"] == created_id
         assert data["name"] == "Roundtrip Resource"
-        assert data["country"] == "CAN"
 
     @pytest.mark.anyio
     async def test_create_persists_to_database(
         self, integration_client, integration_session_factory
     ):
         """POST resource is persisted and queryable directly."""
-        resource_in = make_resource_with_new_sources(
-            gem=make_gem_data(
-                name="GEM Persist Field", lat=25.0, lon=-105.0, country="MEX"
-            ).model,
-            name="Persisted Resource",
-            country="MEX",
-        )
+        resource_in = make_create_resource(name="Persisted Resource")
 
         response = await integration_client.post("/resources/", json=resource_in.data)
 
@@ -94,12 +71,11 @@ class TestResourcesIntegration:
 
         assert resource is not None
         assert resource.name == "Persisted Resource"
-        assert resource.country == "MEX"
 
     @pytest.mark.anyio
     async def test_create_with_minimal_data(self, integration_client):
         """POST /resources/ works with only required fields (no source data)."""
-        resource_in = make_empty_resource(name=None, country=None)
+        resource_in = make_empty_resource(name=None)
 
         response = await integration_client.post("/resources/", json=resource_in.data)
 
@@ -107,4 +83,3 @@ class TestResourcesIntegration:
         data = response.json()
         assert data["id"] > 0
         assert data["name"] is None
-        assert data["country"] is None

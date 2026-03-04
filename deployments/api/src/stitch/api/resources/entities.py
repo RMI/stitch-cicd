@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CreateResource(BaseModel):
     """Domain-agnostic create model."""
 
+    model_config = ConfigDict(extra="forbid")
     name: str | None = None
 
 
