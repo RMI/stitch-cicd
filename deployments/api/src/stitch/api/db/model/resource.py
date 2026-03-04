@@ -84,7 +84,6 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
         PORTABLE_BIGINT, ForeignKey("resources.id"), nullable=True
     )
     name: Mapped[str | None] = mapped_column(String, nullable=True)
-    country: Mapped[str | None] = mapped_column(String(3), nullable=True)
 
     # SQLAlchemy will automatically see the foreign key `memberships.resource_id`
     # and configure the appropriate SQL statement to load the membership objects
@@ -105,12 +104,10 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
         cls,
         created_by: UserEntity,
         name: str | None = None,
-        country: str | None = None,
         repointed_to: int | None = None,
     ):
         return cls(
             name=name,
-            country=country,
             repointed_id=repointed_to,
             created_by_id=created_by.id,
             last_updated_by_id=created_by.id,
