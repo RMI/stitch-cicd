@@ -12,20 +12,12 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from stitch.api.db.model import (
-    CCReservoirsSourceModel,
-    GemSourceModel,
-    MembershipModel,
-    RMIManualSourceModel,
     ResourceModel,
     StitchBase,
     UserModel,
-    WMSourceModel,
 )
 from stitch.api.entities import (
-    GemData,
-    RMIManualData,
     User as UserEntity,
-    WMData,
 )
 
 """
@@ -273,79 +265,14 @@ def create_dev_user() -> UserModel:
     )
 
 
-def create_seed_sources():
-    gem_sources = [
-        GemSourceModel.from_entity(
-            GemData(name="Permian Basin Field", country="USA", lat=31.8, lon=-102.3)
-        ),
-        GemSourceModel.from_entity(
-            GemData(name="North Sea Platform", country="GBR", lat=57.5, lon=1.5)
-        ),
-    ]
-    for i, src in enumerate(gem_sources, start=1):
-        src.id = i
-
-    wm_sources = [
-        WMSourceModel.from_entity(
-            WMData(
-                field_name="Eagle Ford Shale", field_country="USA", production=125000.5
-            )
-        ),
-        WMSourceModel.from_entity(
-            WMData(field_name="Ghawar Field", field_country="SAU", production=500000.0)
-        ),
-    ]
-    for i, src in enumerate(wm_sources, start=1):
-        src.id = i
-
-    rmi_sources = [
-        RMIManualSourceModel.from_entity(
-            RMIManualData(
-                name_override="Custom Override Name",
-                gwp=25.5,
-                gor=0.45,
-                country="CAN",
-                latitude=56.7,
-                longitude=-111.4,
-            )
-        ),
-    ]
-    for i, src in enumerate(rmi_sources, start=1):
-        src.id = i
-
-    # CC Reservoir sources are intentionally omitted from the dev seed profile;
-    # the CCReservoirsSourceModel table is still created from SQLAlchemy metadata.
-    cc_sources: list[CCReservoirsSourceModel] = []
-
-    return gem_sources, wm_sources, rmi_sources, cc_sources
-
-
 def create_seed_resources(user: UserEntity) -> list[ResourceModel]:
     resources = [
-        ResourceModel.create(user, name="Multi-Source Asset", country="USA"),
-        ResourceModel.create(user, name="Single Source Asset", country="GBR"),
+        ResourceModel.create(user, name="Resource Foo01"),
+        ResourceModel.create(user, name="Resource Bar01"),
     ]
     for i, res in enumerate(resources, start=1):
         res.id = i
     return resources
-
-
-def create_seed_memberships(
-    user: UserEntity,
-    resources: list[ResourceModel],
-    gem_sources: list[GemSourceModel],
-    wm_sources: list[WMSourceModel],
-    rmi_sources: list[RMIManualSourceModel],
-) -> list[MembershipModel]:
-    memberships = [
-        MembershipModel.create(user, resources[0], "gem", gem_sources[0].id),
-        MembershipModel.create(user, resources[0], "wm", wm_sources[0].id),
-        MembershipModel.create(user, resources[0], "rmi", rmi_sources[0].id),
-        MembershipModel.create(user, resources[1], "gem", gem_sources[1].id),
-    ]
-    for i, mem in enumerate(memberships, start=1):
-        mem.id = i
-    return memberships
 
 
 def reset_sequences(engine, tables: Iterable[str]) -> None:
@@ -383,17 +310,8 @@ def seed_dev(engine) -> None:
             name=dev_model.name,
         )
 
-        gem_sources, wm_sources, rmi_sources, cc_sources = create_seed_sources()
-        session.add_all(gem_sources + wm_sources + rmi_sources + cc_sources)
-
         resources = create_seed_resources(user_entity)
-        resources = create_seed_resources(dev_entity)
         session.add_all(resources)
-
-        memberships = create_seed_memberships(
-            user_entity, resources, gem_sources, wm_sources, rmi_sources
-        )
-        session.add_all(memberships)
 
         session.commit()
 
@@ -401,9 +319,6 @@ def seed_dev(engine) -> None:
         engine,
         tables=[
             "users",
-            "gem_sources",
-            "wm_sources",
-            "rmi_manual_sources",
             "resources",
             "memberships",
         ],

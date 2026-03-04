@@ -1,11 +1,10 @@
 from datetime import datetime
 from typing import Any, ClassVar, Generic, TypeVar, get_args, get_origin
-from pydantic import TypeAdapter
+from pydantic import BaseModel, TypeAdapter
 from sqlalchemy import DateTime, ForeignKey, String, func
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from sqlalchemy.orm import Mapped, declarative_mixin, mapped_column
-from stitch.api.entities import SourceBase
 from .types import StitchJson
 
 
@@ -30,7 +29,7 @@ class UserAuditMixin:
     last_updated_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
 
-TPayload = TypeVar("TPayload", bound=SourceBase)
+TPayload = TypeVar("TPayload", bound=BaseModel)
 
 
 def _extract_payload_type(cls: type) -> type | None:
@@ -63,7 +62,9 @@ class PayloadMixin(Generic[TPayload]):
 
     @payload.inplace.setter
     def _payload_setter(self, value: TPayload):
-        self.source = value.source
+        # Domain-agnostic: if the payload has a `source` attribute, keep it;
+        # otherwise set a neutral default.
+        self.source = getattr(value, "source", "unknown")
         self._payload_data = value.model_dump(mode="json")
 
     @payload.inplace.expression
