@@ -23,7 +23,7 @@ export async function getResource(id, fetcher) {
 }
 
 export async function getOGFields(fetcher) {
-  const url = `${config.apiBaseUrl}/oilgasfields/`;
+  const url = `${config.apiBaseUrl}/oil_gas_fields/`;
   const response = await fetcher(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -33,7 +33,7 @@ export async function getOGFields(fetcher) {
 }
 
 export async function getOGField(id, fetcher) {
-  const url = `${config.apiBaseUrl}/oilgasfields/${id}`;
+  const url = `${config.apiBaseUrl}/oil_gas_fields/${id}`;
   const response = await fetcher(url);
   if (!response.ok) {
     const error = new Error(`HTTP error! status: ${response.status}`);
