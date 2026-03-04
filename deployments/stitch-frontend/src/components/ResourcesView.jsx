@@ -2,12 +2,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useResources } from "../hooks/useResources";
 import FetchButton from "./FetchButton";
 import ClearCacheButton from "./ClearCacheButton";
-import ResourcesList from "./ResourcesList";
+import ResourcesTable from "./ResourcesTable";
 import { resourceKeys } from "../queries/resources";
 
 export default function ResourcesView({ className, endpoint }) {
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, error, refetch } = useResources();
+  const { data, isLoading, isError, refetch } = useResources();
 
   const handleClear = () => {
     queryClient.setQueryData(resourceKeys.lists(), []);
@@ -26,12 +26,7 @@ export default function ResourcesView({ className, endpoint }) {
           disabled={!data?.length && !isError}
         />
       </div>
-      <ResourcesList
-        resources={data}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-      />
+      <ResourcesTable resources={data} />
     </div>
   );
 }
