@@ -1,4 +1,3 @@
-from collections import defaultdict
 from enum import StrEnum
 from sqlalchemy import (
     ForeignKey,
@@ -12,13 +11,8 @@ from sqlalchemy import (
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .sources import (
-    SOURCE_TABLES,
-    SourceKey,
-    SourceModel,
-    SourceModelData,
-)
-from stitch.api.entities import IdType, User as UserEntity
+from stitch.models.types import IdType
+from stitch.api.entities import User as UserEntity
 from .common import Base
 from .mixins import TimestampMixin, UserAuditMixin
 from .types import PORTABLE_BIGINT
@@ -43,9 +37,7 @@ class MembershipModel(TimestampMixin, UserAuditMixin, Base):
     )
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     resource_id: Mapped[int] = mapped_column(ForeignKey("resources.id"), nullable=False)
-    source: Mapped[SourceKey] = mapped_column(
-        String(10), nullable=False
-    )  # "gem" | "wm"
+    source: Mapped[str] = mapped_column(String(10), nullable=False)  # "gem" | "wm"
     source_pk: Mapped[int] = mapped_column(PORTABLE_BIGINT, nullable=False)
     status: Mapped[MembershipStatus]
 
@@ -54,14 +46,14 @@ class MembershipModel(TimestampMixin, UserAuditMixin, Base):
         cls,
         created_by: UserEntity,
         resource: "ResourceModel",
-        source: SourceKey,
+        source: str,
         source_pk: IdType,
         status: MembershipStatus = MembershipStatus.ACTIVE,
     ):
         model = cls(
             resource_id=resource.id,
             source=source,
-            source_pk=str(source_pk),
+            source_pk=int(source_pk),
             status=status,
             created_by_id=created_by.id,
             last_updated_by_id=created_by.id,
@@ -97,23 +89,6 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
     # SQLAlchemy will automatically see the foreign key `memberships.resource_id`
     # and configure the appropriate SQL statement to load the membership objects
     memberships: Mapped[list[MembershipModel]] = relationship()
-
-    async def get_source_data(self, session: AsyncSession):
-        pks_by_src: dict[SourceKey, set[int]] = defaultdict(set)
-        for mem in self.memberships:
-            if mem.status == MembershipStatus.ACTIVE:
-                pks_by_src[mem.source].add(mem.source_pk)
-
-        results: dict[SourceKey, dict[IdType, SourceModel]] = defaultdict(dict)
-        for src, pks in pks_by_src.items():
-            model_cls = SOURCE_TABLES.get(src)
-            if model_cls is None:
-                continue
-            stmt = select(model_cls).where(model_cls.id.in_(pks))
-            for src_model in await session.scalars(stmt):
-                results[src][src_model.id] = src_model
-
-        return SourceModelData(**results)
 
     async def get_root(self, session: AsyncSession):
         root = await session.scalar(self.__class__._root_select(self.id))
