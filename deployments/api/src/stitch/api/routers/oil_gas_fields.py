@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from collections.abc import Sequence
 
 from fastapi import APIRouter, HTTPException
@@ -20,18 +21,22 @@ router = APIRouter(prefix="/oil-gas-fields", tags=["oil_gas_fields"])
 
 @router.post("/", response_model=OGFieldView)
 async def create_oil_gas_field(
-    payload: OilGasFieldBase,
+    payload: dict[str, Any],
     uow: UnitOfWorkDep,
     user: CurrentUser,
 ):
     session: AsyncSession = uow.session
+
+    # Validate to the canonical package model (drops/ignores unknown fields),
+    # but keep raw input in original_payload for traceability.
+    domain = OilGasFieldBase.model_validate(payload)
 
     # Create the generic resource first (label derived from OG name)
     created_res = await resource_actions.create(
         session=session,
         user=user,
         resource=resource_actions.CreateResource(
-            name=payload.name
+            name=domain.name
         ),  # adjust import if CreateResource lives elsewhere in your branch
     )
 
@@ -40,12 +45,14 @@ async def create_oil_gas_field(
         created_by_id=user.id,
         last_updated_by_id=user.id,
     )
-    og.payload = payload
+    og.original_payload = payload
+    og.payload = domain
+    og.set_domain(domain)
     session.add(og)
     await session.flush()
 
     # Package response type
-    return OGFieldView(id=og.resource_id, **payload.model_dump())
+    return OGFieldView(id=og.resource_id, **domain.model_dump())
 
 
 @router.get("/", response_model=Sequence[OGFieldView])
