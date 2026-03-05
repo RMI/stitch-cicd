@@ -56,7 +56,7 @@ async def create_oil_gas_field(
 
 
 @router.get("/", response_model=Sequence[OGFieldView])
-async def list_oil_gas_fields(uow: UnitOfWorkDep):
+async def list_oil_gas_fields(uow: UnitOfWorkDep, user: CurrentUser):
     session: AsyncSession = uow.session
     rows = (await session.execute(select(OilGasFieldModel))).scalars().all()
 
@@ -68,7 +68,7 @@ async def list_oil_gas_fields(uow: UnitOfWorkDep):
 
 
 @router.get("/{id}", response_model=OGFieldView)
-async def get_oil_gas_field(id: int, uow: UnitOfWorkDep):
+async def get_oil_gas_field(id: int, uow: UnitOfWorkDep, user: CurrentUser):
     session: AsyncSession = uow.session
     row = await session.get(OilGasFieldModel, id)
     if row is None:
