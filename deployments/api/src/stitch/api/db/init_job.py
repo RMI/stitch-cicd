@@ -5,6 +5,7 @@ import sys
 import time
 from enum import Enum
 from dataclasses import dataclass
+from typing import Any
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import OperationalError
@@ -14,7 +15,7 @@ from stitch.api.db.model import (
     ResourceModel,
     StitchBase,
     UserModel,
-    OilGasFieldModel,
+    OilGasFieldSourceModel,
 )
 from stitch.api.entities import (
     User as UserEntity,
@@ -274,35 +275,48 @@ def create_seed_resources(user: UserEntity) -> list[ResourceModel]:
     return resources
 
 
-def create_seed_oil_gas_fields(
+def create_seed_oil_gas_source_fields(
     user: UserEntity,
     resources: list[ResourceModel],
-) -> list[OilGasFieldModel]:
+) -> list[OilGasFieldSourceModel]:
     """Create example OilGasField rows linked 1:1 with seeded resources."""
 
-    # Construct payloads using the package model
-    payloads = [
-        OilGasFieldBase(
-            name="Permian Alpha",
-            country="USA",
-            basin="Permian",
-        ),
-        OilGasFieldBase(
-            name="North Sea Bravo",
-            country="GBR",
-            basin="North Sea",
-        ),
+    raw_payloads: list[dict[str, Any]] = [
+        # pretend this came from some upstream system (GEM/WM/etc)
+        {
+            "name": "Permian Alpha",
+            "country": "USA",
+            "basin": "Permian",
+            # extra keys demonstrate why we keep original_payload
+            "upstream_id": "seed-gem-0001",
+            "notes": "seed example",
+        },
+        {
+            "name": "North Sea Bravo",
+            "country": "GBR",
+            "basin": "North Sea",
+            "upstream_id": "seed-wm-0002",
+            "notes": "seed example",
+        },
     ]
 
-    og_models: list[OilGasFieldModel] = []
+    og_models: list[OilGasFieldSourceModel] = []
 
-    for resource, payload in zip(resources, payloads):
-        model = OilGasFieldModel(
-            resource_id=resource.id,
+    for resource, raw in zip(resources, raw_payloads):
+        domain = OilGasFieldBase.model_validate(raw)
+        model = OilGasFieldSourceModel(
             created_by_id=user.id,
             last_updated_by_id=user.id,
         )
-        model.payload = payload
+        # Raw input (includes extra fields not in OilGasFieldBase)
+        model.original_payload = raw
+        # Canonical validated payload
+        model.payload = raw
+        model.name = domain.name
+        model.country = domain.country
+        model.basin = domain.basin
+        model.source = "dev-seed"
+        # Populate domain columns for queryability
         og_models.append(model)
 
     return og_models
@@ -330,7 +344,7 @@ def seed_dev(engine) -> None:
         session.flush()
         #
         # Add sample OilGasField rows for the first two resources only
-        og_fields = create_seed_oil_gas_fields(user_entity, resources)
+        og_fields = create_seed_oil_gas_source_fields(user_entity, resources)
         session.add_all(og_fields)
 
         session.commit()
