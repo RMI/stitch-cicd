@@ -61,6 +61,7 @@ async def get_source(session, id: int) -> OilGasFieldSourceModel:
         )
     return model
 
+
 async def list_og_resources(session):
     stmt = (
         select(ResourceModel)

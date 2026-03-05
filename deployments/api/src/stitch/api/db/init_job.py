@@ -279,8 +279,8 @@ def create_seed_resources(user: UserEntity) -> list[ResourceModel]:
 def create_seed_memberships(
     user: UserEntity,
     resources: list[ResourceModel],
-    sources: list[OilGasFieldSourceModel]
-    ) -> list[MembershipModel]:
+    sources: list[OilGasFieldSourceModel],
+) -> list[MembershipModel]:
     memberships = [
         MembershipModel.create(user, resources[0], "og_field", 1),
         MembershipModel.create(user, resources[1], "og_field", 2),
@@ -362,9 +362,7 @@ def seed_dev(engine) -> None:
         og_fields = create_seed_oil_gas_source_fields(user_entity, resources)
         session.add_all(og_fields)
 
-        memberships = create_seed_memberships(
-            user_entity, resources, og_fields
-        )
+        memberships = create_seed_memberships(user_entity, resources, og_fields)
         session.add_all(memberships)
 
         session.commit()

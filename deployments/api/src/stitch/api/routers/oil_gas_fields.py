@@ -31,9 +31,7 @@ async def create_oil_gas_field(
 
     # 1) create a generic resource
     resource = await resource_actions.create(
-        session=session,
-        user=user,
-        resource=CreateResource(name=raw_body.get("name"))
+        session=session, user=user, resource=CreateResource(name=raw_body.get("name"))
     )
 
     # 2) create canonical domain source
@@ -47,6 +45,7 @@ async def create_oil_gas_field(
     await attach_to_resource(session, resource.id, src, user)
 
     return resource
+
 
 @router.get("/", response_model=list[Resource])
 async def list_oil_gas_fields(uow: UnitOfWorkDep, user: CurrentUser):
