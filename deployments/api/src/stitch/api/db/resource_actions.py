@@ -47,7 +47,6 @@ def resource_model_to_empty_entity(model: ResourceModel):
     return Resource(
         id=model.id,
         name=model.name,
-        country=model.country,
         source_data=SourceData(),
         constituents=[],
         created=model.created,
@@ -71,7 +70,6 @@ async def resource_model_to_entity(
     return Resource(
         id=model.id,
         name=model.name,
-        country=model.country,
         source_data=source_data,
         constituents=constituents,
         created=model.created,
@@ -110,7 +108,7 @@ async def create(session: AsyncSession, user: CurrentUser, resource: CreateResou
     - create membership
     """
     model = ResourceModel.create(
-        created_by=user, name=resource.name, country=resource.country
+        created_by=user, name=resource.name
     )
     session.add(model)
     if resource.source_data:

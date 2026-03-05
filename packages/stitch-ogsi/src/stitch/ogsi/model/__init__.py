@@ -61,10 +61,7 @@ OGFieldSource = Annotated[
 
 
 class OGSourcePayload(SourcePayload):
-    gem: Sequence[GemSource] = Field(default_factory=lambda: [])
-    wm: Sequence[WoodMacSource] = Field(default_factory=lambda: [])
-    rmi: Sequence[RMISource] = Field(default_factory=lambda: [])
-    llm: Sequence[LLMSource] = Field(default_factory=lambda: [])
+    og_field: Sequence[OGFieldSource] = Field(default_factory=lambda: [])
 
 
 class OGFieldResource(OilGasFieldBase, Resource[int, OGSourcePayload]): ...

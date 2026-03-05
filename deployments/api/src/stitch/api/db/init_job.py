@@ -282,8 +282,8 @@ def create_seed_memberships(
     sources: list[OilGasFieldSourceModel],
 ) -> list[MembershipModel]:
     memberships = [
-        MembershipModel.create(user, resources[0], "og_field", 1),
-        MembershipModel.create(user, resources[1], "og_field", 2),
+        MembershipModel.create(user, resources[0], "gem", 1),
+        MembershipModel.create(user, resources[1], "wm", 2),
     ]
     for i, mem in enumerate(memberships, start=1):
         mem.id = i

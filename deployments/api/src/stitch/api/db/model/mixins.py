@@ -5,6 +5,7 @@ from sqlalchemy import DateTime, ForeignKey, String, func
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from sqlalchemy.orm import Mapped, declarative_mixin, mapped_column
+from stitch.api.entities import SourceBase
 from .types import StitchJson
 
 
@@ -29,7 +30,7 @@ class UserAuditMixin:
     last_updated_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
 
-TPayload = TypeVar("TPayload", bound=BaseModel)
+TPayload = TypeVar("TPayload", bound=SourceBase)
 
 
 def _extract_payload_type(cls: type) -> type | None:

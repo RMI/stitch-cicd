@@ -50,7 +50,7 @@ async def attach_to_resource(
         MembershipModel.create(
             created_by=created_by,
             resource=session.get(ResourceModel, resource_id),
-            source="og_field",
+            source="rmi",
             source_pk=source_row.id,
         )
     )
@@ -70,7 +70,6 @@ async def list_og_resources(session):
         select(ResourceModel)
         .where(ResourceModel.repointed_id.is_(None))
         .join(MembershipModel, MembershipModel.resource_id == ResourceModel.id)
-        .where(MembershipModel.source == "og_field")
         .options(selectinload(ResourceModel.memberships))
         .distinct()
     )

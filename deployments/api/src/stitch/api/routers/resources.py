@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from stitch.api.db import resource_actions
 from stitch.api.db.config import UnitOfWorkDep
 from stitch.api.auth import CurrentUser
-from stitch.api.resources.entities import CreateResource, Resource
+from stitch.api.entities import CreateResource, Resource
 
 
 router = APIRouter(
