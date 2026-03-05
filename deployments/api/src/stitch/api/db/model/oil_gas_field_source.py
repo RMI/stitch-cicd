@@ -6,12 +6,8 @@ from sqlalchemy import (
     Integer,
     String,
     JSON,
-    Column,
-    ForeignKey,
 )
 from sqlalchemy.orm import Mapped, mapped_column
-
-from stitch.ogsi.model.og_field import OilGasFieldBase
 
 from .common import Base
 from .mixins import TimestampMixin, UserAuditMixin

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from enum import StrEnum
 from sqlalchemy import (
     ForeignKey,
@@ -10,6 +11,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .sources import (
+    SOURCE_TABLES,
+    SourceKey,
+    SourceModel,
+    SourceModelData,
+)
 
 from stitch.models.types import IdType
 from stitch.api.entities import User as UserEntity
@@ -52,7 +60,7 @@ class MembershipModel(TimestampMixin, UserAuditMixin, Base):
         model = cls(
             resource_id=resource.id,
             source=source,
-            source_pk=int(source_pk),
+            source_pk=str(source_pk),
             status=status,
             created_by_id=created_by.id,
             last_updated_by_id=created_by.id,

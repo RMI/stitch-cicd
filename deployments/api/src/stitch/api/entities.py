@@ -22,7 +22,8 @@ class HasId(Protocol):
     def id(self) -> IdType: ...
 
 
-TSourceKey = TypeVar("TSourceKey", bound=OGSISrcKey)
+SourceKey = OGSISrcKey
+TSourceKey = TypeVar("TSourceKey", bound=SourceKey)
 
 
 class Timestamped(BaseModel):
@@ -40,7 +41,7 @@ class SourceBase(BaseModel, Generic[TSourceKey]):
 
 
 class SourceRef(BaseModel):
-    source: OGSISrcKey
+    source: SourceKey
     id: int
 
 
@@ -68,7 +69,7 @@ class CreateResourceSourceData(BaseModel):
 
     og_field: Sequence[OilGasFieldBase | int] = Field(default_factory=list)
 
-    def get(self, key: OGSISrcKey):
+    def get(self, key: SourceKey):
         raise ValueError(f"Unknown source key: {key}")
 
 
