@@ -36,11 +36,11 @@ async def create_oil_gas_field_source(
 
 
 @router.get("/", response_model=Sequence[OGFieldSource])
-async def query_oil_gas_field_sources(uow: UnitOfWorkDep):
+async def query_oil_gas_field_sources(uow: UnitOfWorkDep, user: CurrentUser):
     # TODO: this **will** need to get paged and/or filtered
     return await og_field_source_actions.list_og_sources(session=uow.session)
 
 
 @router.get("/{id}", response_model=OGFieldSource)
-async def get_oil_gas_field(id: int, uow: UnitOfWorkDep):
+async def get_oil_gas_field(id: int, uow: UnitOfWorkDep, user: CurrentUser):
     return await og_field_source_actions.get_source(session=uow.session, id=id)
