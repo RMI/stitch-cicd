@@ -59,15 +59,15 @@ OGFieldSource = Annotated[
     Field(discriminator="source"),
 ]
 
-class OGFieldProvenance(BaseModel):
- """Which source "won" for each coalesced field."""
 
- # Keys are OilGasFieldBase field names, values are the `source` discriminator.
- by_field: dict[str, OGSISrcKey] = Field(default_factory=dict)
+class OGFieldProvenance(BaseModel):
+    """Which source "won" for each coalesced field."""
+
+    # Keys are OilGasFieldBase field names, values are the `source` discriminator.
+    by_field: dict[str, OGSISrcKey] = Field(default_factory=dict)
 
 
 class OGFieldResource(OilGasFieldBase, Resource[int, OGFieldSource]):
-
     def to_view(self) -> "OGFieldView":
         """
         Coalesce all source payloads into a single `OGFieldView`.
@@ -83,9 +83,9 @@ class OGFieldResource(OilGasFieldBase, Resource[int, OGFieldSource]):
             if v is None:
                 return True
             if isinstance(v, str) and v.strip() == "":
-               return True
+                return True
             if isinstance(v, (list, tuple, set, dict)) and len(v) == 0:
-               return True
+                return True
             return False
 
         merged: dict[str, Any] = {}
@@ -117,6 +117,7 @@ class OGFieldResource(OilGasFieldBase, Resource[int, OGFieldSource]):
             provenance=OGFieldProvenance(by_field=prov),
             **merged,
         )
+
 
 class OGFieldView(OilGasFieldBase):
     id: int
