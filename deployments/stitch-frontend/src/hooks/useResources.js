@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuthenticatedQuery } from "./useAuthenticatedQuery";
 import { resourceQueries, resourceKeys } from "../queries/resources";
-import mockResources from "../../mockData/og_field_resources.json";
+import mockResources from "../mockData/og_field_resources.json";
 
 const USE_MOCK_DATA = true;
 
