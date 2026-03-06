@@ -35,7 +35,12 @@ async def get_all(session: AsyncSession) -> Sequence[Resource]:
 
 
 async def get(session: AsyncSession, id: int):
-    model = await session.get(ResourceModel, id)
+    stmt = (
+        select(ResourceModel)
+        .options(selectinload(ResourceModel.memberships))
+        .where(ResourceModel.id == id)
+    )
+    model = await session.scalar(stmt)
     if model is None:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail=f"No Resource with id `{id}` found."
