@@ -36,6 +36,6 @@ function useResourceMock(id) {
   });
 }
 
-// Export one implementation based on the compile-time flag. Assign at module level 
+// Export one implementation based on the compile-time flag. Assign at module level
 export const useResources = USE_MOCK_DATA ? useResourcesMock : useResourcesReal;
 export const useResource = USE_MOCK_DATA ? useResourceMock : useResourceReal;

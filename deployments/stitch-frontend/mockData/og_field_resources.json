@@ -730,10 +730,7 @@
       "llm": []
     },
     "repointed_to": null,
-    "constituents": [
-      6,
-      7
-    ],
+    "constituents": [6, 7],
     "name": "Ghawar Complex",
     "country": "SAU",
     "latitude": 52.11,
@@ -1084,10 +1081,7 @@
       "llm": []
     },
     "repointed_to": 14,
-    "constituents": [
-      8,
-      9
-    ],
+    "constituents": [8, 9],
     "name": "Rumaila Combined",
     "country": "IRQ",
     "latitude": 8.35,
@@ -1364,10 +1358,7 @@
       "llm": []
     },
     "repointed_to": null,
-    "constituents": [
-      10,
-      13
-    ],
+    "constituents": [10, 13],
     "name": "Rumaila Complex",
     "country": "IRQ",
     "latitude": 8.35,

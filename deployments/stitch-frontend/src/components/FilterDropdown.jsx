@@ -15,7 +15,11 @@ export default function FilterDropdown({ label, options, selected, onChange }) {
   }, []);
 
   function toggleValue(value) {
-    onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value]);
+    onChange(
+      selected.includes(value)
+        ? selected.filter((v) => v !== value)
+        : [...selected, value],
+    );
   }
 
   const selectedCount = selected.length;
@@ -37,7 +41,9 @@ export default function FilterDropdown({ label, options, selected, onChange }) {
             {selectedCount}
           </span>
         )}
-        <span className={`text-xs scale-y-60 text-dark-gray`}>{open ? "▲" : "▼"}</span>
+        <span className={`text-xs scale-y-60 text-dark-gray`}>
+          {open ? "▲" : "▼"}
+        </span>
       </button>
 
       {open && (
@@ -55,7 +61,9 @@ export default function FilterDropdown({ label, options, selected, onChange }) {
                       onChange={() => toggleValue(value)}
                       className="accent-blue-500"
                     />
-                    <span className="flex-1 text-sm text-gray-700">{value}</span>
+                    <span className="flex-1 text-sm text-gray-700">
+                      {value}
+                    </span>
                     <span className="text-xs text-gray-400">{count}</span>
                   </label>
                 </li>

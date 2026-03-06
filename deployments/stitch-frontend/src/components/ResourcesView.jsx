@@ -12,7 +12,9 @@ import { resourceKeys } from "../queries/resources";
 function applyFilters(resources, filters) {
   if (!resources) return resources;
   return resources.filter((resource) =>
-    Object.entries(filters).every(([field, values]) => !values.length || values.includes(resource[field])),
+    Object.entries(filters).every(
+      ([field, values]) => !values.length || values.includes(resource[field]),
+    ),
   );
 }
 
@@ -35,11 +37,18 @@ export default function ResourcesView({ className, endpoint }) {
       </div>
       <div className="mb-4 flex gap-3">
         <FetchButton onFetch={() => refetch()} isLoading={isLoading} />
-        <ClearCacheButton onClear={handleClear} disabled={!data?.length && !isError} />
+        <ClearCacheButton
+          onClear={handleClear}
+          disabled={!data?.length && !isError}
+        />
       </div>
       {data?.length > 0 && (
         <div className="mb-4">
-          <FilterBar resources={data} filters={filters} onFiltersChange={setFilters} />
+          <FilterBar
+            resources={data}
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
         </div>
       )}
       <ResourcesTable resources={filteredData} />

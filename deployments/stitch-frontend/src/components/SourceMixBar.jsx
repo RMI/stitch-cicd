@@ -2,7 +2,7 @@ const SOURCES = ["gem", "wm", "rmi", "llm"];
 
 const SOURCE_COLORS = {
   gem: "#4AE3D9", // teal
-  wm: "#3B44EC",  // purple
+  wm: "#3B44EC", // purple
   rmi: "#F4A70B", // orange
   llm: "#57A0FF", // light blue
 };
@@ -12,7 +12,9 @@ export default function SourceMixBar({ sourceData }) {
   const total = counts.reduce((a, b) => a + b, 0);
 
   if (total === 0) {
-    return <div className="h-3 w-full rounded bg-gray-200" title="No source data" />;
+    return (
+      <div className="h-3 w-full rounded bg-gray-200" title="No source data" />
+    );
   }
 
   return (

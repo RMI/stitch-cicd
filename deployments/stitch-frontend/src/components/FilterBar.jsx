@@ -59,7 +59,9 @@ export default function FilterBar({ resources, filters, onFiltersChange }) {
                 aria-label={`Remove ${label}: ${value}`}
                 className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-gray-dark text-gray-light hover:bg-dark-gray hover:cursor-pointer"
               >
-                <span className="leading-none -translate-y-px font-bold">×</span>
+                <span className="leading-none -translate-y-px font-bold">
+                  ×
+                </span>
               </button>
             </span>
           ))}
