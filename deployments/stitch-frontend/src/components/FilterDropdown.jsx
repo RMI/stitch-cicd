@@ -33,7 +33,7 @@ export default function FilterDropdown({ label, options, selected, onChange }) {
       >
         {label}
         {isActive && (
-          <span className="rounded-full bg-gray-dark px-1.5 py-0.5 text-xs font-medium text-gray-light">
+          <span className="rounded-full bg-gray-dark px-1.5 min-w-5 py-0.5 text-xs font-medium text-gray-light">
             {selectedCount}
           </span>
         )}
