@@ -75,7 +75,7 @@ class OilGasFieldSourceModel(TimestampMixin, UserAuditMixin, Base):
     @classmethod
     def create(
         cls,
-        created_by: User,
+        created_by: UserEntity,
         source: OGSISrcKey,
         name: str | None = None,
         country: str | None = None,
@@ -125,7 +125,7 @@ class OilGasFieldSourceModel(TimestampMixin, UserAuditMixin, Base):
     def create_from_entity(cls, ent: OGFieldSource, created_by: User):
         cols = {col.key for col in inspect(cls).columns}
         kwargs = {k: val for k, val in ent.model_dump().items() if k in cols}
-        return cls(**kwargs, created_by=created_by, last_updated_by=created_by)
+        return cls(**kwargs, created_by_id=created_by.id, last_updated_by_id=created_by.id)
 
     def as_entity(self) -> OGFieldSource:
         return self.__class__.type_adapter.validate_python(self)
