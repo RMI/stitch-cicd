@@ -14,6 +14,17 @@ services:
       STITCH_DB_USER: stitch_app
       STITCH_DB_PASSWORD: ${STITCH_APP_PASSWORD:?STITCH_APP_PASSWORD must be set in .env}
       AUTH_DISABLED: "true"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2).read()\" || exit 1"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+      start_interval: 1s
 
     ports:
       - "8000:8000"
@@ -86,6 +97,23 @@ services:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
     ports:
       - "3000:80"
+
+  seed:
+    build:
+      context: .
+      dockerfile: deployments/seed/Dockerfile
+    env_file:
+      - .env
+    environment:
+      # Inside compose network, talk to the api service by name.
+      API_BASE_URL: ${SEED_API_BASE_URL:-http://api:8000/api/v1}
+      POST_COUNT: ${SEED_POST_COUNT:-5}
+      LOOP: ${SEED_LOOP:-false}
+      SLEEP_SECONDS: ${SEED_SLEEP_SECONDS:-5}
+    restart: "no"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   db_data:
