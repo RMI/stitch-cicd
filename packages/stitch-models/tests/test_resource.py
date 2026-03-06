@@ -115,7 +115,7 @@ class TestResourceSubclassingDiscriminatedUnion:
         bad_bar["label"] = 4
 
         with pytest.raises(ValidationError) as exc_info:
-            res = ResourceWithSrcUnion.model_validate(
+            ResourceWithSrcUnion.model_validate(
                 {"id": 1, "res_b": 4.5, "res_c": "hi", "source_data": [bad_bar]}
             )
 

@@ -1,5 +1,5 @@
 from typing import ClassVar
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from stitch.models.types import (
     CountryCodeAlpha3,

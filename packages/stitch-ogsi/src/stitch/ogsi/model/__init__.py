@@ -1,11 +1,9 @@
-from collections.abc import Sequence
 from typing import Annotated, Final
 
 from pydantic import Field
 from stitch.models import (
     Resource,
     Source,
-    SourcePayload,
 )
 
 from .og_field import OilGasFieldBase, OilGasOwner, OilGasOperator
@@ -29,6 +27,7 @@ __all__ = [
     "LocationType",
     "OilGasOwner",
     "OilGasOperator",
+    "OGSISrcKey",
 ]
 
 

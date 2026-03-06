@@ -7,7 +7,6 @@ documentation for how the models are intended to be used.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import datetime, timezone
 
 import pytest
 
