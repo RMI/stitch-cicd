@@ -75,7 +75,7 @@ class OilGasFieldSourceModel(TimestampMixin, UserAuditMixin, Base):
     @classmethod
     def create(
         cls,
-        created_by: UserEntity,
+        created_by: User,
         source: OGSISrcKey,
         name: str | None = None,
         country: str | None = None,
