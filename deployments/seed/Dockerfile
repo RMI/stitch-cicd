@@ -1,15 +1,39 @@
-FROM python:3.12-slim-trixie
+# ── base: Python + uv + third-party deps ─────────────────────────────
+FROM python:3.12-slim-trixie AS base
 
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=0 \
+    UV_NO_DEV=1
+
+COPY --from=ghcr.io/astral-sh/uv:0.9.25 /uv /uvx /bin/
+
 WORKDIR /app
 
-# Keep it dead-simple: no workspace/uv; just a tiny http client.
-RUN pip install --no-cache-dir httpx
+# Third-party deps only — cached until uv.lock changes.
+# All metadata via bind mounts (not copied into the layer).
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-workspace --package stitch-seed
 
-COPY ./deployments/seed/src /app/src
+# ── runtime target ────────────────────────────────────────────────────
+FROM base AS runtime
 
-# Make /app/src importable so `python -m seed` works.
-ENV PYTHONPATH="/app/src"
+RUN groupadd --system --gid 999 stitch-app \
+ && useradd --system --gid 999 --uid 999 --create-home stitch-app
+
+COPY ./deployments/seed /app/deployments/seed
+COPY ./packages /app/packages
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --package stitch-seed
+
+ENV PATH="/app/.venv/bin:$PATH"
+USER stitch-app
 
 # Sensible defaults (override in compose/env as needed)
 ENV API_BASE_URL="http://api:8000/api/v1" \
@@ -17,4 +41,4 @@ ENV API_BASE_URL="http://api:8000/api/v1" \
     LOOP="false" \
     SLEEP_SECONDS="5"
 
-CMD ["python", "-m", "seed"]
+CMD ["python", "-m", "stitch.seed"]
