@@ -382,6 +382,14 @@ class TestGetResourceActionIntegration:
         assert exc_info.value.status_code == 404
 
 
+class TestMergeResourceActionIntegration:
+    @pytest.mark.anyio
+    async def test_merge_creates_new_resource(
+        self, seeded_integration_session: AsyncSession, test_user: User
+    ):
+        """"""
+
+
 class TestCreateSourceDataActionIntegration:
     """Integration tests for resource_actions.create_source_data()."""
 
