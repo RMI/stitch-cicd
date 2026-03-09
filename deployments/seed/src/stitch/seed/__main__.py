@@ -1,11 +1,24 @@
 import json
 import os
+import logging
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 import httpx
 from jsonschema import Draft202012Validator
+
+logger = logging.getLogger("stitch.seed")
+
+
+def _configure_logging() -> None:
+    level_name = os.getenv("LOG_LEVEL", "INFO").upper()
+    level = getattr(logging, level_name, logging.INFO)
+
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    )
 
 
 _OPENAPI_CACHE: dict[str, Any] | None = None
@@ -19,7 +32,7 @@ def _env_int(name: str, default: int) -> int:
     try:
         return int(raw)
     except ValueError:
-        print(f"[seed] WARN: {name}={raw!r} is not an int; using {default}")
+        logger.warning("%s=%r is not an int; using %s", name, raw, default)
         return default
 
 
@@ -83,7 +96,7 @@ def _fetch_openapi(client: httpx.Client, openapi_url: str) -> dict[str, Any]:
     if _OPENAPI_CACHE is not None:
         return _OPENAPI_CACHE
 
-    print(f"[seed] fetching OpenAPI spec: {openapi_url}")
+    logger.info("Fetching OpenAPI spec: %s", openapi_url)
     resp = client.get(openapi_url)
     resp.raise_for_status()
     _OPENAPI_CACHE = resp.json()
@@ -138,7 +151,7 @@ def _validate_against_openapi(payload: dict[str, Any], client: httpx.Client, api
         resolved = _dereference(schema, openapi, seen=set())
         _REQUEST_SCHEMA_CACHE = {"schema": resolved, "path": path}
 
-        print(f"[seed] using OpenAPI request schema for POST {path}")
+        logger.info("Using OpenAPI request schema for POST %s", path)
 
     schema = _REQUEST_SCHEMA_CACHE["schema"]
     validator = Draft202012Validator(schema)
@@ -150,9 +163,9 @@ def _validate_against_openapi(payload: dict[str, Any], client: httpx.Client, api
         for e in errors[:3]:
             loc = "/".join(str(p) for p in e.path) or "<root>"
             lines.append(f"- {loc}: {e.message}")
-        raise RuntimeError(
-            "[seed] OpenAPI validation failed:\n" + "\n".join(lines)
-        )
+        message = "OpenAPI validation failed:\n" + "\n".join(lines)
+        logger.error(message)
+        raise RuntimeError(message)
 
 
 def build_og_field() -> dict[str, Any]:
@@ -199,35 +212,40 @@ def post_once(client: httpx.Client, base_url: str, i: int) -> None:
     url = f"{base_url.rstrip('/')}/oil-gas-fields/"
     payload = build_payload(i)
     _validate_against_openapi(payload, client, base_url)
-    print(f"[seed] POST {url}")
-    print(f"[seed] payload={json.dumps(payload, ensure_ascii=False)}")
+    logger.info("POST %s", url)
+    logger.debug("Payload: %s", json.dumps(payload, ensure_ascii=False))
 
     resp = client.post(url, json=payload)
-    print(f"[seed] status={resp.status_code}")
+    logger.info("Response status=%s", resp.status_code)
     try:
         body = resp.json()
     except Exception:
         body = resp.text
-    print(
-        f"[seed] response={json.dumps(body, ensure_ascii=False) if isinstance(body, (dict, list)) else body}"
+    logger.debug(
+        "Response body=%s",
+        json.dumps(body, ensure_ascii=False)
+        if isinstance(body, (dict, list))
+        else body,
     )
 
     resp.raise_for_status()
 
 
 def main() -> None:
+    _configure_logging()
     base_url = os.getenv("API_BASE_URL", "http://api:8000/api/v1")
     post_count = _env_int("POST_COUNT", 5)
     timeout_seconds = float(os.getenv("HTTP_TIMEOUT_SECONDS", "10"))
 
-    print("[seed] starting")
-    print(f"[seed] API_BASE_URL={base_url}")
+    logger.info("Seed starting")
+    logger.info("API_BASE_URL=%s", base_url)
+    logger.info("POST_COUNT=%s", post_count)
 
     with httpx.Client(timeout=timeout_seconds) as client:
         for i in range(1, post_count + 1):
             post_once(client, base_url, i)
 
-    print("[seed] done")
+    logger.info("Seed finished successfully")
 
 
 if __name__ == "__main__":
