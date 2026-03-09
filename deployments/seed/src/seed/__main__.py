@@ -1,17 +1,9 @@
 import json
 import os
-import time
 from datetime import datetime, timezone
 from typing import Any
 
 import httpx
-
-
-def _env_bool(name: str, default: bool = False) -> bool:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    return raw.strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
 def _env_int(name: str, default: int) -> int:
@@ -25,7 +17,7 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
-def build_og_field(i: int = 1) -> dict[str, Any]:
+def build_og_field() -> dict[str, Any]:
     return {
         "name": "turquoise 1080p hard drive",
         "country": "XPG",
@@ -87,24 +79,14 @@ def post_once(client: httpx.Client, base_url: str, i: int) -> None:
 def main() -> None:
     base_url = os.getenv("API_BASE_URL", "http://api:8000/api/v1")
     post_count = _env_int("POST_COUNT", 5)
-    loop = _env_bool("LOOP", False)
-    sleep_seconds = _env_int("SLEEP_SECONDS", 5)
     timeout_seconds = float(os.getenv("HTTP_TIMEOUT_SECONDS", "10"))
 
     print("[seed] starting")
     print(f"[seed] API_BASE_URL={base_url}")
-    print(f"[seed] POST_COUNT={post_count} LOOP={loop} SLEEP_SECONDS={sleep_seconds}")
 
     with httpx.Client(timeout=timeout_seconds) as client:
-        if loop:
-            n = 0
-            while True:
-                n += 1
-                post_once(client, base_url, n)
-                time.sleep(sleep_seconds)
-        else:
-            for i in range(1, post_count + 1):
-                post_once(client, base_url, i)
+        for i in range(1, post_count + 1):
+            post_once(client, base_url, i)
 
     print("[seed] done")
 
