@@ -217,7 +217,7 @@ export const resourceQueries = {
 ```js
 // src/hooks/useResources.js
 export const useResources = USE_MOCK_DATA ? useResourcesMock : useResourcesReal;
-export const useResource  = USE_MOCK_DATA ? useResourceMock  : useResourceReal;
+export const useResource = USE_MOCK_DATA ? useResourceMock : useResourceReal;
 ```
 
 Each named function always calls the same hooks unconditionally, satisfying React's rules of hooks. The choice between real and mock is made once at module evaluation time.
@@ -331,9 +331,9 @@ Filter fields are configured in one place:
 ```js
 // src/config/filters.js
 export const FILTER_FIELDS = [
-  { key: "region",         label: "Region" },
+  { key: "region", label: "Region" },
   { key: "state_province", label: "State/Province" },
-  { key: "basin",          label: "Basin" },
+  { key: "basin", label: "Basin" },
 ];
 ```
 
