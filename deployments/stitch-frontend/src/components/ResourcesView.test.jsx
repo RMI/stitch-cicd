@@ -112,8 +112,12 @@ describe("ResourcesView", () => {
     renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
 
     const filterBar = screen.getByTestId("filter-bar");
-    expect(within(filterBar).getByRole("button", { name: /region/i })).toBeInTheDocument();
-    expect(within(filterBar).getByRole("button", { name: /basin/i })).toBeInTheDocument();
+    expect(
+      within(filterBar).getByRole("button", { name: /region/i }),
+    ).toBeInTheDocument();
+    expect(
+      within(filterBar).getByRole("button", { name: /basin/i }),
+    ).toBeInTheDocument();
   });
 
   it("does not show filter bar when no data", () => {
