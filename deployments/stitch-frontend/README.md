@@ -87,21 +87,23 @@ npm run test:coverage
 
 ## Mock Data
 
-The app supports a compile-time mock data mode that bypasses the API and Auth0 entirely, useful for local UI development.
+The app supports a mock data mode for local UI development. When enabled, `useResources()` and `useResource(id)` serve data directly from `mockData/og_field_resources.json` instead of hitting the real API.
 
-**Toggle:** set `USE_MOCK_DATA` in `src/hooks/useResources.js`:
+**Note:** mock mode only affects the data hooks. `AuthGate` still enforces Auth0 authentication, so you must still have Auth0 configured to reach any page. If you want to develop without Auth0, that requires a separate change to bypass `AuthGate`.
 
-```js
-const USE_MOCK_DATA = true; // ← flip to false to use the real API
+**Toggle:** set `VITE_USE_MOCK_DATA` in your `.env.local` file:
+
+```
+VITE_USE_MOCK_DATA=true
 ```
 
-When `true`, `useResources()` and `useResource(id)` serve data directly from `mockData/og_field_resources.json`. The real API implementations are preserved and selected at module-load time — no conditional hook calls at render time.
-
-To drive the flag from the environment instead:
+The flag is read at compile time in `src/hooks/useResources.js`:
 
 ```js
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === "true";
 ```
+
+The real and mock implementations are separate functions selected once at module-load time — no conditional hook calls at render time.
 
 ## API
 

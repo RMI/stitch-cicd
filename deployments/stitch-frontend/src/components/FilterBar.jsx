@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import FilterDropdown from "./FilterDropdown";
 import { FILTER_FIELDS, EMPTY_FILTERS } from "../config/filters";
 
@@ -14,6 +15,15 @@ function buildOptions(resources, field) {
 }
 
 export default function FilterBar({ resources, filters, onFiltersChange }) {
+  // Memoize per-field options so O(n) passes only re-run when `resources` changes,
+  // not on every filter interaction.
+  const optionsByField = useMemo(
+    () =>
+      Object.fromEntries(
+        FILTER_FIELDS.map(({ key }) => [key, buildOptions(resources, key)]),
+      ),
+    [resources],
+  );
   // Flatten active filters into chips: [{ field, label, value }, ...]
   const chips = FILTER_FIELDS.flatMap(({ key, label }) =>
     (filters[key] ?? []).map((value) => ({ field: key, label, value })),
@@ -31,14 +41,14 @@ export default function FilterBar({ resources, filters, onFiltersChange }) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-testid="filter-bar">
       {/* Dropdowns row */}
       <div className="flex flex-wrap gap-2">
         {FILTER_FIELDS.map(({ key, label }) => (
           <FilterDropdown
             key={key}
             label={label}
-            options={buildOptions(resources, key)}
+            options={optionsByField[key]}
             selected={filters[key] ?? []}
             onChange={(values) => handleDropdownChange(key, values)}
           />
@@ -53,11 +63,13 @@ export default function FilterBar({ resources, filters, onFiltersChange }) {
               key={`${field}:${value}`}
               className="flex items-center gap-1 rounded-full bg-gray-light px-2 py-1.5 text-xs text-gray-dark border-gray-button-outline border"
             >
-              <span className="font-medium"></span>&nbsp;{value}
+              <span>
+                <span className="font-medium">{label}:</span> {value}
+              </span>
               <button
                 onClick={() => removeChip(field, value)}
                 aria-label={`Remove ${label}: ${value}`}
-                className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-gray-dark text-gray-light hover:bg-dark-gray hover:cursor-pointer"
+                className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-gray-dark text-gray-light hover:bg-gray-dark/80 hover:cursor-pointer"
               >
                 <span className="leading-none -translate-y-px font-bold">
                   ×

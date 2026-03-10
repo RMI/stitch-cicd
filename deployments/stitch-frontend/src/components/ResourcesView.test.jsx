@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen, within } from "@testing-library/react";
 import { renderWithQueryClient } from "../test/utils";
 import ResourcesView from "./ResourcesView";
 import { useResources } from "../hooks/useResources";
@@ -64,21 +63,17 @@ describe("ResourcesView", () => {
     expect(screen.getByRole("button", { name: /clear cache/i })).toBeDisabled();
   });
 
-  it("shows loading state while fetching", async () => {
-    const user = userEvent.setup();
-    const refetch = vi.fn(() => {
-      vi.mocked(useResources).mockReturnValue({
-        ...defaultHookReturn,
-        isLoading: true,
-      });
+  it("shows loading state while fetching", () => {
+    vi.mocked(useResources).mockReturnValue({
+      ...defaultHookReturn,
+      isLoading: true,
     });
-    vi.mocked(useResources).mockReturnValue({ ...defaultHookReturn, refetch });
 
     renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
 
-    await user.click(screen.getByRole("button", { name: /fetch/i }));
-
-    expect(refetch).toHaveBeenCalled();
+    const fetchButton = screen.getByRole("button", { name: /loading/i });
+    expect(fetchButton).toBeInTheDocument();
+    expect(fetchButton).toBeDisabled();
   });
 
   it("renders table rows when data is available", () => {
@@ -115,16 +110,19 @@ describe("ResourcesView", () => {
 
     renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
 
-    expect(screen.getByRole("button", { name: /region/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /basin/i })).toBeInTheDocument();
+    const filterBar = screen.getByTestId("filter-bar");
+    expect(
+      within(filterBar).getByRole("button", { name: /region/i }),
+    ).toBeInTheDocument();
+    expect(
+      within(filterBar).getByRole("button", { name: /basin/i }),
+    ).toBeInTheDocument();
   });
 
   it("does not show filter bar when no data", () => {
     renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
 
-    expect(
-      screen.queryByRole("button", { name: /region/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("filter-bar")).not.toBeInTheDocument();
   });
 
   it("enables Clear Cache button when data is loaded", () => {

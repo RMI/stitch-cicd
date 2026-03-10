@@ -49,11 +49,12 @@ export default function ResourceDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const numericId = Number(id);
+  const validId = Number.isFinite(numericId);
   const { data, isLoading, isError, refetch } = useResource(numericId);
 
   useEffect(() => {
-    refetch();
-  }, [numericId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (validId) refetch();
+  }, [numericId, validId, refetch]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -64,7 +65,8 @@ export default function ResourceDetailPage() {
         ← Back
       </button>
 
-      {isLoading && <p className="text-gray-medium">Loading…</p>}
+      {!validId && <p className="text-red-500">Invalid resource ID.</p>}
+      {isLoading && <p className="text-gray-500">Loading…</p>}
       {isError && <p className="text-red-500">Failed to load resource.</p>}
 
       {data && (
