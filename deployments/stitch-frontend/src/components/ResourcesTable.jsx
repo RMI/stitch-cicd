@@ -64,7 +64,7 @@ function SortIndicator({ column, sortConfig }) {
     return <span className="ml-1 text-gray-medium">⬍</span>;
   }
   return (
-    <span className="ml-1 inline-block scale-y-60 text-dark-gray">
+    <span className="ml-1 inline-block scale-y-60 text-gray-dark">
       {sortConfig.direction === "asc" ? "▲" : "▼"}
     </span>
   );
