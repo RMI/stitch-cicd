@@ -6,6 +6,9 @@ from typing import Any, Iterable, get_args
 
 from faker import Faker
 
+import json
+from pathlib import Path
+
 from stitch.ogsi.model.types import (
     FieldStatus,
     LocationType,
@@ -13,6 +16,30 @@ from stitch.ogsi.model.types import (
     ProductionConventionality,
 )
 
+def _load_static_payloads() -> list[dict[str, Any]]:
+    """
+    Load static payloads from JSON file.
+    File path can be overridden with STATIC_PAYLOAD_FILE env var.
+    """
+    path_str = os.getenv(
+        "STATIC_PAYLOAD_FILE",
+        "/mnt/data/static_payloads.json",
+    )
+
+    path = Path(path_str)
+    if not path.exists():
+        return []
+
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return []
+
+    if not isinstance(data, list):
+        return []
+
+    return [d for d in data if isinstance(d, dict)]
 
 def _seed() -> int | None:
     raw = os.getenv("RANDOM_SEED")
@@ -140,6 +167,10 @@ def iter_payloads(count: int) -> Iterable[dict[str, Any]]:
     fake = Faker()
     if seed is not None:
         Faker.seed(seed)
+
+    static_payloads = _load_static_payloads()
+    for payload in static_payloads:
+        yield payload
 
     for i in range(1, count + 1):
         yield build_payload(fake=fake, rng=rng)
