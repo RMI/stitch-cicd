@@ -99,11 +99,22 @@ export default function ResourcesTable({ resources }) {
               col.sortable ? (
                 <th
                   key={col.key}
-                  className="py-2 pr-6 cursor-pointer select-none hover:text-gray-800"
-                  onClick={() => handleSort(col.key)}
+                  className="py-2 pr-6"
+                  aria-sort={
+                    sortConfig.column !== col.key
+                      ? "none"
+                      : sortConfig.direction === "asc"
+                        ? "ascending"
+                        : "descending"
+                  }
                 >
-                  {col.label}
-                  <SortIndicator column={col.key} sortConfig={sortConfig} />
+                  <button
+                    onClick={() => handleSort(col.key)}
+                    className="select-none hover:text-gray-800 cursor-pointer"
+                  >
+                    {col.label}
+                    <SortIndicator column={col.key} sortConfig={sortConfig} />
+                  </button>
                 </th>
               ) : (
                 <th key={col.key} className="py-2 pr-6">
