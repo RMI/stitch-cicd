@@ -10,7 +10,7 @@ export default function ResourceDetailPage() {
 
   useEffect(() => {
     refetch();
-  }, [numericId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [numericId, refetch]);
 
   return (
     <div className="max-w-4xl mx-auto">
