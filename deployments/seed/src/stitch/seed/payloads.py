@@ -16,6 +16,7 @@ from stitch.ogsi.model.types import (
     ProductionConventionality,
 )
 
+
 def _load_static_payloads() -> list[dict[str, Any]]:
     """
     Load static payloads from JSON file.
@@ -40,6 +41,7 @@ def _load_static_payloads() -> list[dict[str, Any]]:
         return []
 
     return [d for d in data if isinstance(d, dict)]
+
 
 def _seed() -> int | None:
     raw = os.getenv("RANDOM_SEED")
