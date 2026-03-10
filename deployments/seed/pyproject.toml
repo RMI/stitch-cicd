@@ -8,6 +8,7 @@ dependencies = [
   "faker>=24.0.0",
   "httpx>=0.28.0",
   "jsonschema>=4.23.0",
+  "stitch-ogsi",
 ]
 
 [project.scripts]
@@ -19,3 +20,6 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "stitch.seed"
+
+[tool.uv.sources]
+stitch-ogsi = { workspace = true }

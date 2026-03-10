@@ -1383,6 +1383,7 @@ dependencies = [
     { name = "faker" },
     { name = "httpx" },
     { name = "jsonschema" },
+    { name = "stitch-ogsi" },
 ]
 
 [package.metadata]
@@ -1390,6 +1391,7 @@ requires-dist = [
     { name = "faker", specifier = ">=24.0.0" },
     { name = "httpx", specifier = ">=0.28.0" },
     { name = "jsonschema", specifier = ">=4.23.0" },
+    { name = "stitch-ogsi", editable = "packages/stitch-ogsi" },
 ]
 
 [[package]]

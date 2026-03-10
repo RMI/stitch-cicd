@@ -109,6 +109,9 @@ services:
       API_BASE_URL: ${SEED_API_BASE_URL:-http://api:8000/api/v1}
       POST_COUNT: ${SEED_POST_COUNT:-5}
       LOG_LEVEL: ${SEED_LOG_LEVEL:-INFO}
+      RANDOM_SEED: 8675309
+      SEED_SOURCE: "mixed"
+      NULL_PROBABILITY: 0.3
     restart: "no"
     depends_on:
       api:
