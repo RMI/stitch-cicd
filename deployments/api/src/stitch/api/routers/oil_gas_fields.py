@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from fastapi import APIRouter
 
+from stitch.api.coalesce import coalesce_og_field_resource
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.config import UnitOfWorkDep
 from stitch.api.auth import CurrentUser
@@ -31,7 +32,8 @@ async def get_resource(
     og_res = OGFieldResource(
         id=res.id, name=res.name, country=res.country, source_data=res.source_data
     )
-    return og_res.to_view()
+    og_view, _ = coalesce_og_field_resource(og_res)
+    return og_view
 
 
 # TODO: consider sub-routes (this would be a repeatable pattern for other "resource" objects)

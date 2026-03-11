@@ -27,7 +27,7 @@ class ResourceBase(BaseModel):
 class Resource(ResourceBase, Timestamped):
     id: int
     source_data: Sequence[OGFieldSource] = Field(default_factory=lambda: [])
-    constituents: Sequence[IdType] = Field(default_factory=lambda: [])
+    constituents: Sequence[int] = Field(default_factory=lambda: [])
 
 
 class User(BaseModel):
