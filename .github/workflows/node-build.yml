@@ -20,7 +20,7 @@ jobs:
         run: make frontend-build
 
       - name: Prepare Tarball
-        run: tar -czf dist.tgz -C deployments/stitch-fronten/dist .
+        run: tar -czf dist.tgz -C deployments/stitch-frontend/dist .
 
       - name: Check for dist.tgz
         id: check_artifact
