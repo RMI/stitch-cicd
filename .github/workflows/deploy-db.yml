@@ -29,7 +29,13 @@ jobs:
       PGPASSWORD: ${{ secrets.PGPASSWORD_DEV }}
       PGSSLMODE: ${{ vars.PGSSLMODE || 'require' }}
       PGDATABASE: ${{ vars.PGDATABASE || 'postgres' }}
-      DB_NAME: 'db-gha-create-01'
+      DB_NAME: |
+        ${{
+          (github.event_name == 'push' && github.ref_name) ||
+          (github.event_name == 'pull_request' && github.base_ref == 'production' && github.head_ref) ||
+          (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) ||
+          github.ref_name
+        }}
 
     steps:
       - name: Install psql client
