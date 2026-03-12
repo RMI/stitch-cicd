@@ -8,6 +8,8 @@ on:
       - main
   workflow_call:
 
+name: Create Database
+
 jobs:
   create-db:
     runs-on: ubuntu-latest
