@@ -22,7 +22,12 @@ jobs:
       PGDATABASE: ${{ vars.PGDATABASE || 'postgres' }}
 
       # For PR close events, just use the PR number naming scheme.
-      DB_NAME: ${{ format('pr-{0}', github.event.pull_request.number) }}
+      DB_NAME_RAW: ${{
+          (github.event_name == 'push' && github.ref_name) ||
+          (github.event_name == 'pull_request' && github.base_ref == 'production' && github.head_ref) ||
+          (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) ||
+          github.ref_name
+        }}
 
     steps:
       - name: Install psql client
@@ -30,9 +35,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Drop database if it exists
+      - name: Normalize DB name
+        id: normalize-name
         run: |
-          set -euo pipefail
+          set -euox pipefail
+          RAW_NAME="${DB_NAME_RAW}"
+          # Lowercase
+          CLEAN=$(echo "$RAW_NAME" | tr '[:upper:]' '[:lower:]')
+          # Replace anything not a-z, 0-9, or underscore with underscore
+          CLEAN=$(echo "$CLEAN" | sed -E 's/[^a-z0-9_]/_/g')
+          # Trim to 63 chars (Postgres identifier limit)
+          CLEAN=$(echo "$CLEAN" | cut -c1-63)
+          echo "db-name=$CLEAN" >> "$GITHUB_OUTPUT"
+
+      - name: Drop database if it exists
+        env:
+          DB_NAME: ${{ steps.normalize-name.outputs.db-name }}
+        run: |
+          set -euox pipefail
 
           echo "Target server: $PGHOST"
           echo "Dropping DB: $DB_NAME"
