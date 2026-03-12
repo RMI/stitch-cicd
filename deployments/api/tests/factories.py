@@ -1,20 +1,14 @@
 # pyright: reportUnannotatedClassAttribute=false
-from collections.abc import Sequence
+from collections.abc import Callable
 from polyfactory import Require, Use
 from polyfactory.decorators import post_generated
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from typing import Any, override
 
 from stitch.ogsi.model import (
-    LLMSource,
     OGFieldSource,
-    OGSISrcKey,
     OilGasOperator,
     OilGasOwner,
-    RMISource,
-    WoodMacSource,
-    GemSource,
 )
 from stitch.ogsi.model.og_field import OilGasFieldBase
 
@@ -22,6 +16,9 @@ from stitch.api.entities import Resource
 
 EMPTY_OG_FIELD_BASE = OilGasFieldBase(name=None, country=None)
 DEFAULT_OG_FIELD_BASE = OilGasFieldBase(name="Default OGFieldBase Name", country="USA")
+
+type ResourceCreateFactory = Callable[..., Resource]
+type SourceFactory = Callable[..., OGFieldSource]
 
 
 def _construct_str_vals(num: int, attr_: str, parent: str = "OilGasFieldBase"):
@@ -62,6 +59,10 @@ class OGFieldBaseFactory(ModelFactory[OilGasFieldBase]):
     __random_seed__ = 1
     __by_name__ = True
     __allow_none_optionals__ = True
+    __randomize_collection_length__ = True
+    __min_collection_length__ = 0
+    __max_collection_length__ = 3
+    __set_as_default_factory_for_type__ = True
 
     name = Use(
         ModelFactory.__random__.choice,
@@ -116,22 +117,3 @@ class ResourceFactory(ModelFactory[Resource]):
     @classmethod
     def provenance(cls):
         return {}
-
-
-def make_source(
-    fact: OGFieldBaseFactory, managed: bool = True, source: OGSISrcKey = "gem"
-) -> OGFieldSource:
-    base = fact.build()
-    id_ = fact.__random__.randint(1, 100) if managed else None
-
-    kwargs: dict[str, Any] = {**base.model_dump(), "id": id_}
-
-    match source:
-        case "llm":
-            return LLMSource(**kwargs)
-        case "rmi":
-            return RMISource(**kwargs)
-        case "wm":
-            return WoodMacSource(**kwargs)
-        case "gem":
-            return GemSource(**kwargs)

@@ -1,13 +1,13 @@
 from collections.abc import Sequence
 from fastapi import APIRouter
 
-from stitch.api.coalesce import coalesce_og_field_resource
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.config import UnitOfWorkDep
 from stitch.api.auth import CurrentUser
+from stitch.api.db.utils import resource_to_view
 from stitch.api.entities import Resource
 
-from stitch.ogsi.model import OGFieldResource, OGFieldView
+from stitch.ogsi.model import OGFieldView
 
 router = APIRouter(
     prefix="/oil-gas-fields",
@@ -29,11 +29,7 @@ async def get_resource(
 ) -> OGFieldView:
     res: Resource = await resource_actions.get(session=uow.session, id=id)
 
-    og_res = OGFieldResource(
-        id=res.id, name=res.name, country=res.country, source_data=res.source_data
-    )
-    og_view, _ = coalesce_og_field_resource(og_res)
-    return og_view
+    return resource_to_view(resource=res)
 
 
 # TODO: consider sub-routes (this would be a repeatable pattern for other "resource" objects)

@@ -3,6 +3,9 @@ from functools import reduce
 from typing import Protocol
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from stitch.ogsi.model import OGFieldView
+from stitch.api.coalesce import coalesce_og_field_resource
+from stitch.api.db.errors import ResourceIntegrityError
 from stitch.api.entities import Resource
 
 from .model import ResourceModel
@@ -41,9 +44,28 @@ async def resource_model_to_entity(
         rep_model = await session.get(ResourceModel, model.repointed_id)
         rep_res = rep_model.as_empty_entity() if rep_model else None
 
+    view, provenance = coalesce_og_field_resource(src_data)
+
     return Resource(
         id=model.id,
         repointed_to=None if rep_res is None else rep_res.id,
         constituents=frozenset([cm.id for cm in constituents if cm.id is not None]),
         source_data=src_data,
+        view=view,
+        provenance=provenance,
     )
+
+
+def resource_to_view(resource: Resource, force_coalesce: bool = False):
+    if resource.id is None:
+        raise ResourceIntegrityError(
+            f"Cannot create view for unmanaged resource: {repr(resource)}"
+        )
+
+    view = (
+        coalesce_og_field_resource(resource.source_data)[0]
+        if force_coalesce or resource.view is None
+        else resource.view
+    )
+
+    return OGFieldView(id=resource.id, **view.model_dump())

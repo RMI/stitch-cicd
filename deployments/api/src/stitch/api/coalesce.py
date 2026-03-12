@@ -6,9 +6,7 @@ from stitch.ogsi.model import (
     LLM_SRC,
     RMI_SRC,
     WM_SRC,
-    OGFieldResource,
     OGFieldSource,
-    OGFieldView,
 )
 from stitch.ogsi.model.og_field import OilGasFieldBase
 from stitch.ogsi.model.types import OGSISrcKey
@@ -16,25 +14,12 @@ from stitch.ogsi.model.types import OGSISrcKey
 SRC_PRIORITY = (RMI_SRC, GEM_SRC, WM_SRC, LLM_SRC)
 
 
-def merge_og_fields(
-    existing: OilGasFieldBase, update: OilGasFieldBase
-) -> OilGasFieldBase:
-    return OilGasFieldBase.model_validate(
-        {**existing.model_dump(), **update.model_dump()}
-    )
-
-
-def coalesce_og_field_sources(sources: Sequence[OGFieldSource]) -> OilGasFieldBase:
-    first, *rest = sources
-    return reduce(merge_og_fields, rest, first)
-
-
 type ProvAttrs = dict[str, tuple[Any, OGSISrcKey, int] | None]
 
 
 def coalesce_og_field_resource(
-    resource: OGFieldResource,
-) -> tuple[OGFieldView, ProvAttrs]:
+    source_data: Sequence[OGFieldSource],
+) -> tuple[OilGasFieldBase, ProvAttrs]:
     """
     Coalesce all source payloads into a single `OGFieldView`.
 
@@ -42,10 +27,6 @@ def coalesce_og_field_resource(
         - in `source_data` order, fill any still-missing fields with the
         first non-null value found
     """
-    if resource.id is None:
-        raise ValueError(
-            f"Cannot build OGFieldView from a resource without an id: {repr(resource)}"
-        )
 
     def _reducer(acc: ProvAttrs, src: OGFieldSource) -> ProvAttrs:
         # get non-None values from src excluding `id` and `source`
@@ -62,7 +43,7 @@ def coalesce_og_field_resource(
 
     # sort in  reverse priority order so latter models override
     ordered_sources = sorted(
-        resource.source_data,
+        source_data,
         reverse=True,
         key=lambda src: SRC_PRIORITY.index(src.source),
     )
@@ -74,6 +55,7 @@ def coalesce_og_field_resource(
     )
 
     final_attrs = {
-        key: val[0] for key, val in provenanced_attrs.items() if val is not None
+        key: val[0] if val is not None else None
+        for key, val in provenanced_attrs.items()
     }
-    return OGFieldView(id=resource.id, **final_attrs), provenanced_attrs
+    return OilGasFieldBase(**final_attrs), provenanced_attrs
