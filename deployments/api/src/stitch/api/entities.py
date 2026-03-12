@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 
-from stitch.ogsi.model import OGFieldSource
+from stitch.ogsi.model import OGFieldResource, OGFieldSource
 from stitch.models.types import IdType
 
 
@@ -24,7 +24,10 @@ class ResourceBase(BaseModel):
     repointed_to: IdType | None = Field(default=None)
 
 
-class Resource(ResourceBase, Timestamped):
+Resource = OGFieldResource
+
+
+class Resource_(ResourceBase, Timestamped):
     id: int
     source_data: Sequence[OGFieldSource] = Field(default_factory=lambda: [])
     constituents: Sequence[int] = Field(default_factory=lambda: [])

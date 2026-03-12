@@ -3,6 +3,7 @@
 import pytest
 from sqlalchemy import select
 
+from tests.factories import ResourceFactory
 from stitch.api.db.model import ResourceModel
 
 from tests.utils import make_empty_resource, make_create_resource
@@ -35,7 +36,9 @@ class TestResourcesIntegration:
         assert data["id"] > 0
 
     @pytest.mark.anyio
-    async def test_create_and_get_resource(self, integration_client):
+    async def test_create_and_get_resource(
+        self, integration_client, og_field_resource_factory: ResourceFactory
+    ):
         """POST creates resource, GET retrieves it."""
         resource_in = make_create_resource(name="Roundtrip Resource")
 

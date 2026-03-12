@@ -70,6 +70,8 @@ class OGFieldProvenance(BaseModel):
 class OGFieldResource(OilGasFieldBase, Resource[int, OGFieldSource]):
     provenance: dict[str, tuple[OGSISrcKey, int]] = Field(default_factory=dict)
 
+    # TODO: override name & country to be optional, temporary until we move to `_payload: T` attribute
+
 
 class OGFieldView(OilGasFieldBase):
     id: int

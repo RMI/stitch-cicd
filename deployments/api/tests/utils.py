@@ -12,6 +12,7 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 from stitch.ogsi.model import GemSource, WoodMacSource
 
+from tests.factories import ResourceFactory
 from stitch.api.entities import Resource
 
 T = TypeVar("T", bound=BaseModel)
@@ -30,14 +31,15 @@ class FactoryResult(Generic[T]):
 
 
 def make_create_resource(
-    *,
-    name: str | None = None,
+    *, name: str | None = None, factory: ResourceFactory
 ) -> FactoryResult[Resource]:
     """Create a minimal Resource payload for creation tests."""
     src = [
         GemSource(name="fake_gem_source", country=None),
         WoodMacSource(name=None, country="USA"),
     ]
+    model = factory.build()
+    model.id = None
     return FactoryResult(model=Resource(id=0, name=name, source_data=src))
 
 

@@ -1,4 +1,5 @@
 from polyfactory import Use
+from polyfactory.decorators import post_generated
 from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.pytest_plugin import register_fixture
 
@@ -106,9 +107,9 @@ def make_source(fact: OGFieldBaseFactory) -> OGFieldSource:
     return GemSource(**empty_kw, id=999)
 
 
-# class OGFieldSourceFactory(ModelFactory[OGFieldSource]): ...
-#
-#
+# TODO: move to `utils` make_resource with args for the collection attrs: source_data, constituents, provenance
+#  - use the base factory above to build the associated fiels or just None them all
+@register_fixture(name="og_field_resource_factory")
 class ResourceFactory(ModelFactory[Resource]):
     __by_name__ = True
     __allow_none_optionals__ = True
@@ -119,3 +120,20 @@ class ResourceFactory(ModelFactory[Resource]):
         providers_map = super().get_provider_map()
         og_field_base_fact = OGFieldBaseFactory()
         return {OGFieldSource: lambda: make_source(og_field_base_fact), **providers_map}
+
+    @post_generated
+    @classmethod
+    def repointed_to(cls, id: int | None) -> int | None:
+        return None if id is None else cls.__random__.choice([None, 9, 8, 7])
+
+    @post_generated
+    @classmethod
+    def constituents(cls, id: int | None) -> frozenset[int]:
+        if id is None:
+            return frozenset()
+        return frozenset()
+
+    @post_generated
+    @classmethod
+    def provenance(cls):
+        return {}
