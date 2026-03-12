@@ -8,20 +8,12 @@ on:
       - main
   workflow_call:
 
+name: Create Database
+
 jobs:
   create-db:
     runs-on: ubuntu-latest
 
-    # Recommended: keep these in GitHub Secrets.
-    # Required secrets (minimum):
-    #   PGHOST: "<your-server>.postgres.database.azure.com"
-    #   PGPORT: "5432" (optional, defaults to 5432)
-    #   PGUSER: "adminuser" OR "adminuser@<your-server>" (depends on your Azure PG auth setup)
-    #   PGPASSWORD: "<password>"
-    #
-    # Optional:
-    #   PGSSLMODE: "require"
-    #   PGDATABASE: "postgres" (or another existing DB to connect to for running CREATE DATABASE)
     env:
       PGHOST: ${{ vars.PGHOST_DEV }}
       PGPORT: ${{ vars.PGPORT || '5432' }}
@@ -29,8 +21,7 @@ jobs:
       PGPASSWORD: ${{ secrets.PGPASSWORD_DEV }}
       PGSSLMODE: ${{ vars.PGSSLMODE || 'require' }}
       PGDATABASE: ${{ vars.PGDATABASE || 'postgres' }}
-      DB_NAME: |
-        ${{
+      DB_NAME_RAW: ${{
           (github.event_name == 'push' && github.ref_name) ||
           (github.event_name == 'pull_request' && github.base_ref == 'production' && github.head_ref) ||
           (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) ||
@@ -43,7 +34,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
+      - name: Normalize DB name
+        id: normalize-name
+        run: |
+          set -euox pipefail
+          RAW_NAME="${DB_NAME_RAW}"
+          # Lowercase
+          CLEAN=$(echo "$RAW_NAME" | tr '[:upper:]' '[:lower:]')
+          # Replace anything not a-z, 0-9, or underscore with underscore
+          CLEAN=$(echo "$CLEAN" | sed -E 's/[^a-z0-9_]/_/g')
+          # Trim to 63 chars (Postgres identifier limit)
+          CLEAN=$(echo "$CLEAN" | cut -c1-63)
+          echo "db-name=$CLEAN" >> "$GITHUB_OUTPUT"
+
       - name: Create database if it doesn't exist
+        env:
+          DB_NAME: ${{ steps.normalize-name.outputs.db-name }}
         run: |
           set -euo pipefail
 
@@ -65,8 +71,8 @@ jobs:
 
       - name: Run DB initialization script
         env:
-          POSTGRES_DB: ${{ env.DB_NAME }}
+          POSTGRES_DB: ${{ steps.normalize-name.outputs.db-name }}
           POSTGRES_USER: ${{ env.PGUSER }}
-          STITCH_MIGRATOR_PASSWORD: CHANGE_ME123!
-          STITCH_APP_PASSWORD: CHANGE_ME456!
+          STITCH_MIGRATOR_PASSWORD: ${{ secrets.STITCH_MIGRATOR_PASSWORD_DEV }}
+          STITCH_APP_PASSWORD: ${{ secrets.STITCH_APP_PASSWORD_DEV }}
         run: deployments/db/00-init-roles.sh
