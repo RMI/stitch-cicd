@@ -59,3 +59,14 @@ jobs:
             psql -X -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"${DB_NAME}\";"
             echo "Database '$DB_NAME' created."
           fi
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Run DB initialization script
+        env:
+          POSTGRES_DB: ${{ env.DB_NAME }}
+          POSTGRES_USER: ${{ env.PGUSER }}
+          STITCH_MIGRATOR_PASSWORD: CHANGE_ME123!
+          STITCH_APP_PASSWORD: CHANGE_ME456!
+        run: deployments/db/00-init-roles.sh
