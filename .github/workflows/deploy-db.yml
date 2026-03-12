@@ -73,6 +73,6 @@ jobs:
         env:
           POSTGRES_DB: ${{ steps.normalize-name.outputs.db-name }}
           POSTGRES_USER: ${{ env.PGUSER }}
-          STITCH_MIGRATOR_PASSWORD: CHANGE_ME123!
-          STITCH_APP_PASSWORD: CHANGE_ME456!
+          STITCH_MIGRATOR_PASSWORD: ${{ secrets.STITCH_MIGRATOR_PASSWORD_DEV }}
+          STITCH_APP_PASSWORD: ${{ secrets.STITCH_APP_PASSWORD_DEV }}
         run: deployments/db/00-init-roles.sh
