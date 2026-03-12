@@ -1,5 +1,5 @@
 #!/bin/sh
-set -eu
+set -eux
 
 # This script runs automatically on first database initialization
 # via /docker-entrypoint-initdb.d.
