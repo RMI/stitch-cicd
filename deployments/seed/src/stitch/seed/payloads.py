@@ -140,7 +140,6 @@ def build_payload(
 ) -> dict[str, Any]:
     """
     POST body is Resource-Input (OpenAPI), which requires id.
-    Keep payload coherent: top-level name mirrors the first source_data entry.
     """
     src = build_og_field(
         fake=fake, seed_source=seed_source, rng=rng, null_prob=null_prob
@@ -148,7 +147,6 @@ def build_payload(
 
     return {
         "id": 0,
-        "name": src["name"],
         "source_data": [src],
         "constituents": [],
     }
