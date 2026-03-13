@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from functools import reduce
-from itertools import cycle
 import os
 import sys
 import time
 from enum import Enum
 from dataclasses import dataclass
-from typing import Any
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import OperationalError
@@ -26,7 +23,6 @@ from stitch.api.entities import (
 )
 
 # Domain model from stitch-ogsi package
-from stitch.ogsi.model.og_field import OilGasFieldBase
 
 """
 DB init/seed job.
