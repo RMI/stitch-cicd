@@ -1,10 +1,12 @@
 """Pytest fixtures for stitch-api tests."""
 
 from collections.abc import AsyncIterator
+from functools import partial
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from polyfactory.pytest_plugin import register_fixture
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from stitch.api.db.config import UnitOfWork, get_uow
@@ -15,6 +17,8 @@ from stitch.api.db.model import (
 from stitch.api.auth import get_current_user
 from stitch.api.entities import User
 from stitch.api.main import app
+from .factories import OGFieldBaseFactory, ResourceFactory
+from .utils import make_create_resource, make_resource, make_source
 
 
 @pytest.fixture
@@ -173,3 +177,36 @@ async def integration_client(
         base_url="http://test/api/v1",
     ) as ac:
         yield ac
+
+
+register_fixture(ResourceFactory, name="og_field_resource_factory", scope="function")
+register_fixture(OGFieldBaseFactory, name="og_field_base_factory", scope="function")
+
+
+@pytest.fixture(scope="function")
+def source_maker(og_field_base_factory: OGFieldBaseFactory):
+    return partial(make_source, fact=og_field_base_factory)
+
+
+@pytest.fixture(scope="function")
+def og_res_fact(
+    og_field_resource_factory: ResourceFactory,
+    og_field_base_factory: OGFieldBaseFactory,
+):
+    fact = partial(
+        make_resource, fact=og_field_resource_factory, base_fact=og_field_base_factory
+    )
+    return fact
+
+
+@pytest.fixture(scope="function")
+def og_create_res_fact(
+    og_field_resource_factory: ResourceFactory,
+    og_field_base_factory: OGFieldBaseFactory,
+):
+    fact = partial(
+        make_create_resource,
+        factory=og_field_resource_factory,
+        base_factory=og_field_base_factory,
+    )
+    return fact

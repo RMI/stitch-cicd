@@ -9,13 +9,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from stitch.ogsi.model import OGFieldSource, OGSISrcKey
+from stitch.ogsi.model import OGFieldSource, OGSISrcKey, OGFieldResource
 
 from .oil_gas_field_source import (
     OilGasFieldSourceModel,
 )
 
-from stitch.api.entities import Resource, User as UserEntity
+from stitch.api.entities import User as UserEntity
 from .common import Base
 from .mixins import TimestampMixin, UserAuditMixin
 from .types import PORTABLE_BIGINT
@@ -28,12 +28,14 @@ class MembershipStatus(StrEnum):
 
 
 class MembershipModel(TimestampMixin, UserAuditMixin, Base):
-    __tablename__ = "memberships"
+    __tablename__ = "og_field_memberships"
 
     id: Mapped[int] = mapped_column(
         PORTABLE_BIGINT, primary_key=True, autoincrement=True
     )
-    resource_id: Mapped[int] = mapped_column(ForeignKey("resources.id"), nullable=False)
+    resource_id: Mapped[int] = mapped_column(
+        ForeignKey("og_field_resources.id"), nullable=False
+    )
     source: Mapped[OGSISrcKey] = mapped_column(
         String(10), nullable=False
     )  # "gem" | "wm"
@@ -77,29 +79,25 @@ class MembershipModel(TimestampMixin, UserAuditMixin, Base):
 
 
 class ResourceModel(TimestampMixin, UserAuditMixin, Base):
-    __tablename__ = "resources"
+    __tablename__ = "og_field_resources"
     __table_args__ = (Index("rp_repointed_id_idx", "repointed_id"),)
 
     id: Mapped[int] = mapped_column(
         PORTABLE_BIGINT, primary_key=True, autoincrement=True
     )
     repointed_id: Mapped[int | None] = mapped_column(
-        PORTABLE_BIGINT, ForeignKey("resources.id"), nullable=True
+        PORTABLE_BIGINT, ForeignKey("og_field_resources.id"), nullable=True
     )
-    name: Mapped[str | None] = mapped_column(String, nullable=True)
 
     # SQLAlchemy will automatically see the foreign key `memberships.resource_id`
     # and configure the appropriate SQL statement to load the membership objects
     memberships: Mapped[list[MembershipModel]] = relationship()
 
     def as_empty_entity(self):
-        return Resource(
+        return OGFieldResource(
             id=self.id,
-            name=self.name,
             source_data=[],
-            constituents=[],
-            created=self.created,
-            updated=self.updated,
+            constituents=frozenset(),
         )
 
     async def get_source_data(self, session: AsyncSession) -> Sequence[OGFieldSource]:
@@ -133,11 +131,9 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
     def create(
         cls,
         created_by: UserEntity,
-        name: str | None = None,
         repointed_to: int | None = None,
     ):
         return cls(
-            name=name,
             repointed_id=repointed_to,
             created_by_id=created_by.id,
             last_updated_by_id=created_by.id,
