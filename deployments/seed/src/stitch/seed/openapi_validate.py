@@ -156,4 +156,3 @@ class OpenAPIRequestValidator:
         logger.error(message)
         logger.debug(payload)
         raise RuntimeError(message)
-
