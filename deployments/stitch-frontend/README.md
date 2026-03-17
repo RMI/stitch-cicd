@@ -141,29 +141,71 @@ npm run test:coverage
 
 Test files should be placed next to the component they test with a `.test.jsx` or `.test.js` extension.
 
-**Example test:**
+Use `renderWithQueryClient` from `src/test/utils.jsx` instead of `render` directly — it wraps the component in both a `QueryClientProvider` and a `MemoryRouter`, which most components require:
 
 ```javascript
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithQueryClient } from "../test/utils";
 import MyComponent from "./MyComponent";
 
 describe("MyComponent", () => {
   it("renders correctly", () => {
-    render(<MyComponent />);
+    renderWithQueryClient(<MyComponent />);
     expect(screen.getByText("Hello")).toBeInTheDocument();
   });
 });
 ```
 
+### Mocking Data Hooks
+
+Components that fetch data use `useResource` or `useResources` from `src/hooks/useResources.js`. Mock these hooks rather than the network — this keeps tests independent of whether the app is in real API or mock data mode:
+
+```javascript
+import { vi, beforeEach } from "vitest";
+import { useResource } from "../hooks/useResources";
+
+vi.mock("../hooks/useResources");
+
+const defaultHookReturn = {
+  data: null,
+  isLoading: false,
+  isError: false,
+  error: null,
+  refetch: vi.fn(),
+};
+
+beforeEach(() => {
+  vi.mocked(useResource).mockReturnValue({ ...defaultHookReturn, refetch: vi.fn() });
+});
+```
+
+Override the mock per-test to simulate loading, error, or success states:
+
+```javascript
+it("shows a loading indicator", () => {
+  vi.mocked(useResource).mockReturnValue({ ...defaultHookReturn, isLoading: true });
+  renderWithQueryClient(<MyComponent />);
+  expect(screen.getByText(/loading/i)).toBeInTheDocument();
+});
+```
+
 ### Testing Utilities
 
-The project includes:
+`src/test/utils.jsx` exports:
 
-- **@testing-library/react** - Component testing utilities
-- **@testing-library/jest-dom** - Custom matchers for DOM elements
-- **@testing-library/user-event** - User interaction simulation
-- **jsdom** - DOM environment for Node.js
+| Export | Description |
+|---|---|
+| `renderWithQueryClient(ui)` | Renders inside `QueryClientProvider` + `MemoryRouter`; returns `{ queryClient, ...rtlResult }` |
+| `auth0TestDefaults` | Default Auth0 mock state (authenticated); spread and override for auth tests |
+| `createMockResponse(data, options)` | Builds a mock `fetch` response object |
+| `createMockError(status)` | Builds a mock error `fetch` response |
+
+Additional libraries:
+
+- **@testing-library/jest-dom** — custom DOM matchers (e.g. `toBeInTheDocument`, `toHaveStyle`)
+- **@testing-library/user-event** — user interaction simulation
+- **jsdom** — DOM environment for Node.js
 
 Test setup is located in `src/test/setup.js` and runs automatically before each test file.
 
