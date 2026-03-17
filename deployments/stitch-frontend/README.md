@@ -10,6 +10,7 @@ React frontend application styled with Tailwind CSS and built with Vite.
 - [API](#api)
 - [Testing](#testing)
 - [Queries](#queries)
+- [Resource Detail View](#resource-detail-view)
 
 ## Tech Stack
 
@@ -31,11 +32,13 @@ stitch-frontend/
 ├── src/
 │   ├── auth/                    # Auth0 integration and gate component
 │   ├── components/              # Shared UI components
+│   │   ├── FieldCard.jsx        # Field value card + FieldGrid layout
 │   │   ├── FilterBar.jsx        # Filter dropdown row + active chips
 │   │   ├── FilterDropdown.jsx   # Multi-select dropdown with counts
 │   │   ├── ResourcesTable.jsx   # Sortable resources table
 │   │   ├── ResourcesView.jsx    # Resources list page section
 │   │   ├── ResourceView.jsx     # Single resource fetch section
+│   │   ├── SectionHeader.jsx    # Titled section divider
 │   │   └── SourceMixBar.jsx     # Data source proportion bar
 │   ├── config/
 │   │   ├── env.js               # Runtime environment config
@@ -43,9 +46,12 @@ stitch-frontend/
 │   ├── hooks/
 │   │   ├── useAuthenticatedQuery.js
 │   │   └── useResources.js      # useResources / useResource (real + mock implementations)
+│   ├── constants/
+│   │   ├── fieldMeta.js         # Field display labels and section groupings (FIELD_META)
+│   │   └── sourceMeta.js        # Data source labels and colors (SOURCES, SOURCE_COLORS, SOURCE_LABELS)
 │   ├── pages/
 │   │   ├── HomePage.jsx         # "/" — ResourcesView + ResourceView
-│   │   └── ResourceDetailPage.jsx  # "/resources/:id"
+│   │   └── ResourceDetailPage.jsx  # "/resources/:id" — full resource detail view
 │   ├── queries/                 # TanStack Query key factory and definitions
 │   ├── test/                    # Test setup and shared utilities
 │   ├── App.jsx                  # Route definitions
@@ -291,18 +297,15 @@ const handleClear = () => {
 When adding new endpoints:
 
 1. **Update the key factory** in `src/queries/[entity].js`:
-
-   ```js
+  ```js
    export const resourceKeys = {
      // ... existing keys
      mutations: () => [...resourceKeys.all, "mutation"],
      mutation: (id) => [...resourceKeys.mutations(), id],
    };
-   ```
-
+  ```
 2. **Add query definition**:
-
-   ```js
+  ```js
    export const resourceQueries = {
      // ... existing queries
      mutation: (id) => ({
@@ -310,14 +313,13 @@ When adding new endpoints:
        queryFn: () => mutateResource(id),
      }),
    };
-   ```
-
+  ```
 3. **Use in hook**:
-   ```js
+  ```js
    export function useMutateResource(id) {
      return useQuery(resourceQueries.mutation(id));
    }
-   ```
+  ```
 
 ### Reference
 
@@ -436,8 +438,8 @@ Portal → Container App → Networking → CORS
 
 - Enable credentials
 - Max Age: 5
-- Allowed Origins: <SWA_URL>
-- Allowed Headers: \*
+- Allowed Origins: 
+- Allowed Headers:
 
 Apply changes.
 
@@ -448,3 +450,38 @@ Apply changes.
 - Login succeeds.
 - API calls succeed.
 - Authenticated resources load properly.
+
+## Resource Detail View
+
+`ResourceDetailPage` (`/resources/:id`) renders a full detail view for a single resource. It is organized into sections driven by two constants files.
+
+### Constants
+
+`**src/constants/sourceMeta.js**` — Data source registry:
+
+```js
+export const SOURCES = ["gem", "wm", "rmi", "llm"];
+
+export const SOURCE_COLORS = { gem: "#4AE3D9", wm: "#3B44EC", rmi: "#F4A70B", llm: "#57A0FF" };
+
+export const SOURCE_LABELS = {
+  gem: "GEM Database",
+  wm: "Woodmac Database",
+  rmi: "User Generated",
+  llm: "LLM",
+};
+```
+
+`**src/constants/fieldMeta.js**` — Field display configuration. Maps API payload keys to a label and a `section` grouping used to populate each page section:
+
+```js
+export const FIELD_META = {
+  name:    { label: "Name",    section: "identity" },
+  country: { label: "Country", section: "identity" },
+  // ...
+  field_status:    { label: "Field Status",    section: "production" },
+  discovery_year:  { label: "Discovery Year",  section: "production" },
+  // ...
+};
+```
+
