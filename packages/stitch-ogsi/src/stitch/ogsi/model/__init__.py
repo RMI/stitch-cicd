@@ -1,11 +1,9 @@
-from collections.abc import Sequence
-from typing import Annotated, Final
+from typing import Any, Annotated, Final
 
 from pydantic import Field
 from stitch.models import (
     Resource,
     Source,
-    SourcePayload,
 )
 
 from .og_field import OilGasFieldBase, OilGasOwner, OilGasOperator
@@ -13,13 +11,13 @@ from .types import (
     GEMSrcKey,
     LLMSrcKey,
     LocationType,
+    OGSISrcKey,
     RMISrcKey,
     WMSrcKey,
 )
 
 __all__ = [
     "OGFieldSource",
-    "OGSourcePayload",
     "OGFieldResource",
     "OGFieldView",
     "LLMSource",
@@ -29,6 +27,7 @@ __all__ = [
     "LocationType",
     "OilGasOwner",
     "OilGasOperator",
+    "OGSISrcKey",
 ]
 
 
@@ -60,15 +59,12 @@ OGFieldSource = Annotated[
 ]
 
 
-class OGSourcePayload(SourcePayload):
-    gem: Sequence[GemSource] = Field(default_factory=lambda: [])
-    wm: Sequence[WoodMacSource] = Field(default_factory=lambda: [])
-    rmi: Sequence[RMISource] = Field(default_factory=lambda: [])
-    llm: Sequence[LLMSource] = Field(default_factory=lambda: [])
-
-
-class OGFieldResource(OilGasFieldBase, Resource[int, OGSourcePayload]): ...
-
-
 class OGFieldView(OilGasFieldBase):
     id: int
+
+
+class OGFieldResource(Resource[int, OGFieldSource]):
+    provenance: dict[str, tuple[Any, OGSISrcKey, int] | None] = Field(
+        default_factory=dict
+    )
+    view: OilGasFieldBase | None = None

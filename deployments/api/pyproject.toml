@@ -12,6 +12,8 @@ dependencies = [
   "pydantic-settings>=2.12.0",
   "sqlalchemy>=2.0.44",
   "stitch-auth",
+  "stitch-models",
+  "stitch-ogsi",
 ]
 
 [project.scripts]
@@ -30,6 +32,7 @@ dev = [
   "pytest-anyio>=0.0.0",
   "aiosqlite>=0.21.0",
   "httpx>=0.28.0",
+  "polyfactory>=3.3.0",
 ]
 
 [tool.pytest.ini_options]
@@ -41,3 +44,5 @@ addopts = ["-v", "--strict-markers", "--tb=short"]
 
 [tool.uv.sources]
 stitch-auth = { workspace = true }
+stitch-models = { workspace = true }
+stitch-ogsi = { workspace = true }
