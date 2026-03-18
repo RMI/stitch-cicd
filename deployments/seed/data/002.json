@@ -5,7 +5,7 @@
       {
         "source": "rmi",
         "name": "Complex Resource",
-        "country": "XXX",
+        "country": "ZXX",
         "latitude": 1.1,
         "longitude": 2.2,
         "location_type": "Onshore",
@@ -16,7 +16,7 @@
       {
         "source": "gem",
         "name": "Complex Resource",
-        "country": "XXY",
+        "country": "ZXY",
         "latitude": 3.1,
         "longitude": 4.2,
         "location_type": "Offshore"
