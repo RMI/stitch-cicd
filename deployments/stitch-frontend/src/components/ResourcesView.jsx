@@ -7,6 +7,7 @@ import ResourcesTable from "./ResourcesTable";
 import FilterBar from "./FilterBar";
 import { EMPTY_FILTERS } from "../config/filters";
 import { resourceKeys } from "../queries/resources";
+import config from "../config/env";
 
 // OR within a field, AND across fields.
 function applyFilters(resources, filters) {
@@ -33,7 +34,9 @@ export default function ResourcesView({ className, endpoint }) {
     <div className={`max-w-4xl mx-auto ${className}`}>
       <h1 className="text-3xl font-bold mb-3 text-gray-800">Resources</h1>
       <div className="text-gray-500 pb-4">
-        <span className="font-bold">{endpoint}</span>
+        <span className="font-bold">
+          {config.apiBaseUrl}/{endpoint}
+        </span>
       </div>
       <div className="mb-4 flex gap-3">
         <FetchButton onFetch={() => refetch()} isLoading={isLoading} />

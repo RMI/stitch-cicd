@@ -30,8 +30,7 @@ export default function ResourceView({ className, endpoint }) {
       </h1>
       <div className=" text-gray-500 pb-4">
         <span className="font-bold">
-          {config.apiBaseUrl}
-          {endpoint}
+          {config.apiBaseUrl}/{endpoint}
         </span>
       </div>
       <div className="mb-6 flex gap-3">
