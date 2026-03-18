@@ -7,13 +7,17 @@ const SOURCE_COLORS = {
   llm: "#57A0FF", // light blue
 };
 
-export default function SourceMixBar({ sourceData }) {
-  const counts = SOURCES.map((s) => sourceData?.[s]?.length ?? 0);
+export default function SourceMixBar({ provenance }) {
+  const counts = SOURCES.map(
+    (source) =>
+      Object.values(provenance ?? {}).filter((value) => value === source).length,
+  );
+
   const total = counts.reduce((a, b) => a + b, 0);
 
   if (total === 0) {
     return (
-      <div className="h-3 w-full rounded bg-gray-200" title="No source data" />
+      <div className="h-3 w-full rounded bg-gray-200" title="No provenance data" />
     );
   }
 
