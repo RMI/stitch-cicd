@@ -176,7 +176,10 @@ const defaultHookReturn = {
 };
 
 beforeEach(() => {
-  vi.mocked(useResource).mockReturnValue({ ...defaultHookReturn, refetch: vi.fn() });
+  vi.mocked(useResource).mockReturnValue({
+    ...defaultHookReturn,
+    refetch: vi.fn(),
+  });
 });
 ```
 
@@ -184,7 +187,10 @@ Override the mock per-test to simulate loading, error, or success states:
 
 ```javascript
 it("shows a loading indicator", () => {
-  vi.mocked(useResource).mockReturnValue({ ...defaultHookReturn, isLoading: true });
+  vi.mocked(useResource).mockReturnValue({
+    ...defaultHookReturn,
+    isLoading: true,
+  });
   renderWithQueryClient(<MyComponent />);
   expect(screen.getByText(/loading/i)).toBeInTheDocument();
 });
@@ -194,12 +200,12 @@ it("shows a loading indicator", () => {
 
 `src/test/utils.jsx` exports:
 
-| Export | Description |
-|---|---|
-| `renderWithQueryClient(ui)` | Renders inside `QueryClientProvider` + `MemoryRouter`; returns `{ queryClient, ...rtlResult }` |
-| `auth0TestDefaults` | Default Auth0 mock state (authenticated); spread and override for auth tests |
-| `createMockResponse(data, options)` | Builds a mock `fetch` response object |
-| `createMockError(status)` | Builds a mock error `fetch` response |
+| Export                              | Description                                                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `renderWithQueryClient(ui)`         | Renders inside `QueryClientProvider` + `MemoryRouter`; returns `{ queryClient, ...rtlResult }` |
+| `auth0TestDefaults`                 | Default Auth0 mock state (authenticated); spread and override for auth tests                   |
+| `createMockResponse(data, options)` | Builds a mock `fetch` response object                                                          |
+| `createMockError(status)`           | Builds a mock error `fetch` response                                                           |
 
 Additional libraries:
 
@@ -339,29 +345,34 @@ const handleClear = () => {
 When adding new endpoints:
 
 1. **Update the key factory** in `src/queries/[entity].js`:
-  ```js
-   export const resourceKeys = {
-     // ... existing keys
-     mutations: () => [...resourceKeys.all, "mutation"],
-     mutation: (id) => [...resourceKeys.mutations(), id],
-   };
-  ```
+
+```js
+export const resourceKeys = {
+  // ... existing keys
+  mutations: () => [...resourceKeys.all, "mutation"],
+  mutation: (id) => [...resourceKeys.mutations(), id],
+};
+```
+
 2. **Add query definition**:
-  ```js
-   export const resourceQueries = {
-     // ... existing queries
-     mutation: (id) => ({
-       queryKey: resourceKeys.mutation(id),
-       queryFn: () => mutateResource(id),
-     }),
-   };
-  ```
+
+```js
+export const resourceQueries = {
+  // ... existing queries
+  mutation: (id) => ({
+    queryKey: resourceKeys.mutation(id),
+    queryFn: () => mutateResource(id),
+  }),
+};
+```
+
 3. **Use in hook**:
-  ```js
-   export function useMutateResource(id) {
-     return useQuery(resourceQueries.mutation(id));
-   }
-  ```
+
+```js
+export function useMutateResource(id) {
+  return useQuery(resourceQueries.mutation(id));
+}
+```
 
 ### Reference
 
@@ -480,7 +491,7 @@ Portal → Container App → Networking → CORS
 
 - Enable credentials
 - Max Age: 5
-- Allowed Origins: 
+- Allowed Origins:
 - Allowed Headers:
 
 Apply changes.
@@ -504,7 +515,12 @@ Apply changes.
 ```js
 export const SOURCES = ["gem", "wm", "rmi", "llm"];
 
-export const SOURCE_COLORS = { gem: "#4AE3D9", wm: "#3B44EC", rmi: "#F4A70B", llm: "#57A0FF" };
+export const SOURCE_COLORS = {
+  gem: "#4AE3D9",
+  wm: "#3B44EC",
+  rmi: "#F4A70B",
+  llm: "#57A0FF",
+};
 
 export const SOURCE_LABELS = {
   gem: "GEM Database",
@@ -518,12 +534,11 @@ export const SOURCE_LABELS = {
 
 ```js
 export const FIELD_META = {
-  name:    { label: "Name",    section: "identity" },
+  name: { label: "Name", section: "identity" },
   country: { label: "Country", section: "identity" },
   // ...
-  field_status:    { label: "Field Status",    section: "production" },
-  discovery_year:  { label: "Discovery Year",  section: "production" },
+  field_status: { label: "Field Status", section: "production" },
+  discovery_year: { label: "Discovery Year", section: "production" },
   // ...
 };
 ```
-
