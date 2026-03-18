@@ -28,10 +28,10 @@ jobs:
             pdb\.set_trace\(
             ipdb\.set_trace\(
             # --- Python escape hatches
-            type:\s*ignore(?:\[[^\]]+\])?
-            pyright:\s*ignore(?:\[[^\]]+\])?
-            noqa(?::\s*[A-Z]+\d+(?:,\s*[A-Z]+\d+)*)?
-            pylint:\s*disable(?:=|$)
+            type:[[:space:]]*ignore
+            pyright:[[:space:]]*ignore
+            noqa
+            pylint:[[:space:]]*disable
           default_patterns: true
           mode: regex
           ignore_case: true
