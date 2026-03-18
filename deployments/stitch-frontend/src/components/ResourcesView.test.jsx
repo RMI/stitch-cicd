@@ -41,15 +41,17 @@ beforeEach(() => {
 });
 
 describe("ResourcesView", () => {
+  const ENDPOINT = "oil-gas-fields";
+
   it("renders heading and endpoint information", () => {
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     expect(screen.getByText("Resources")).toBeInTheDocument();
-    expect(screen.getByText(/\/api\/v1\/resources\//)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(ENDPOINT))).toBeInTheDocument();
   });
 
   it("renders Fetch and Clear Cache buttons", () => {
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     expect(screen.getByRole("button", { name: /fetch/i })).toBeInTheDocument();
     expect(
@@ -58,7 +60,7 @@ describe("ResourcesView", () => {
   });
 
   it("disables Clear Cache button when no data", () => {
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     expect(screen.getByRole("button", { name: /clear cache/i })).toBeDisabled();
   });
@@ -69,7 +71,7 @@ describe("ResourcesView", () => {
       isLoading: true,
     });
 
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     const fetchButton = screen.getByRole("button", { name: /loading/i });
     expect(fetchButton).toBeInTheDocument();
@@ -82,7 +84,7 @@ describe("ResourcesView", () => {
       data: mockResourceData,
     });
 
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     expect(screen.getByText("Burgan Field")).toBeInTheDocument();
     expect(screen.getByText("Ghawar Field")).toBeInTheDocument();
@@ -94,7 +96,7 @@ describe("ResourcesView", () => {
       data: mockResourceData,
     });
 
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     expect(screen.getByText("Name")).toBeInTheDocument();
     // "Basin" appears in both the filter bar and the table header
@@ -108,7 +110,7 @@ describe("ResourcesView", () => {
       data: mockResourceData,
     });
 
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     const filterBar = screen.getByTestId("filter-bar");
     expect(
@@ -120,7 +122,7 @@ describe("ResourcesView", () => {
   });
 
   it("does not show filter bar when no data", () => {
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     expect(screen.queryByTestId("filter-bar")).not.toBeInTheDocument();
   });
@@ -131,7 +133,7 @@ describe("ResourcesView", () => {
       data: mockResourceData,
     });
 
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     expect(
       screen.getByRole("button", { name: /clear cache/i }),
@@ -145,7 +147,7 @@ describe("ResourcesView", () => {
       error: new Error("HTTP error! status: 500"),
     });
 
-    renderWithQueryClient(<ResourcesView endpoint="/api/v1/resources/" />);
+    renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
 
     expect(
       screen.getByRole("button", { name: /clear cache/i }),
