@@ -7,7 +7,7 @@ export default function ResourceDetailPage() {
   const navigate = useNavigate();
   const numericId = Number(id);
   const validId = Number.isFinite(numericId);
-  const endpoint = "resources";
+  const endpoint = "oil-gas-fields";
   const { data, isLoading, isError, refetch } = useResource(
     endpoint,
     numericId,
