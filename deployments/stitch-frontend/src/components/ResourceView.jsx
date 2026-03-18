@@ -11,10 +11,10 @@ import config from "../config/env";
 export default function ResourceView({ className, endpoint }) {
   const queryClient = useQueryClient();
   const [id, setId] = useState(1);
-  const { data, isLoading, isError, error, refetch } = useResource(id);
+  const { data, isLoading, isError, error, refetch } = useResource(endpoint, id);
 
   const handleClear = (id) => {
-    queryClient.resetQueries({ queryKey: resourceKeys.detail(id) });
+    queryClient.resetQueries({ queryKey: resourceKeys.detail(endpoint, id) });
   };
 
   const handleKeyDown = (e) => {

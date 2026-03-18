@@ -20,11 +20,11 @@ function applyFilters(resources, filters) {
 
 export default function ResourcesView({ className, endpoint }) {
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, refetch } = useResources();
+  const { data, isLoading, isError, refetch } = useResources(endpoint);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
   const handleClear = () => {
-    queryClient.setQueryData(resourceKeys.lists(), []);
+    queryClient.setQueryData(resourceKeys.lists(endpoint), []);
   };
 
   const filteredData = applyFilters(data, filters);
