@@ -1,6 +1,3 @@
-import pytest
-
-
 class TestMergeResourcesUnit:
     """
     test cases:

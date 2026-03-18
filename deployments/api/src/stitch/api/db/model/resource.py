@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 from enum import StrEnum
 from sqlalchemy import (
-    Enum,
     ForeignKey,
     Index,
     String,
