@@ -9,19 +9,32 @@ vi.mock("../hooks/useResources");
 const mockResourceData = [
   {
     id: 1,
-    name: "Burgan Field",
-    state_province: "Kuwait",
-    region: "Middle East",
-    basin: "Arabian",
-    source_data: { gem: [{}], wm: [], rmi: [], llm: [] },
+    data: {
+      name: "Burgan Field",
+      state_province: "Kuwait",
+      region: "Middle East",
+      basin: "Arabian",
+    },
+    provenance: {
+      name: "gem",
+      state_province: "gem",
+      region: "wm",
+      basin: "wm",
+    },
   },
   {
     id: 2,
-    name: "Ghawar Field",
-    state_province: null,
-    region: "Middle East",
-    basin: "Arabian",
-    source_data: { gem: [{}], wm: [{}], rmi: [], llm: [] },
+    data: {
+      name: "Ghawar Field",
+      state_province: null,
+      region: "Middle East",
+      basin: "Arabian",
+    },
+    provenance: {
+      name: "gem",
+      region: "wm",
+      basin: "wm",
+    },
   },
 ];
 
