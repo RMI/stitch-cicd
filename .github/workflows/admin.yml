@@ -10,7 +10,7 @@ on:
     - cron: "0 3 * * *" # Nightly at 3 AM UTC
   workflow_dispatch:
 
-name: Docker Checks
+name: Admin Checks
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-${{ github.event_action }}
   cancel-in-progress: true
