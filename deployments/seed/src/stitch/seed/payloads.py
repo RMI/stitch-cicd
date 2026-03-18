@@ -151,13 +151,21 @@ def build_payload(
         "constituents": [],
     }
 
-def _iter_faker_payload(fake: Faker, faker_count: int, seed_source: str, rng: random.Random, null_prob: float) -> Iterator[dict[str, Any]]:
+
+def _iter_faker_payload(
+    fake: Faker,
+    faker_count: int,
+    seed_source: str,
+    rng: random.Random,
+    null_prob: float,
+) -> Iterator[dict[str, Any]]:
     logger.info("Seeding random payloads")
     for i in range(1, faker_count + 1):
         logger.debug("Random payload %s", i)
         yield build_payload(
             fake=fake, seed_source=seed_source, rng=rng, null_prob=null_prob
         )
+
 
 def _iter_static_payloads(static_payload_dir: str) -> Iterator[dict[str, Any]]:
     """
@@ -225,4 +233,10 @@ def iter_payloads(
         yield from _iter_static_payloads(static_payload_dir)
 
     if faker_count is not None and faker_count > 0:
-        yield from _iter_faker_payload(fake=fake, faker_count=faker_count, seed_source=seed_source, rng=rng, null_prob=null_prob)
+        yield from _iter_faker_payload(
+            fake=fake,
+            faker_count=faker_count,
+            seed_source=seed_source,
+            rng=rng,
+            null_prob=null_prob,
+        )

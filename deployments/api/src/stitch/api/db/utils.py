@@ -70,7 +70,10 @@ def resource_to_view(resource: OGFieldResource, force_coalesce: bool = False):
 
     return OGFieldView(id=resource.id, **view.model_dump())
 
-def resource_to_list_item_view(resource: OGFieldResource, force_coalesce: bool = False) -> OGFieldListItemView:
+
+def resource_to_list_item_view(
+    resource: OGFieldResource, force_coalesce: bool = False
+) -> OGFieldListItemView:
     if resource.id is None:
         raise ResourceIntegrityError(
             f"Cannot create view for unmanaged resource: {repr(resource)}"

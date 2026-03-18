@@ -62,6 +62,7 @@ OGFieldSource = Annotated[
 class OGFieldView(OilGasFieldBase):
     id: int
 
+
 class OGFieldListItemView(BaseModel):
     id: int
     data: OilGasFieldBase

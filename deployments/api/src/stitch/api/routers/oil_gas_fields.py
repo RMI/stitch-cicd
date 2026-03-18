@@ -21,6 +21,7 @@ async def get_all_resources(
     resources = list(await resource_actions.get_all(session=uow.session))
     return [resource_to_list_item_view(r) for r in resources]
 
+
 @router.get("/{id}", response_model=OGFieldView)
 async def get_resource(
     *, uow: UnitOfWorkDep, user: CurrentUser, id: int
