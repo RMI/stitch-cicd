@@ -1,12 +1,11 @@
-from collections.abc import Sequence
 from fastapi import APIRouter
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.config import UnitOfWorkDep
 from stitch.api.auth import CurrentUser
-from stitch.api.db.utils import resource_to_view
+from stitch.api.db.utils import resource_to_view, resource_to_list_item_view
 
-from stitch.ogsi.model import OGFieldView, OGFieldResource
+from stitch.ogsi.model import OGFieldView, OGFieldResource, OGFieldListItemView
 
 router = APIRouter(
     prefix="/oil-gas-fields",
@@ -15,12 +14,12 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("/", response_model=list[OGFieldListItemView])
 async def get_all_resources(
     *, uow: UnitOfWorkDep, user: CurrentUser
-) -> Sequence[OGFieldResource]:
-    return await resource_actions.get_all(session=uow.session)
-
+) -> list[OGFieldListItemView]:
+    resources = list(await resource_actions.get_all(session=uow.session))
+    return [resource_to_list_item_view(r) for r in resources]
 
 @router.get("/{id}", response_model=OGFieldView)
 async def get_resource(

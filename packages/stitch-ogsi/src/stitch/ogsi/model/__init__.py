@@ -1,6 +1,6 @@
 from typing import Any, Annotated, Final
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from stitch.models import (
     Resource,
     Source,
@@ -61,6 +61,11 @@ OGFieldSource = Annotated[
 
 class OGFieldView(OilGasFieldBase):
     id: int
+
+class OGFieldListItemView(BaseModel):
+    id: int
+    data: OilGasFieldBase
+    provenance: dict[str, OGSISrcKey | None] = Field(default_factory=dict)
 
 
 class OGFieldResource(Resource[int, OGFieldSource]):
