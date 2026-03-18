@@ -142,23 +142,20 @@ export default function ResourcesTable({ resources }) {
                 const value = getField(resource, col.key);
 
                 return (
-                <td key={col.key} className={`py-2.5 pr-6 ${col.className}`}>
-                  {col.key === "name" ? (
-                    <Link
-                      to={`/oil-gas-fields/${resource.id}`}
-                      className="after:absolute after:inset-0 after:content-['']"
-                    >
-                      {value ?? (
-                        <span className="text-gray-300">—</span>
-                      )}
-                    </Link>
-                  ) : (
-                    (value ?? (
-                      <span className="text-gray-300">—</span>
-                    ))
-                  )}
-                </td>
-              )})}
+                  <td key={col.key} className={`py-2.5 pr-6 ${col.className}`}>
+                    {col.key === "name" ? (
+                      <Link
+                        to={`/oil-gas-fields/${resource.id}`}
+                        className="after:absolute after:inset-0 after:content-['']"
+                      >
+                        {value ?? <span className="text-gray-300">—</span>}
+                      </Link>
+                    ) : (
+                      (value ?? <span className="text-gray-300">—</span>)
+                    )}
+                  </td>
+                );
+              })}
 
               <td className="py-2.5">
                 <SourceMixBar provenance={resource.provenance} />
