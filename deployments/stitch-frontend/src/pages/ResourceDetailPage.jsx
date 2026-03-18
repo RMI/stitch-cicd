@@ -7,8 +7,11 @@ export default function ResourceDetailPage() {
   const navigate = useNavigate();
   const numericId = Number(id);
   const validId = Number.isFinite(numericId);
-  const endpoint = "resources"
-  const { data, isLoading, isError, refetch } = useResource(endpoint, numericId);
+  const endpoint = "resources";
+  const { data, isLoading, isError, refetch } = useResource(
+    endpoint,
+    numericId,
+  );
 
   useEffect(() => {
     if (validId) refetch();

@@ -4,9 +4,18 @@ import { getResource, getResources } from "./api";
 export const resourceKeys = {
   all: (endpoint = "resources") => [endpoint],
   lists: (endpoint = "resources") => [...resourceKeys.all(endpoint), "list"],
-  list: (endpoint = "resources", filters) => [...resourceKeys.lists(endpoint), filters,],
-  details: (endpoint = "resources") => [...resourceKeys.all(endpoint), "detail",],
-  detail: (endpoint = "resources", id) => [...resourceKeys.details(endpoint), id,],
+  list: (endpoint = "resources", filters) => [
+    ...resourceKeys.lists(endpoint),
+    filters,
+  ],
+  details: (endpoint = "resources") => [
+    ...resourceKeys.all(endpoint),
+    "detail",
+  ],
+  detail: (endpoint = "resources", id) => [
+    ...resourceKeys.details(endpoint),
+    id,
+  ],
 };
 
 // Query definitions
