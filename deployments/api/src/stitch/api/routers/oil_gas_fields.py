@@ -31,14 +31,6 @@ async def get_resource(
     return resource_to_view(resource=res)
 
 
-# TODO: consider sub-routes (this would be a repeatable pattern for other "resource" objects)
-#  * GET /{id}/sources - get og_field_sources for og_field_resource
-#  * GET <oil-gas-fields>/sources - get/query all og_field_sources (only useful if we have other "resources")
-#  * POST /{id}/sources - attach og_field_source objects to og_field_resource
-#  * POST <oil-gas-fields>/sources - create new og_field_sources
-#  * Are we every going to detatch a source from a resource?
-
-
 @router.post("/", response_model=OGFieldResource)
 async def create_resource(
     *, uow: UnitOfWorkDep, user: CurrentUser, resource_in: OGFieldResource

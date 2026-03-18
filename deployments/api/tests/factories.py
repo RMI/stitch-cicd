@@ -88,8 +88,6 @@ class OGFieldBaseFactory(ModelFactory[OilGasFieldBase]):
     )
 
 
-# TODO: move to `utils` make_resource with args for the collection attrs: source_data, constituents, provenance
-#  - use the base factory above to build the associated fiels or just None them all
 class ResourceFactory(ModelFactory[OGFieldResource]):
     __random_seed__ = 1
     __by_name__ = True
