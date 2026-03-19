@@ -9,6 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from stitch.api.db.errors import ResourceNotFoundError
 from stitch.ogsi.model import OGFieldSource, OGSISrcKey, OGFieldResource
 
 from .oil_gas_field_source import (
@@ -120,8 +121,9 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
     async def get_root(self, session: AsyncSession):
         root = await session.scalar(self.__class__._root_select(self.id))
         if root is None:
-            # TODO: add specific errors & exceptions
-            raise
+            raise ResourceNotFoundError(
+                f"No root ResourceModel found for `{repr(self)}`"
+            )
         return root
 
     async def get_constituents(self, session: AsyncSession):
