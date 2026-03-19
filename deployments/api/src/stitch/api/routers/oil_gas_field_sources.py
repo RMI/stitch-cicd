@@ -37,7 +37,6 @@ async def create_oil_gas_field_source(
 
 @router.get("/", response_model=Sequence[OGFieldSource])
 async def query_oil_gas_field_sources(uow: UnitOfWorkDep, user: CurrentUser):
-    # TODO: this **will** need to get paged and/or filtered
     return await og_field_source_actions.list_og_sources(session=uow.session)
 
 

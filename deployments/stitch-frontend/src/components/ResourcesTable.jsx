@@ -34,16 +34,21 @@ const COLUMNS = [
   },
 ];
 
+function getField(resource, key) {
+  return resource?.data?.[key] ?? null;
+}
+
 // Pure sort utility — accepts the sort config object so it can be
 // reused / moved server-side when pagination is introduced.
 function applySort(data, sortConfig) {
   if (!sortConfig.column) return data;
+
   const col = COLUMNS.find((c) => c.key === sortConfig.column);
   if (!col?.sortable) return data;
 
   return [...data].sort((a, b) => {
-    const aVal = a[sortConfig.column];
-    const bVal = b[sortConfig.column];
+    const aVal = getField(a, sortConfig.column);
+    const bVal = getField(b, sortConfig.column);
 
     // Nulls always last, regardless of direction
     if (aVal == null && bVal == null) return 0;
@@ -133,26 +138,27 @@ export default function ResourcesTable({ resources }) {
               key={resource.id}
               className="relative border-b border-gray-100 transition-colors hover:bg-white"
             >
-              {COLUMNS.map((col) => (
-                <td key={col.key} className={`py-2.5 pr-6 ${col.className}`}>
-                  {col.key === "name" ? (
-                    <Link
-                      to={`/resources/${resource.id}`}
-                      className="after:absolute after:inset-0 after:content-['']"
-                    >
-                      {resource[col.key] ?? (
-                        <span className="text-gray-300">—</span>
-                      )}
-                    </Link>
-                  ) : (
-                    (resource[col.key] ?? (
-                      <span className="text-gray-300">—</span>
-                    ))
-                  )}
-                </td>
-              ))}
+              {COLUMNS.map((col) => {
+                const value = getField(resource, col.key);
+
+                return (
+                  <td key={col.key} className={`py-2.5 pr-6 ${col.className}`}>
+                    {col.key === "name" ? (
+                      <Link
+                        to={`/oil-gas-fields/${resource.id}`}
+                        className="after:absolute after:inset-0 after:content-['']"
+                      >
+                        {value ?? <span className="text-gray-300">—</span>}
+                      </Link>
+                    ) : (
+                      (value ?? <span className="text-gray-300">—</span>)
+                    )}
+                  </td>
+                );
+              })}
+
               <td className="py-2.5">
-                <SourceMixBar sourceData={resource.source_data} />
+                <SourceMixBar provenance={resource.provenance} />
               </td>
             </tr>
           ))}
