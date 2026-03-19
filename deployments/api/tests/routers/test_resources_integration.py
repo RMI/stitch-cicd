@@ -1,16 +1,12 @@
 """Integration tests for resources router with real SQLite database."""
 
+from httpx import AsyncClient
 import pytest
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from tests.factories import ResourceCreateFactory, SourceFactory
 from stitch.api.db.model import ResourceModel
-
-from tests.utils import (
-    make_empty_resource,
-    make_gem_data,
-    make_resource_with_new_sources,
-    make_wm_data,
-)
 
 
 class TestResourcesIntegration:
@@ -19,69 +15,66 @@ class TestResourcesIntegration:
     @pytest.mark.anyio
     async def test_get_nonexistent_returns_404(self, integration_client):
         """GET /resources/999 returns 404 status code."""
-        response = await integration_client.get("/resources/999")
+        response = await integration_client.get("/oil-gas-fields/999")
 
         assert response.status_code == 404
         assert "999" in response.json()["detail"]
 
     @pytest.mark.anyio
-    async def test_create_resource_returns_resource(self, integration_client):
+    async def test_create_resource_returns_resource(
+        self,
+        integration_client: AsyncClient,
+        og_create_res_fact: ResourceCreateFactory,
+    ):
         """POST /resources/ returns the created resource."""
-        resource_in = make_resource_with_new_sources(
-            gem=make_gem_data(name="GEM Integration Field", lat=40.0, lon=-100.0).model,
-            name="Integration Test Resource",
-            country="USA",
-        )
+        resource_in = og_create_res_fact(name="Integration Test Resource")
 
-        response = await integration_client.post("/resources/", json=resource_in.data)
+        response = await integration_client.post(
+            "/oil-gas-fields/", json=resource_in.model_dump(mode="json")
+        )
 
         assert response.status_code == 200
         data = response.json()
-        assert data["name"] == "Integration Test Resource"
-        assert data["country"] == "USA"
+        assert data["view"]["name"] == "Integration Test Resource"
         assert "id" in data
         assert data["id"] > 0
 
     @pytest.mark.anyio
-    async def test_create_and_get_resource(self, integration_client):
+    async def test_create_and_get_resource(
+        self,
+        integration_client: AsyncClient,
+        og_create_res_fact: ResourceCreateFactory,
+    ):
         """POST creates resource, GET retrieves it."""
-        resource_in = make_resource_with_new_sources(
-            wm=make_wm_data(
-                field_name="WM Roundtrip Field", field_country="CAN", production=5000.0
-            ).model,
-            name="Roundtrip Resource",
-            country="CAN",
-        )
+        resource_in = og_create_res_fact(name="Roundtrip Resource")
 
         create_response = await integration_client.post(
-            "/resources/", json=resource_in.data
+            "/oil-gas-fields/", json=resource_in.model_dump(mode="json")
         )
 
         assert create_response.status_code == 200
         created_id = create_response.json()["id"]
 
-        get_response = await integration_client.get(f"/resources/{created_id}")
+        get_response = await integration_client.get(f"/oil-gas-fields/{created_id}")
 
         assert get_response.status_code == 200
         data = get_response.json()
         assert data["id"] == created_id
         assert data["name"] == "Roundtrip Resource"
-        assert data["country"] == "CAN"
 
     @pytest.mark.anyio
     async def test_create_persists_to_database(
-        self, integration_client, integration_session_factory
+        self,
+        integration_client: AsyncClient,
+        integration_session_factory: async_sessionmaker[AsyncSession],
+        og_create_res_fact: ResourceCreateFactory,
     ):
         """POST resource is persisted and queryable directly."""
-        resource_in = make_resource_with_new_sources(
-            gem=make_gem_data(
-                name="GEM Persist Field", lat=25.0, lon=-105.0, country="MEX"
-            ).model,
-            name="Persisted Resource",
-            country="MEX",
-        )
+        resource_in = og_create_res_fact(name="Persisted Resource")
 
-        response = await integration_client.post("/resources/", json=resource_in.data)
+        response = await integration_client.post(
+            "/oil-gas-fields/", json=resource_in.model_dump(mode="json")
+        )
 
         assert response.status_code == 200
         created_id = response.json()["id"]
@@ -91,20 +84,32 @@ class TestResourcesIntegration:
                 select(ResourceModel).where(ResourceModel.id == created_id)
             )
             resource = result.scalar_one_or_none()
+            assert resource is not None
+            assert resource.id is not None
 
-        assert resource is not None
-        assert resource.name == "Persisted Resource"
-        assert resource.country == "MEX"
+            sources = await resource.get_source_data(session)
+
+        assert len(sources) > 0
+        rmi_sources = [src for src in sources if src.source == "rmi"]
+        assert len(rmi_sources) == 1
+        assert rmi_sources[0].name == "Persisted Resource"
 
     @pytest.mark.anyio
-    async def test_create_with_minimal_data(self, integration_client):
+    async def test_create_with_minimal_data(
+        self,
+        integration_client: AsyncClient,
+        og_create_res_fact: ResourceCreateFactory,
+        source_maker: SourceFactory,
+    ):
         """POST /resources/ works with only required fields (no source data)."""
-        resource_in = make_empty_resource(name=None, country=None)
+        resource_in = og_create_res_fact(name="Minimal Name", sources=[])
 
-        response = await integration_client.post("/resources/", json=resource_in.data)
+        response = await integration_client.post(
+            "/oil-gas-fields/", json=resource_in.model_dump(mode="json")
+        )
 
         assert response.status_code == 200
         data = response.json()
         assert data["id"] > 0
-        assert data["name"] is None
-        assert data["country"] is None
+        assert (view := data.get("view", None)) is not None
+        assert view["name"] == "Minimal Name"

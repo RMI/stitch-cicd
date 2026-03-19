@@ -8,28 +8,28 @@ const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === "true";
 //--------------------------------
 // Real Implementations
 //--------------------------------
-function useResourcesReal() {
-  return useAuthenticatedQuery(resourceQueries.list());
+function useResourcesReal(endpoint = "resources") {
+  return useAuthenticatedQuery(resourceQueries.list(endpoint));
 }
 
-function useResourceReal(id) {
-  return useAuthenticatedQuery(resourceQueries.detail(id));
+function useResourceReal(endpoint = "resources", id) {
+  return useAuthenticatedQuery(resourceQueries.detail(endpoint, id));
 }
 
 //--------------------------------
 // Mock Implementations
 //--------------------------------
-function useResourcesMock() {
+function useResourcesMock(endpoint = "resources") {
   return useQuery({
-    queryKey: resourceKeys.lists(),
+    queryKey: resourceKeys.lists(endpoint),
     queryFn: () => Promise.resolve(mockResources),
     enabled: false,
   });
 }
 
-function useResourceMock(id) {
+function useResourceMock(endpoint = "resources", id) {
   return useQuery({
-    queryKey: resourceKeys.detail(id),
+    queryKey: resourceKeys.detail(endpoint, id),
     queryFn: () =>
       Promise.resolve(mockResources.find((r) => r.id === id) ?? null),
     enabled: false,

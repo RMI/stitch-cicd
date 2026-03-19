@@ -1,7 +1,12 @@
 import { SOURCES, SOURCE_COLORS, SOURCE_LABELS } from "../constants/sourceMeta";
 
-export default function SourceMixBar({ sourceData, showLabels = false }) {
-  const counts = SOURCES.map((s) => sourceData?.[s]?.length ?? 0);
+export default function SourceMixBar({ provenance, showLabels = false }) {
+  const counts = SOURCES.map(
+    (source) =>
+      Object.values(provenance ?? {}).filter((value) => value === source)
+        .length,
+  );
+
   const total = counts.reduce((a, b) => a + b, 0);
 
   if (total === 0) {
