@@ -136,7 +136,6 @@ async def get_sources(
 ) -> Sequence[OGFieldSource]:
     stmt = select(OilGasFieldSourceModel).where(OilGasFieldSourceModel.id.in_(ids))
     models = (await session.scalars(stmt)).all()
-    # TODO: raise if missing ids, optional
     return [model.as_entity() for model in models]
 
 
