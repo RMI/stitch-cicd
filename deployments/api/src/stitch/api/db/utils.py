@@ -3,7 +3,7 @@ from functools import reduce
 from typing import Protocol
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from stitch.ogsi.model import OGFieldView
+from stitch.ogsi.model import OGFieldView, OGFieldListItemView
 from stitch.api.coalesce import coalesce_og_field_resource
 from stitch.api.db.errors import ResourceIntegrityError
 from stitch.ogsi.model import OGFieldResource
@@ -69,3 +69,29 @@ def resource_to_view(resource: OGFieldResource, force_coalesce: bool = False):
     )
 
     return OGFieldView(id=resource.id, **view.model_dump())
+
+
+def resource_to_list_item_view(
+    resource: OGFieldResource, force_coalesce: bool = False
+) -> OGFieldListItemView:
+    if resource.id is None:
+        raise ResourceIntegrityError(
+            f"Cannot create view for unmanaged resource: {repr(resource)}"
+        )
+
+    if force_coalesce or resource.view is None:
+        data, raw_provenance = coalesce_og_field_resource(resource.source_data)
+    else:
+        data = resource.view
+        raw_provenance = resource.provenance
+
+    provenance = {
+        field_name: (None if prov is None else prov[1])
+        for field_name, prov in raw_provenance.items()
+    }
+
+    return OGFieldListItemView(
+        id=resource.id,
+        data=data,
+        provenance=provenance,
+    )
