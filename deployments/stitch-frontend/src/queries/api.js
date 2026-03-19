@@ -20,3 +20,15 @@ export async function getResource(id, fetcher, endpoint = "resources") {
   const data = await response.json();
   return data;
 }
+
+export async function getResourceDetail(id, fetcher, endpoint = "resources") {
+  const url = `${config.apiBaseUrl}/${endpoint}/${id}/detail`;
+  const response = await fetcher(url);
+  if (!response.ok) {
+    const error = new Error(`HTTP error! status: ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  const data = await response.json();
+  return data;
+}

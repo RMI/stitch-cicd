@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useResource } from "../hooks/useResources";
+import { useResourceDetail } from "../hooks/useResources";
 import SourceMixBar from "../components/SourceMixBar";
 import SectionHeader from "../components/SectionHeader";
 import { FieldCard, FieldGrid } from "../components/FieldCard";
@@ -51,7 +51,7 @@ export default function ResourceDetailPage() {
   const numericId = Number(id);
   const validId = Number.isFinite(numericId);
   const endpoint = "oil-gas-fields";
-  const { data, isLoading, isError, refetch } = useResource(
+  const { data, isLoading, isError, refetch } = useResourceDetail(
     endpoint,
     numericId,
   );

@@ -1,4 +1,4 @@
-import { getResource, getResources } from "./api";
+import { getResource, getResources, getResourceDetail } from "./api";
 
 // Query key factory - hierarchical for easy invalidation
 export const resourceKeys = {
@@ -16,6 +16,14 @@ export const resourceKeys = {
     ...resourceKeys.details(endpoint),
     id,
   ],
+  views: (endpoint = "resources") => [
+    ...resourceKeys.all(endpoint),
+    "view",
+  ],
+  view: (endpoint = "resources", id) => [
+    ...resourceKeys.views(endpoint),
+    id,
+  ],
 };
 
 // Query definitions
@@ -28,6 +36,12 @@ export const resourceQueries = {
 
   detail: (endpoint = "resources", id) => ({
     queryKey: resourceKeys.detail(endpoint, id),
+    queryFn: (fetcher) => getResourceDetail(id, fetcher, endpoint),
+    enabled: false,
+  }),
+
+  view: (endpoint = "resources", id) => ({
+    queryKey: resourceKeys.view(endpoint, id),
     queryFn: (fetcher) => getResource(id, fetcher, endpoint),
     enabled: false,
   }),
