@@ -69,6 +69,10 @@ class OGFieldListItemView(BaseModel):
     provenance: dict[str, OGSISrcKey | None] = Field(default_factory=dict)
 
 
+class OGFieldDetailView(OGFieldListItemView):
+    source_data: list[OGFieldSource] = Field(default_factory=list)
+
+
 class OGFieldResource(Resource[int, OGFieldSource]):
     provenance: dict[str, tuple[Any, OGSISrcKey, int] | None] = Field(
         default_factory=dict

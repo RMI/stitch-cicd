@@ -3,10 +3,15 @@ from functools import reduce
 from typing import Protocol
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from stitch.ogsi.model import OGFieldView, OGFieldListItemView
+from stitch.ogsi.model import (
+    OGFieldDetailView,
+    OGFieldListItemView,
+    OGFieldResource,
+    OGFieldView,
+    OGSISrcKey,
+)
 from stitch.api.coalesce import coalesce_og_field_resource
 from stitch.api.db.errors import ResourceIntegrityError
-from stitch.ogsi.model import OGFieldResource
 
 from .model import ResourceModel
 
@@ -85,7 +90,7 @@ def resource_to_list_item_view(
         data = resource.view
         raw_provenance = resource.provenance
 
-    provenance = {
+    provenance: dict[str, OGSISrcKey | None] = {
         field_name: (None if prov is None else prov[1])
         for field_name, prov in raw_provenance.items()
     }
@@ -94,4 +99,13 @@ def resource_to_list_item_view(
         id=resource.id,
         data=data,
         provenance=provenance,
+    )
+
+def resource_to_detail_view(
+    resource: OGFieldResource, force_coalesce: bool = False
+) -> OGFieldDetailView:
+    base = resource_to_list_item_view(resource, force_coalesce=force_coalesce)
+    return OGFieldDetailView(
+        **base.model_dump(),
+        source_data=list(resource.source_data),
     )
