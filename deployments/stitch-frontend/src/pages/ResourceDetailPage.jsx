@@ -58,8 +58,6 @@ export default function ResourceDetailPage() {
     refetch,
   } = useResourceDetail(endpoint, numericId);
 
-  console.log(detailView);
-
   useEffect(() => {
     if (validId) refetch();
   }, [numericId, validId, refetch]);
