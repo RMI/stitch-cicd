@@ -51,10 +51,12 @@ export default function ResourceDetailPage() {
   const numericId = Number(id);
   const validId = Number.isFinite(numericId);
   const endpoint = "oil-gas-fields";
-  const { data, isLoading, isError, refetch } = useResourceDetail(
+  const { data: detailView, isLoading, isError, refetch } = useResourceDetail(
     endpoint,
     numericId,
   );
+
+  console.log(detailView)
 
   useEffect(() => {
     if (validId) refetch();
@@ -73,19 +75,19 @@ export default function ResourceDetailPage() {
       {isLoading && <p className="text-gray-500">Loading…</p>}
       {isError && <p className="text-red-500">Failed to load resource.</p>}
 
-      {data && (
+      {detailView && (
         <div className="space-y-12">
           {/* Header */}
           <div>
             <h1 className="text-3xl font-bold text-gray-dark mb-4">
-              {data.name}
+              {detailView.data.name}
             </h1>
           </div>
 
           <section>
             <SectionHeader title="Data Source Mix" />
             <div className="px-4">
-              <SourceMixBar sourceData={data.source_data} showLabels />
+              <SourceMixBar provenance={detailView.provenance} showLabels />
             </div>
           </section>
 
@@ -97,7 +99,8 @@ export default function ResourceDetailPage() {
                 <FieldCard
                   key={key}
                   label={FIELD_META[key].label}
-                  value={data[key]}
+                  value={detailView.data[key]}
+                  source={detailView.provenance[key]}
                 />
               ))}
             </FieldGrid>
@@ -106,7 +109,7 @@ export default function ResourceDetailPage() {
           {/* Organizations */}
           <section>
             <SectionHeader title="Organizations" />
-            <OrganizationsSection data={data} />
+            <OrganizationsSection data={detailView.data} />
           </section>
 
           {/* Production & Geology */}
@@ -117,14 +120,15 @@ export default function ResourceDetailPage() {
                 <FieldCard
                   key={key}
                   label={FIELD_META[key].label}
-                  value={data[key]}
+                  value={detailView.data[key]}
+                  source={detailView.provenance[key]}
                 />
               ))}
             </FieldGrid>
           </section>
 
           <section className="bg-gray-light p-4">
-            <pre>{JSON.stringify(data, null, 2)}</pre>
+            <pre>{JSON.stringify(detailView, null, 2)}</pre>
           </section>
         </div>
       )}
