@@ -16,14 +16,8 @@ export const resourceKeys = {
     ...resourceKeys.details(endpoint),
     id,
   ],
-  views: (endpoint = "resources") => [
-    ...resourceKeys.all(endpoint),
-    "view",
-  ],
-  view: (endpoint = "resources", id) => [
-    ...resourceKeys.views(endpoint),
-    id,
-  ],
+  views: (endpoint = "resources") => [...resourceKeys.all(endpoint), "view"],
+  view: (endpoint = "resources", id) => [...resourceKeys.views(endpoint), id],
 };
 
 // Query definitions

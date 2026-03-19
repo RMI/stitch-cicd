@@ -51,12 +51,14 @@ export default function ResourceDetailPage() {
   const numericId = Number(id);
   const validId = Number.isFinite(numericId);
   const endpoint = "oil-gas-fields";
-  const { data: detailView, isLoading, isError, refetch } = useResourceDetail(
-    endpoint,
-    numericId,
-  );
+  const {
+    data: detailView,
+    isLoading,
+    isError,
+    refetch,
+  } = useResourceDetail(endpoint, numericId);
 
-  console.log(detailView)
+  console.log(detailView);
 
   useEffect(() => {
     if (validId) refetch();

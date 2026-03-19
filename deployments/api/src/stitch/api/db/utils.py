@@ -101,6 +101,7 @@ def resource_to_list_item_view(
         provenance=provenance,
     )
 
+
 def resource_to_detail_view(
     resource: OGFieldResource, force_coalesce: bool = False
 ) -> OGFieldDetailView:
