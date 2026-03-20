@@ -6,7 +6,10 @@ export default function SourceMixBar({ sourceData, showLabels = false }) {
 
   if (total === 0) {
     return (
-      <div className="h-3 w-full rounded bg-gray-200" title="No source data" />
+      <div
+        className="h-3 w-full rounded bg-gray-200"
+        title="No provenance data"
+      />
     );
   }
 
