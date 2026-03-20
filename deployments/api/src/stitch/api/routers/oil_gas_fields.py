@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+import logging
+from fastapi import APIRouter, HTTPException
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.config import UnitOfWorkDep
@@ -15,6 +16,9 @@ from stitch.ogsi.model import (
     OGFieldResource,
     OGFieldView,
 )
+
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/oil-gas-fields",
@@ -54,3 +58,37 @@ async def create_resource(
     return await resource_actions.create(
         session=uow.session, user=user, resource=resource_in
     )
+
+
+@router.post("/merge", response_model=OGFieldResource)
+async def merge_resources_endpoint(
+    *, uow: UnitOfWorkDep, user: CurrentUser, resource_ids: list[int]
+) -> OGFieldResource:
+    """
+    Merge multiple resources into one (STUB):
+    repoint resource_ids[1:] -> resource_ids[0]
+    """
+    # preserve order but drop duplicates
+    unique_ids = list(dict.fromkeys(resource_ids))
+    if len(unique_ids) < 2:
+        raise HTTPException(
+            status_code=400, detail="Provide at least 2 unique resource IDs"
+        )
+
+    logger.info(
+        "Merge requested by user=%s for resource_ids=%s",
+        getattr(user, "sub", "<anon>"),
+        unique_ids,
+    )
+
+    try:
+        return await resource_actions.merge_resources(
+            session=uow.session,
+            user=user,
+            resource_ids=unique_ids,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Error while merging resources %s: %s", unique_ids, exc)
+        raise HTTPException(status_code=500, detail="Internal error during merge")
