@@ -96,7 +96,7 @@ class TestGetTokenClaims:
         ):
             with TestClient(app, raise_server_exceptions=False) as client:
                 response = client.get(
-                    "/api/v1/oil-gas-fields/",
+                    "/api/v1/resources",
                 )
 
             assert response.status_code == 401
@@ -113,7 +113,7 @@ class TestGetTokenClaims:
         ):
             with TestClient(app, raise_server_exceptions=False) as client:
                 response = client.get(
-                    "/api/v1/oil-gas-fields/",
+                    "/api/v1/resources",
                     headers={"Authorization": "NotBearer sometoken"},
                 )
 

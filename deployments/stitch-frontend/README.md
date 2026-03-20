@@ -10,6 +10,7 @@ React frontend application styled with Tailwind CSS and built with Vite.
 - [API](#api)
 - [Testing](#testing)
 - [Queries](#queries)
+- [Resource Detail View](#resource-detail-view)
 
 ## Tech Stack
 
@@ -31,11 +32,13 @@ stitch-frontend/
 ├── src/
 │   ├── auth/                    # Auth0 integration and gate component
 │   ├── components/              # Shared UI components
+│   │   ├── FieldCard.jsx        # Field value card + FieldGrid layout
 │   │   ├── FilterBar.jsx        # Filter dropdown row + active chips
 │   │   ├── FilterDropdown.jsx   # Multi-select dropdown with counts
 │   │   ├── ResourcesTable.jsx   # Sortable resources table
 │   │   ├── ResourcesView.jsx    # Resources list page section
 │   │   ├── ResourceView.jsx     # Single resource fetch section
+│   │   ├── SectionHeader.jsx    # Titled section divider
 │   │   └── SourceMixBar.jsx     # Data source proportion bar
 │   ├── config/
 │   │   ├── env.js               # Runtime environment config
@@ -43,9 +46,12 @@ stitch-frontend/
 │   ├── hooks/
 │   │   ├── useAuthenticatedQuery.js
 │   │   └── useResources.js      # useResources / useResource (real + mock implementations)
+│   ├── constants/
+│   │   ├── fieldMeta.js         # Field display labels and section groupings (FIELD_META)
+│   │   └── sourceMeta.js        # Data source labels and colors (SOURCES, SOURCE_COLORS, SOURCE_LABELS)
 │   ├── pages/
 │   │   ├── HomePage.jsx         # "/" — ResourcesView + ResourceView
-│   │   └── ResourceDetailPage.jsx  # "/resources/:id"
+│   │   └── ResourceDetailPage.jsx  # "/resources/:id" — full resource detail view
 │   ├── queries/                 # TanStack Query key factory and definitions
 │   ├── test/                    # Test setup and shared utilities
 │   ├── App.jsx                  # Route definitions
@@ -135,29 +141,77 @@ npm run test:coverage
 
 Test files should be placed next to the component they test with a `.test.jsx` or `.test.js` extension.
 
-**Example test:**
+Use `renderWithQueryClient` from `src/test/utils.jsx` instead of `render` directly — it wraps the component in both a `QueryClientProvider` and a `MemoryRouter`, which most components require:
 
 ```javascript
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithQueryClient } from "../test/utils";
 import MyComponent from "./MyComponent";
 
 describe("MyComponent", () => {
   it("renders correctly", () => {
-    render(<MyComponent />);
+    renderWithQueryClient(<MyComponent />);
     expect(screen.getByText("Hello")).toBeInTheDocument();
   });
 });
 ```
 
+### Mocking Data Hooks
+
+Components that fetch data use `useResource` or `useResources` from `src/hooks/useResources.js`. Mock these hooks rather than the network — this keeps tests independent of whether the app is in real API or mock data mode:
+
+```javascript
+import { vi, beforeEach } from "vitest";
+import { useResource } from "../hooks/useResources";
+
+vi.mock("../hooks/useResources");
+
+const defaultHookReturn = {
+  data: null,
+  isLoading: false,
+  isError: false,
+  error: null,
+  refetch: vi.fn(),
+};
+
+beforeEach(() => {
+  vi.mocked(useResource).mockReturnValue({
+    ...defaultHookReturn,
+    refetch: vi.fn(),
+  });
+});
+```
+
+Override the mock per-test to simulate loading, error, or success states:
+
+```javascript
+it("shows a loading indicator", () => {
+  vi.mocked(useResource).mockReturnValue({
+    ...defaultHookReturn,
+    isLoading: true,
+  });
+  renderWithQueryClient(<MyComponent />);
+  expect(screen.getByText(/loading/i)).toBeInTheDocument();
+});
+```
+
 ### Testing Utilities
 
-The project includes:
+`src/test/utils.jsx` exports:
 
-- **@testing-library/react** - Component testing utilities
-- **@testing-library/jest-dom** - Custom matchers for DOM elements
-- **@testing-library/user-event** - User interaction simulation
-- **jsdom** - DOM environment for Node.js
+| Export                              | Description                                                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `renderWithQueryClient(ui)`         | Renders inside `QueryClientProvider` + `MemoryRouter`; returns `{ queryClient, ...rtlResult }` |
+| `auth0TestDefaults`                 | Default Auth0 mock state (authenticated); spread and override for auth tests                   |
+| `createMockResponse(data, options)` | Builds a mock `fetch` response object                                                          |
+| `createMockError(status)`           | Builds a mock error `fetch` response                                                           |
+
+Additional libraries:
+
+- **@testing-library/jest-dom** — custom DOM matchers (e.g. `toBeInTheDocument`, `toHaveStyle`)
+- **@testing-library/user-event** — user interaction simulation
+- **jsdom** — DOM environment for Node.js
 
 Test setup is located in `src/test/setup.js` and runs automatically before each test file.
 
@@ -292,32 +346,33 @@ When adding new endpoints:
 
 1. **Update the key factory** in `src/queries/[entity].js`:
 
-   ```js
-   export const resourceKeys = {
-     // ... existing keys
-     mutations: () => [...resourceKeys.all, "mutation"],
-     mutation: (id) => [...resourceKeys.mutations(), id],
-   };
-   ```
+```js
+export const resourceKeys = {
+  // ... existing keys
+  mutations: () => [...resourceKeys.all, "mutation"],
+  mutation: (id) => [...resourceKeys.mutations(), id],
+};
+```
 
 2. **Add query definition**:
 
-   ```js
-   export const resourceQueries = {
-     // ... existing queries
-     mutation: (id) => ({
-       queryKey: resourceKeys.mutation(id),
-       queryFn: () => mutateResource(id),
-     }),
-   };
-   ```
+```js
+export const resourceQueries = {
+  // ... existing queries
+  mutation: (id) => ({
+    queryKey: resourceKeys.mutation(id),
+    queryFn: () => mutateResource(id),
+  }),
+};
+```
 
 3. **Use in hook**:
-   ```js
-   export function useMutateResource(id) {
-     return useQuery(resourceQueries.mutation(id));
-   }
-   ```
+
+```js
+export function useMutateResource(id) {
+  return useQuery(resourceQueries.mutation(id));
+}
+```
 
 ### Reference
 
@@ -436,8 +491,8 @@ Portal → Container App → Networking → CORS
 
 - Enable credentials
 - Max Age: 5
-- Allowed Origins: <SWA_URL>
-- Allowed Headers: \*
+- Allowed Origins:
+- Allowed Headers:
 
 Apply changes.
 
@@ -448,3 +503,42 @@ Apply changes.
 - Login succeeds.
 - API calls succeed.
 - Authenticated resources load properly.
+
+## Resource Detail View
+
+`ResourceDetailPage` (`/resources/:id`) renders a full detail view for a single resource. It is organized into sections driven by two constants files.
+
+### Constants
+
+`**src/constants/sourceMeta.js**` — Data source registry:
+
+```js
+export const SOURCES = ["gem", "wm", "rmi", "llm"];
+
+export const SOURCE_COLORS = {
+  gem: "#4AE3D9",
+  wm: "#3B44EC",
+  rmi: "#F4A70B",
+  llm: "#57A0FF",
+};
+
+export const SOURCE_LABELS = {
+  gem: "GEM Database",
+  wm: "Woodmac Database",
+  rmi: "User Generated",
+  llm: "LLM",
+};
+```
+
+`**src/constants/fieldMeta.js**` — Field display configuration. Maps API payload keys to a label and a `section` grouping used to populate each page section:
+
+```js
+export const FIELD_META = {
+  name: { label: "Name", section: "identity" },
+  country: { label: "Country", section: "identity" },
+  // ...
+  field_status: { label: "Field Status", section: "production" },
+  discovery_year: { label: "Discovery Year", section: "production" },
+  // ...
+};
+```

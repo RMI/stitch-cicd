@@ -1,22 +1,24 @@
-from collections.abc import Sequence
+from collections import defaultdict
 from enum import StrEnum
 from sqlalchemy import (
     ForeignKey,
     Index,
+    Integer,
     String,
+    UniqueConstraint,
     literal,
     select,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from stitch.api.db.errors import ResourceNotFoundError
-from stitch.ogsi.model import OGFieldSource, OGSISrcKey, OGFieldResource
 
-from .oil_gas_field_source import (
-    OilGasFieldSourceModel,
+from .sources import (
+    SOURCE_TABLES,
+    SourceKey,
+    SourceModel,
+    SourceModelData,
 )
-
-from stitch.api.entities import User as UserEntity
+from stitch.api.entities import IdType, User as UserEntity
 from .common import Base
 from .mixins import TimestampMixin, UserAuditMixin
 from .types import PORTABLE_BIGINT
@@ -29,37 +31,37 @@ class MembershipStatus(StrEnum):
 
 
 class MembershipModel(TimestampMixin, UserAuditMixin, Base):
-    __tablename__ = "og_field_memberships"
+    __tablename__ = "memberships"
 
-    id: Mapped[int] = mapped_column(
-        PORTABLE_BIGINT, primary_key=True, autoincrement=True
+    __table_args__ = (
+        UniqueConstraint(
+            "resource_id",
+            "source",
+            "source_pk",
+            name="uc_source_source_pk",
+        ),
     )
-    resource_id: Mapped[int] = mapped_column(
-        ForeignKey("og_field_resources.id"), nullable=False
-    )
-    source: Mapped[OGSISrcKey] = mapped_column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    resource_id: Mapped[int] = mapped_column(ForeignKey("resources.id"), nullable=False)
+    source: Mapped[SourceKey] = mapped_column(
         String(10), nullable=False
     )  # "gem" | "wm"
-    source_pk: Mapped[int] = mapped_column(
-        ForeignKey("oil_gas_field_sources.id"), nullable=False
-    )
-    status: Mapped[MembershipStatus] = mapped_column(
-        default=MembershipStatus.ACTIVE, nullable=False
-    )
+    source_pk: Mapped[int] = mapped_column(PORTABLE_BIGINT, nullable=False)
+    status: Mapped[MembershipStatus]
 
     @classmethod
     def create(
         cls,
         created_by: UserEntity,
         resource: "ResourceModel",
-        source: OGSISrcKey,
-        source_pk: int,
+        source: SourceKey,
+        source_pk: IdType,
         status: MembershipStatus = MembershipStatus.ACTIVE,
     ):
         model = cls(
             resource_id=resource.id,
             source=source,
-            source_pk=source_pk,
+            source_pk=str(source_pk),
             status=status,
             created_by_id=created_by.id,
             last_updated_by_id=created_by.id,
@@ -80,50 +82,44 @@ class MembershipModel(TimestampMixin, UserAuditMixin, Base):
 
 
 class ResourceModel(TimestampMixin, UserAuditMixin, Base):
-    __tablename__ = "og_field_resources"
+    __tablename__ = "resources"
     __table_args__ = (Index("rp_repointed_id_idx", "repointed_id"),)
 
     id: Mapped[int] = mapped_column(
         PORTABLE_BIGINT, primary_key=True, autoincrement=True
     )
     repointed_id: Mapped[int | None] = mapped_column(
-        PORTABLE_BIGINT, ForeignKey("og_field_resources.id"), nullable=True
+        PORTABLE_BIGINT, ForeignKey("resources.id"), nullable=True
     )
+    name: Mapped[str | None] = mapped_column(String, nullable=True)
+    country: Mapped[str | None] = mapped_column(String(3), nullable=True)
 
     # SQLAlchemy will automatically see the foreign key `memberships.resource_id`
     # and configure the appropriate SQL statement to load the membership objects
     memberships: Mapped[list[MembershipModel]] = relationship()
 
-    def as_empty_entity(self):
-        return OGFieldResource(
-            id=self.id,
-            source_data=[],
-            constituents=frozenset(),
-        )
+    async def get_source_data(self, session: AsyncSession):
+        pks_by_src: dict[SourceKey, set[int]] = defaultdict(set)
+        for mem in self.memberships:
+            if mem.status == MembershipStatus.ACTIVE:
+                pks_by_src[mem.source].add(mem.source_pk)
 
-    async def get_source_data(self, session: AsyncSession) -> Sequence[OGFieldSource]:
-        stmt = (
-            select(MembershipModel.source_pk)
-            .where(MembershipModel.resource_id == self.id)
-            .where(MembershipModel.status == MembershipStatus.ACTIVE)
-        )
-        source_pks = (await session.scalars(stmt)).all()
+        results: dict[SourceKey, dict[IdType, SourceModel]] = defaultdict(dict)
+        for src, pks in pks_by_src.items():
+            model_cls = SOURCE_TABLES.get(src)
+            if model_cls is None:
+                continue
+            stmt = select(model_cls).where(model_cls.id.in_(pks))
+            for src_model in await session.scalars(stmt):
+                results[src][src_model.id] = src_model
 
-        if not source_pks:
-            return []
-
-        stmt = select(OilGasFieldSourceModel).where(
-            OilGasFieldSourceModel.id.in_(source_pks)
-        )
-        sources = (await session.scalars(stmt)).all()
-        return [ofgsm.as_entity() for ofgsm in sources]
+        return SourceModelData(**results)
 
     async def get_root(self, session: AsyncSession):
         root = await session.scalar(self.__class__._root_select(self.id))
         if root is None:
-            raise ResourceNotFoundError(
-                f"No root ResourceModel found for `{repr(self)}`"
-            )
+            # TODO: add specific errors & exceptions
+            raise
         return root
 
     async def get_constituents(self, session: AsyncSession):
@@ -133,9 +129,13 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
     def create(
         cls,
         created_by: UserEntity,
+        name: str | None = None,
+        country: str | None = None,
         repointed_to: int | None = None,
     ):
         return cls(
+            name=name,
+            country=country,
             repointed_id=repointed_to,
             created_by_id=created_by.id,
             last_updated_by_id=created_by.id,
