@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Annotated, Literal
-from uuid import UUID, uuid4
+from typing import Literal, Mapping
+from uuid import UUID
 
-from pydantic import Field
 import pytest
 
 from stitch.models import (
-    Resource_,
     Resource,
     Source,
     SourcePayload,
@@ -27,12 +24,7 @@ class FooSource(Source[int, Literal["foo"]]):
     value: float
 
 
-class FooDupSource(Source[int, Literal["foo2"]]):
-    source: Literal["foo2"] = "foo2"
-    value: str
-
-
-class BarSource(Source[UUID, Literal["bar"]]):
+class BarSource(Source[str, Literal["bar"]]):
     source: Literal["bar"] = "bar"
     label: str
 
@@ -47,16 +39,16 @@ class UuidSource(Source[UUID, Literal["uuid_src"]]):
 
 
 class FooPayload(SourcePayload):
-    foos: Mapping[int, FooSource] = Field(default_factory=dict)
+    foos: Mapping[int, FooSource] = {}
 
 
 class MultiPayload(SourcePayload):
-    foos: Mapping[int, FooSource] = Field(default_factory=dict)
-    bars: Mapping[str, BarSource] = Field(default_factory=dict)
+    foos: Mapping[int, FooSource] = {}
+    bars: Mapping[str, BarSource] = {}
 
 
 class UuidPayload(SourcePayload):
-    uuids: Mapping[UUID, UuidSource] = Field(default_factory=dict)
+    uuids: Mapping[UUID, UuidSource] = {}
 
 
 # ---------------------------------------------------------------------------
@@ -68,27 +60,16 @@ class EmptyPayload(SourcePayload):
     pass
 
 
-class FooResource(Resource_[int, FooPayload]):
+class FooResource(Resource[int, int, str, FooPayload]):
     pass
 
 
-class MultiResource(Resource_[int, MultiPayload]):
+class MultiResource(Resource[int, int, str, MultiPayload]):
     pass
 
 
-class ExtendedResource(Resource_[int, EmptyPayload]):
+class ExtendedResource(Resource[int, int, str, EmptyPayload]):
     extra: str
-
-
-TestSrcUnion = Annotated[
-    FooSource | FooDupSource | BarSource | UuidSource, Field(discriminator="source")
-]
-
-
-class ResourceWithSrcUnion(Resource[int, TestSrcUnion]):
-    res_a: bool = Field(default=False)
-    res_b: float
-    res_c: str
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +85,7 @@ class FooSourceORM:
 
 
 class BarSourceORM:
-    def __init__(self, id: UUID, source: str, label: str):
+    def __init__(self, id: str, source: str, label: str):
         self.id = id
         self.source = source
         self.label = label
@@ -122,7 +103,7 @@ def foo_source():
 
 @pytest.fixture
 def bar_source():
-    return BarSource(id=uuid4(), label="test")
+    return BarSource(id="abc", label="test")
 
 
 @pytest.fixture

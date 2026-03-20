@@ -2,33 +2,24 @@ import { getResource, getResources } from "./api";
 
 // Query key factory - hierarchical for easy invalidation
 export const resourceKeys = {
-  all: (endpoint = "resources") => [endpoint],
-  lists: (endpoint = "resources") => [...resourceKeys.all(endpoint), "list"],
-  list: (endpoint = "resources", filters) => [
-    ...resourceKeys.lists(endpoint),
-    filters,
-  ],
-  details: (endpoint = "resources") => [
-    ...resourceKeys.all(endpoint),
-    "detail",
-  ],
-  detail: (endpoint = "resources", id) => [
-    ...resourceKeys.details(endpoint),
-    id,
-  ],
+  all: ["resources"],
+  lists: () => [...resourceKeys.all, "list"],
+  list: (filters) => [...resourceKeys.lists(), filters],
+  details: () => [...resourceKeys.all, "detail"],
+  detail: (id) => [...resourceKeys.details(), id],
 };
 
 // Query definitions
 export const resourceQueries = {
-  list: (endpoint = "resources") => ({
-    queryKey: resourceKeys.lists(endpoint),
-    queryFn: (fetcher) => getResources(fetcher, endpoint),
+  list: () => ({
+    queryKey: resourceKeys.lists(),
+    queryFn: (fetcher) => getResources(fetcher),
     enabled: false,
   }),
 
-  detail: (endpoint = "resources", id) => ({
-    queryKey: resourceKeys.detail(endpoint, id),
-    queryFn: (fetcher) => getResource(id, fetcher, endpoint),
+  detail: (id) => ({
+    queryKey: resourceKeys.detail(id),
+    queryFn: (fetcher) => getResource(id, fetcher),
     enabled: false,
   }),
 };

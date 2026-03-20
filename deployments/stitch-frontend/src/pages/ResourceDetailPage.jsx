@@ -50,11 +50,7 @@ export default function ResourceDetailPage() {
   const navigate = useNavigate();
   const numericId = Number(id);
   const validId = Number.isFinite(numericId);
-  const endpoint = "oil-gas-fields";
-  const { data, isLoading, isError, refetch } = useResource(
-    endpoint,
-    numericId,
-  );
+  const { data, isLoading, isError, refetch } = useResource(numericId);
 
   useEffect(() => {
     if (validId) refetch();

@@ -11,13 +11,10 @@ import config from "../config/env";
 export default function ResourceView({ className, endpoint }) {
   const queryClient = useQueryClient();
   const [id, setId] = useState(1);
-  const { data, isLoading, isError, error, refetch } = useResource(
-    endpoint,
-    id,
-  );
+  const { data, isLoading, isError, error, refetch } = useResource(id);
 
   const handleClear = (id) => {
-    queryClient.resetQueries({ queryKey: resourceKeys.detail(endpoint, id) });
+    queryClient.resetQueries({ queryKey: resourceKeys.detail(id) });
   };
 
   const handleKeyDown = (e) => {
@@ -33,7 +30,8 @@ export default function ResourceView({ className, endpoint }) {
       </h1>
       <div className=" text-gray-500 pb-4">
         <span className="font-bold">
-          {config.apiBaseUrl}/{endpoint}
+          {config.apiBaseUrl}
+          {endpoint}
         </span>
       </div>
       <div className="mb-6 flex gap-3">
