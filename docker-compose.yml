@@ -59,15 +59,6 @@ services:
       - db_data:/var/lib/postgresql/data
       - ./deployments/db/00-init-roles.sh:/docker-entrypoint-initdb.d/00-init-roles.sh:ro
 
-  adminer:
-    image: adminer:latest
-    ports:
-      - "8081:8080"
-    profiles: ["tools", "full"]
-    depends_on:
-      db:
-        condition: service_healthy
-
   db-init:
     build:
       context: .
