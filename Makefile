@@ -140,13 +140,13 @@ frontend-clean:
 
 # docker
 clean-docker:
-	$(DOCKER_COMPOSE_DEV) down --volumes --remove-orphans
+	$(DOCKER_COMPOSE_DEV) --profile "*" down --volumes --remove-orphans
 
 dev-docker:
-	$(DOCKER_COMPOSE_DEV) up
+	$(DOCKER_COMPOSE_DEV) --profile full up
 
 reboot-docker: clean-docker
-	$(DOCKER_COMPOSE_DEV) up --build
+	$(DOCKER_COMPOSE_DEV) --profile full up --build
 
 .PHONY: all build clean \
         build-python \
