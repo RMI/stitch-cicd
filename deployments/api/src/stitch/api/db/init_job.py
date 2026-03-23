@@ -9,6 +9,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import OperationalError
+import hashlib
+import json
+from sqlalchemy.sql.schema import Column
 
 from stitch.api.db.model import (
     StitchBase,
@@ -198,6 +201,73 @@ def fail_partial(existing_tables: set[str], expected: set[str]) -> None:
         "Fix by resetting the dev DB volume, or later: run migrations."
     )
 
+def _type_repr(col: Column) -> str:
+    # compile-like string is better than repr() for stability
+    return str(col.type)
+
+def schema_fingerprint(metadata) -> str:
+    tables_payload = []
+
+    for table in sorted(metadata.tables.values(), key=lambda t: t.name):
+        table_payload = {
+            "name": table.name,
+            "columns": [],
+            "primary_key": sorted(col.name for col in table.primary_key.columns),
+            "indexes": [],
+            "unique_constraints": [],
+            "foreign_keys": [],
+        }
+
+        for col in table.columns:
+            table_payload["columns"].append(
+                {
+                    "name": col.name,
+                    "type": _type_repr(col),
+                    "nullable": col.nullable,
+                    "primary_key": col.primary_key,
+                    "unique": bool(col.unique),
+                }
+            )
+
+            for fk in sorted(col.foreign_keys, key=lambda f: str(f.target_fullname)):
+                table_payload["foreign_keys"].append(
+                    {
+                        "column": col.name,
+                        "target": fk.target_fullname,
+                    }
+                )
+
+        for idx in sorted(table.indexes, key=lambda i: i.name or ""):
+            table_payload["indexes"].append(
+                {
+                    "name": idx.name,
+                    "columns": sorted(col.name for col in idx.columns),
+                    "unique": idx.unique,
+                }
+            )
+
+        for constraint in sorted(
+            table.constraints,
+            key=lambda c: getattr(c, "name", "") or c.__class__.__name__,
+        ):
+            if constraint.__class__.__name__ == "UniqueConstraint":
+                cols = sorted(col.name for col in constraint.columns)
+                table_payload["unique_constraints"].append(cols)
+
+        table_payload["columns"].sort(key=lambda c: c["name"])
+        table_payload["foreign_keys"].sort(
+            key=lambda fk: (fk["column"], fk["target"])
+        )
+        table_payload["indexes"].sort(key=lambda i: (i["name"] or "", i["columns"]))
+        table_payload["unique_constraints"].sort()
+
+        tables_payload.append(table_payload)
+
+    payload = {"tables": tables_payload}
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(blob.encode("utf-8")).hexdigest()
+    logger.debug("digest: %s", digest)
+    return f"orm-sha256:{digest}"
 
 def main() -> None:
     setup_logging()
@@ -243,7 +313,8 @@ def main() -> None:
                 logger.info("creating schema from ORM metadata...")
                 StitchBase.metadata.create_all(engine)
                 ensure_meta_tables(engine)
-                mark_schema_version(engine, version="dev-orm-metadata")
+                version = schema_fingerprint(StitchBase.metadata)
+                mark_schema_version(engine, version=version)
             else:
                 ensure_meta_tables(engine)
         else:
