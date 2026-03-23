@@ -66,7 +66,12 @@ uv-lock-check:
 	$(UV) lock --check
 
 api-dev: stack-api-dev
-	$(UV) run uvicorn stitch.api.main:app --host 0.0.0.0 --port 8000 --reload \
+	STITCH_DB_USER=stitch_app \
+	$(UV) run --env-file .env -- \
+		uvicorn stitch.api.main:app \
+		--host 0.0.0.0 \
+		--port 8000 \
+		--reload \
 		--reload-dir deployments/api/src \
 		--reload-dir packages \
 		--reload-exclude '*/tests/*'
@@ -158,7 +163,7 @@ stack-api-dev:
 	$(DOCKER_COMPOSE_DEV) --profile frontend --profile tools up --build -d
 
 stack-frontend-dev:
-	$(DOCKER_COMPOSE_DEV) --profile api --profile tools up --build -d
+	$(DOCKER_COMPOSE_DEV) --profile api --profile tools  up --build -d
 
 .PHONY: all build clean \
         build-python \

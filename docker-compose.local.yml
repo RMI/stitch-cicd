@@ -36,6 +36,3 @@ services:
       - ./deployments/seed/data:/mnt/data:ro
     restart: "no"
     profiles: ["seed", "full"]
-    depends_on:
-      api:
-        condition: service_healthy
