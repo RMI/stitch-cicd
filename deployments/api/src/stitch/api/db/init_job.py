@@ -27,6 +27,7 @@ def setup_logging() -> None:
         stream=sys.stdout,
     )
 
+
 """
 DB init job.
 
@@ -201,9 +202,11 @@ def fail_partial(existing_tables: set[str], expected: set[str]) -> None:
         "Fix by resetting the dev DB volume, or later: run migrations."
     )
 
+
 def _type_repr(col: Column) -> str:
     # compile-like string is better than repr() for stability
     return str(col.type)
+
 
 def schema_fingerprint(metadata) -> str:
     tables_payload = []
@@ -255,9 +258,7 @@ def schema_fingerprint(metadata) -> str:
                 table_payload["unique_constraints"].append(cols)
 
         table_payload["columns"].sort(key=lambda c: c["name"])
-        table_payload["foreign_keys"].sort(
-            key=lambda fk: (fk["column"], fk["target"])
-        )
+        table_payload["foreign_keys"].sort(key=lambda fk: (fk["column"], fk["target"]))
         table_payload["indexes"].sort(key=lambda i: (i["name"] or "", i["columns"]))
         table_payload["unique_constraints"].sort()
 
@@ -268,6 +269,7 @@ def schema_fingerprint(metadata) -> str:
     digest = hashlib.sha256(blob.encode("utf-8")).hexdigest()
     logger.debug("digest: %s", digest)
     return f"orm-sha256:{digest}"
+
 
 def main() -> None:
     setup_logging()
