@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import sys
 import time
+import logging
 from enum import Enum
 from dataclasses import dataclass
 
@@ -13,7 +14,15 @@ from stitch.api.db.model import (
     StitchBase,
 )
 
-# Domain model from stitch-ogsi package
+logger = logging.getLogger("db-init")
+
+
+def setup_logging() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        stream=sys.stdout,
+    )
 
 """
 DB init job.
@@ -190,34 +199,35 @@ def fail_partial(existing_tables: set[str], expected: set[str]) -> None:
     )
 
 
-# -------------------------
-# Seed dataset(s)
-# -------------------------
-
-
 def main() -> None:
+    setup_logging()
+
     settings = load_settings()
     engine = create_engine(settings.database_url, pool_pre_ping=True)
 
-    print("[db-init] waiting for DB...", flush=True)
+    logger.info("waiting for DB...")
     wait_for_db(
         engine,
         timeout_s=settings.connect_timeout_s,
         interval_s=settings.connect_retry_interval_s,
     )
 
-    print("[db-init] connecting db engine...", flush=True)
+    logger.info("connecting db engine...")
     conn = engine.connect()
+
     try:
-        print("[db-init] acquiring advisory lock...", flush=True)
+        logger.info("acquiring advisory lock...")
         acquire_lock(conn)
+
         expected = expected_table_names()
         state, existing = classify_db_state(engine, expected)
-        print(f"[db-init] schema state: {state}", flush=True)
+
+        logger.info("schema state: %s", state)
 
         if settings.schema_mode is SchemaMode.NEVER:
             if state == "partial_or_mismatch":
                 fail_partial(existing, expected)
+
         elif settings.schema_mode is SchemaMode.ASSERT_ONLY:
             if state == "empty":
                 raise RuntimeError(
@@ -230,7 +240,7 @@ def main() -> None:
                 fail_partial(existing, expected)
 
             if state == "empty":
-                print("[db-init] creating schema from ORM metadata...", flush=True)
+                logger.info("creating schema from ORM metadata...")
                 StitchBase.metadata.create_all(engine)
                 ensure_meta_tables(engine)
                 mark_schema_version(engine, version="dev-orm-metadata")
@@ -239,17 +249,14 @@ def main() -> None:
         else:
             raise RuntimeError(f"Unknown STITCH_DB_SCHEMA_MODE: {settings.schema_mode}")
 
-        print("[db-init] done.", flush=True)
+        logger.info("done.")
+
     finally:
-        print("[db-init] releasing advisory lock...", flush=True)
+        logger.info("releasing advisory lock...")
         try:
             release_lock(conn)
-        except Exception as e:
-            print(
-                f"[db-init] ERROR releasing advisory lock: {e}",
-                file=sys.stderr,
-                flush=True,
-            )
+        except Exception:
+            logger.exception("ERROR releasing advisory lock")
         finally:
             conn.close()
         engine.dispose()
@@ -258,6 +265,6 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
-        print(f"[db-init] ERROR: {e}", file=sys.stderr, flush=True)
+    except Exception:
+        logger.exception("ERROR during db-init")
         raise
