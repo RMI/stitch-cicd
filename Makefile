@@ -163,7 +163,7 @@ stack-api-dev:
 	$(DOCKER_COMPOSE_DEV) --profile frontend --profile tools up --build -d
 
 stack-frontend-dev:
-	$(DOCKER_COMPOSE_DEV) --profile api --profile tools  up --build -d
+	$(DOCKER_COMPOSE_DEV) --profile api --profile tools --profile seed up --build -d
 
 .PHONY: all build clean \
         build-python \
