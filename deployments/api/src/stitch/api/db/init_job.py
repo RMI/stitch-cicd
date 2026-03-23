@@ -8,34 +8,24 @@ from dataclasses import dataclass
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import Session
-from stitch.ogsi.model import GemSource, RMISource, WoodMacSource
 
 from stitch.api.db.model import (
-    ResourceModel,
-    MembershipModel,
     StitchBase,
-    UserModel,
-    OilGasFieldSourceModel,
-)
-from stitch.api.entities import (
-    User as UserEntity,
 )
 
 # Domain model from stitch-ogsi package
 
 """
-DB init/seed job.
+DB init job.
 
 This module is intended to be run as a one-shot job (e.g. a `db-init` service)
 *before* the API starts. It can:
   - create schema from SQLAlchemy metadata if the DB is empty
   - fail fast on partial/mismatched schemas (no auto-healing)
-  - apply a seed profile once and record that it ran
 
 Role separation / env vars:
   - The recommended setup uses two Postgres roles:
-      * migrator/seeder role: DDL + seed (used by the init job)
+      * migrator role: DDL (used by the init job)
       * app role: no DDL (used by the API)
   - Set STITCH_DB_USER / STITCH_DB_PASSWORD on a per-service basis to choose
     which role connects (migrator for `db-init`, app for `api`).
@@ -44,7 +34,6 @@ Role separation / env vars:
 """
 
 META_SCHEMA_TABLE = "stitch_schema_meta"
-META_SEED_TABLE = "stitch_seed_meta"
 
 
 class SchemaMode(str, Enum):
@@ -53,20 +42,9 @@ class SchemaMode(str, Enum):
     NEVER = "never"
 
 
-class SeedProfile(str, Enum):
-    DEV = "dev"
-
-
-class SeedMode(str, Enum):
-    IF_NEEDED = "if-needed"
-    NEVER = "never"
-
-
 @dataclass(frozen=True)
 class Settings:
     schema_mode: SchemaMode
-    seed_profile: SeedProfile
-    seed_mode: SeedMode
     connect_timeout_s: int
     connect_retry_interval_s: float
     database_url: str
@@ -105,8 +83,6 @@ def load_settings() -> Settings:
         schema_mode=SchemaMode(
             _env("STITCH_DB_SCHEMA_MODE", SchemaMode.IF_EMPTY.value)
         ),
-        seed_profile=SeedProfile(_env("STITCH_DB_SEED_PROFILE", SeedProfile.DEV.value)),
-        seed_mode=SeedMode(_env("STITCH_DB_SEED_MODE", SeedMode.IF_NEEDED.value)),
         connect_timeout_s=int(_env("STITCH_DB_CONNECT_TIMEOUT_S", "60")),
         connect_retry_interval_s=float(
             _env("STITCH_DB_CONNECT_RETRY_INTERVAL_S", "1.0")
@@ -159,16 +135,6 @@ def ensure_meta_tables(engine) -> None:
                 """
             )
         )
-        conn.execute(
-            text(
-                f"""
-                CREATE TABLE IF NOT EXISTS {META_SEED_TABLE} (
-                  profile TEXT PRIMARY KEY,
-                  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                )
-                """
-            )
-        )
 
 
 def mark_schema_version(engine, version: str) -> None:
@@ -183,28 +149,6 @@ def mark_schema_version(engine, version: str) -> None:
                 """
             ),
             {"v": version},
-        )
-
-
-def seed_already_applied(engine, profile: str) -> bool:
-    with engine.connect() as conn:
-        try:
-            row = conn.execute(
-                text(f"SELECT 1 FROM {META_SEED_TABLE} WHERE profile=:p"),
-                {"p": profile},
-            ).first()
-            return row is not None
-        except OperationalError:
-            return False
-
-
-def mark_seed_applied(engine, profile: str) -> None:
-    with engine.begin() as conn:
-        conn.execute(
-            text(
-                f"INSERT INTO {META_SEED_TABLE}(profile) VALUES (:p) ON CONFLICT DO NOTHING"
-            ),
-            {"p": profile},
         )
 
 
@@ -251,112 +195,6 @@ def fail_partial(existing_tables: set[str], expected: set[str]) -> None:
 # -------------------------
 
 
-def create_seed_user() -> UserModel:
-    return UserModel(
-        sub="seed|system",
-        name="Seed User",
-        email="seed@example.com",
-    )
-
-
-def create_dev_user() -> UserModel:
-    return UserModel(
-        sub="dev|local-placeholder",
-        name="Dev Deverson",
-        email="dev@example.com",
-    )
-
-
-def create_seed_resources(user: UserEntity) -> list[ResourceModel]:
-    resources = [
-        ResourceModel.create(user),
-        ResourceModel.create(user),
-    ]
-    return resources
-
-
-def create_seed_memberships(
-    user: UserEntity,
-    resources: list[ResourceModel],
-    sources: list[OilGasFieldSourceModel],
-) -> list[MembershipModel]:
-    src_tups = [(s.source, s.id) for s in sources]
-
-    memberships = [
-        MembershipModel.create(user, resource, sk, sid)
-        for resource, (sk, sid) in zip(resources, src_tups)
-    ]
-
-    return memberships
-
-
-def create_seed_oil_gas_source_fields(
-    user: UserEntity,
-) -> list[OilGasFieldSourceModel]:
-    """Create example OilGasField rows linked 1:1 with seeded resources."""
-
-    payloads = [
-        GemSource(name="Permian Alpha", country="USA", basin="Permian"),
-        WoodMacSource(
-            name="North Sea Bravo",
-            country="GBR",
-            basin="North Sea",
-            production_conventionality="Conventional",
-        ),
-        RMISource(
-            name="Permian Alpha 2",
-            country="USA",
-            basin="Permian North",
-            state_province="NM",
-            region="Southwest",
-        ),
-    ]
-
-    return [
-        OilGasFieldSourceModel.create_from_entity(ent=src, created_by=user)
-        for src in payloads
-    ]
-
-
-def seed_dev(engine) -> None:
-    with Session(engine) as session:
-        user_model = create_seed_user()
-        session.add(user_model)
-        session.flush()
-
-        dev_model = create_dev_user()
-        session.add(dev_model)
-        session.flush()
-
-        user_entity = UserEntity(
-            id=user_model.id,
-            sub=user_model.sub,
-            email=user_model.email,
-            name=user_model.name,
-        )
-
-        resources = create_seed_resources(user_entity)
-        session.add_all(resources)
-        session.flush()
-        #
-        # Add sample OilGasField rows for the first two resources only
-        og_fields = create_seed_oil_gas_source_fields(user_entity)
-        session.add_all(og_fields)
-        session.flush()
-
-        memberships = create_seed_memberships(user_entity, resources, og_fields)
-        session.add_all(memberships)
-
-        session.commit()
-
-
-def seed(engine, profile: SeedProfile | str) -> None:
-    if profile == "dev":
-        seed_dev(engine)
-        return
-    raise RuntimeError(f"Unknown seed profile '{profile}'")
-
-
 def main() -> None:
     settings = load_settings()
     engine = create_engine(settings.database_url, pool_pre_ping=True)
@@ -400,25 +238,6 @@ def main() -> None:
                 ensure_meta_tables(engine)
         else:
             raise RuntimeError(f"Unknown STITCH_DB_SCHEMA_MODE: {settings.schema_mode}")
-
-        print(
-            f"[db-init]: seed_mode `{settings.seed_mode}`, seed_profile `{settings.seed_profile}`"
-        )
-        if (
-            settings.seed_mode != SeedMode.NEVER
-            and settings.seed_profile == SeedProfile.DEV
-        ):
-            ensure_meta_tables(engine)
-            if seed_already_applied(engine, settings.seed_profile):
-                print(
-                    f"[db-init] seed '{settings.seed_profile}' already applied; skipping.",
-                    flush=True,
-                )
-            else:
-                print(f"[db-init] seeding '{settings.seed_profile}'...", flush=True)
-                seed(engine, settings.seed_profile)
-                mark_seed_applied(engine, settings.seed_profile)
-                print(f"[db-init] seed '{settings.seed_profile}' applied.", flush=True)
 
         print("[db-init] done.", flush=True)
     finally:
