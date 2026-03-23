@@ -65,6 +65,12 @@ uv-sync-dev:
 uv-lock-check:
 	$(UV) lock --check
 
+api-dev: stack-api-dev
+	$(UV) run uvicorn stitch.api.main:app --host 0.0.0.0 --port 8000 --reload \
+		--reload-dir deployments/api/src \
+		--reload-dir packages \
+		--reload-exclude '*/tests/*'
+
 # ---------------------------------------------------------------------
 # Packages and source discovery
 # ---------------------------------------------------------------------
@@ -131,7 +137,7 @@ frontend-format: $(FRONTEND_INSTALL_STAMP)
 frontend-format-check: $(FRONTEND_INSTALL_STAMP)
 	$(NPM) run format:check
 
-frontend-dev: $(FRONTEND_INSTALL_STAMP)
+frontend-dev: $(FRONTEND_INSTALL_STAMP) stack-frontend-dev
 	$(NPM) run dev
 
 frontend-clean:
@@ -147,6 +153,12 @@ dev-docker:
 
 reboot-docker: clean-docker
 	$(DOCKER_COMPOSE_DEV) --profile full up --build
+
+stack-api-dev:
+	$(DOCKER_COMPOSE_DEV) --profile frontend --profile tools up --build -d
+
+stack-frontend-dev:
+	$(DOCKER_COMPOSE_DEV) --profile api --profile tools up --build -d
 
 .PHONY: all build clean \
         build-python \
