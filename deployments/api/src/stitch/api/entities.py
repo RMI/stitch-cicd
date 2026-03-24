@@ -20,3 +20,15 @@ class User(BaseModel):
     role: str | None = None
     email: EmailStr
     name: str
+
+
+class PaginationParams(BaseModel):
+    page: int = Field(1, ge=1)
+    page_size: int = Field(50, ge=1, le=100)
+
+
+class PaginatedResponse[T](BaseModel):
+    items: list[T]
+    total_count: int
+    page: int
+    page_size: int
