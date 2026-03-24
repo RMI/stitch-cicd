@@ -113,3 +113,42 @@ class TestResourcesIntegration:
         assert data["id"] > 0
         assert (view := data.get("view", None)) is not None
         assert view["name"] == "Minimal Name"
+
+
+class TestGetAllResourcesIntegration:
+    """Integration tests for GET /oil-gas-fields/ paginated endpoint."""
+
+    @pytest.mark.anyio
+    async def test_list_returns_paginated_envelope(
+        self,
+        integration_client: AsyncClient,
+        og_create_res_fact: ResourceCreateFactory,
+    ):
+        # Create 3 resources
+        for name in ["X", "Y", "Z"]:
+            await integration_client.post(
+                "/oil-gas-fields/", json=og_create_res_fact(name=name).model_dump(mode="json")
+            )
+
+        response = await integration_client.get("/oil-gas-fields/?page=1&page_size=2")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_count"] == 3
+        assert data["page"] == 1
+        assert data["page_size"] == 2
+        assert len(data["items"]) == 2
+
+    @pytest.mark.anyio
+    async def test_default_params_work(
+        self,
+        integration_client: AsyncClient,
+    ):
+        response = await integration_client.get("/oil-gas-fields/")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["page"] == 1
+        assert data["page_size"] == 50
+        assert "items" in data
+        assert "total_count" in data
