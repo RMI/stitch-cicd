@@ -125,3 +125,82 @@ class TestListResourcesActionIntegration:
 
         labels = {r.view.name for r in results if r.view is not None}
         assert {"A", "B"} <= labels
+
+
+class TestQueryResourcesActionIntegration:
+    """Integration tests for resource_actions.query() with real database."""
+
+    @pytest.mark.anyio
+    async def test_query_returns_paginated_results(
+        self,
+        seeded_integration_session: AsyncSession,
+        test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
+    ):
+        # Create 3 resources
+        for name in ["A", "B", "C"]:
+            await resource_actions.create(
+                session=seeded_integration_session,
+                user=test_user,
+                resource=og_create_res_fact(name=name),
+            )
+
+        items, total_count = await resource_actions.query(
+            session=seeded_integration_session, page=1, page_size=2
+        )
+
+        assert total_count == 3
+        assert len(items) == 2
+
+    @pytest.mark.anyio
+    async def test_query_second_page(
+        self,
+        seeded_integration_session: AsyncSession,
+        test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
+    ):
+        for name in ["A", "B", "C"]:
+            await resource_actions.create(
+                session=seeded_integration_session,
+                user=test_user,
+                resource=og_create_res_fact(name=name),
+            )
+
+        items, total_count = await resource_actions.query(
+            session=seeded_integration_session, page=2, page_size=2
+        )
+
+        assert total_count == 3
+        assert len(items) == 1
+
+    @pytest.mark.anyio
+    async def test_query_page_beyond_total(
+        self,
+        seeded_integration_session: AsyncSession,
+        test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
+    ):
+        await resource_actions.create(
+            session=seeded_integration_session,
+            user=test_user,
+            resource=og_create_res_fact(name="Only"),
+        )
+
+        items, total_count = await resource_actions.query(
+            session=seeded_integration_session, page=99, page_size=50
+        )
+
+        assert total_count == 1
+        assert len(items) == 0
+
+    @pytest.mark.anyio
+    async def test_query_empty_table(
+        self,
+        seeded_integration_session: AsyncSession,
+    ):
+        items, total_count = await resource_actions.query(
+            session=seeded_integration_session, page=1, page_size=50
+        )
+
+        assert total_count == 0
+        assert len(items) == 0

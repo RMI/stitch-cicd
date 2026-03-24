@@ -2,7 +2,7 @@ import asyncio
 from collections.abc import Sequence
 from functools import partial
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette.status import HTTP_404_NOT_FOUND
@@ -36,6 +36,30 @@ async def get_all(session: AsyncSession) -> Sequence[OGFieldResource]:
     models = (await session.scalars(stmt)).all()
     fn = partial(resource_model_to_entity, session)
     return await asyncio.gather(*[fn(m) for m in models])
+
+
+async def query(
+    session: AsyncSession, *, page: int, page_size: int
+) -> tuple[Sequence[OGFieldResource], int]:
+    base_filter = ResourceModel.repointed_id.is_(None)
+
+    # Count total matching records
+    count_stmt = select(func.count()).select_from(ResourceModel).where(base_filter)
+    total_count = await session.scalar(count_stmt) or 0
+
+    # Fetch paginated records
+    offset = (page - 1) * page_size
+    stmt = (
+        select(ResourceModel)
+        .where(base_filter)
+        .options(selectinload(ResourceModel.memberships))
+        .offset(offset)
+        .limit(page_size)
+    )
+    models = (await session.scalars(stmt)).all()
+    fn = partial(resource_model_to_entity, session)
+    items = list(await asyncio.gather(*[fn(m) for m in models]))
+    return items, total_count
 
 
 async def get(session: AsyncSession, id: int):
