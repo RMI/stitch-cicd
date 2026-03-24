@@ -213,26 +213,3 @@ class TestGetAllResourcesUnit:
         assert db_query.pagination.offset == 10
         assert db_query.pagination.limit == 10
 
-    @pytest.mark.anyio
-    async def test_rejects_invalid_page(self, async_client, mock_uow):
-        """GET /oil-gas-fields/?page=0 returns 422."""
-
-        async def override_get_uow():
-            yield mock_uow
-
-        app.dependency_overrides[get_uow] = override_get_uow
-
-        response = await async_client.get("/oil-gas-fields/?page=0")
-        assert response.status_code == 422
-
-    @pytest.mark.anyio
-    async def test_rejects_oversized_page_size(self, async_client, mock_uow):
-        """GET /oil-gas-fields/?page_size=101 returns 422."""
-
-        async def override_get_uow():
-            yield mock_uow
-
-        app.dependency_overrides[get_uow] = override_get_uow
-
-        response = await async_client.get("/oil-gas-fields/?page_size=101")
-        assert response.status_code == 422

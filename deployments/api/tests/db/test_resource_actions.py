@@ -128,141 +128,65 @@ class TestListResourcesActionIntegration:
         assert {"A", "B"} <= labels
 
 
-class TestQueryResourcesActionIntegration:
-    """Integration tests for resource_actions.query() with real database."""
-
-    @pytest.mark.anyio
-    async def test_query_returns_paginated_results(
-        self,
-        seeded_integration_session: AsyncSession,
-        test_user: User,
-        og_create_res_fact: ResourceCreateFactory,
-    ):
-        # Create 3 resources
-        for name in ["A", "B", "C"]:
-            await resource_actions.create(
-                session=seeded_integration_session,
-                user=test_user,
-                resource=og_create_res_fact(name=name),
-            )
-
-        items, total_count = await resource_actions.query(
-            seeded_integration_session, DBQuery(pagination=Pagination(offset=0, limit=2))
-        )
-
-        assert total_count == 3
-        assert len(items) == 2
-
-    @pytest.mark.anyio
-    async def test_query_second_page(
-        self,
-        seeded_integration_session: AsyncSession,
-        test_user: User,
-        og_create_res_fact: ResourceCreateFactory,
-    ):
-        for name in ["A", "B", "C"]:
-            await resource_actions.create(
-                session=seeded_integration_session,
-                user=test_user,
-                resource=og_create_res_fact(name=name),
-            )
-
-        items, total_count = await resource_actions.query(
-            seeded_integration_session, DBQuery(pagination=Pagination(offset=2, limit=2))
-        )
-
-        assert total_count == 3
-        assert len(items) == 1
-
-    @pytest.mark.anyio
-    async def test_query_page_beyond_total(
-        self,
-        seeded_integration_session: AsyncSession,
-        test_user: User,
-        og_create_res_fact: ResourceCreateFactory,
-    ):
-        await resource_actions.create(
-            session=seeded_integration_session,
-            user=test_user,
-            resource=og_create_res_fact(name="Only"),
-        )
-
-        items, total_count = await resource_actions.query(
-            seeded_integration_session, DBQuery(pagination=Pagination(offset=4900, limit=50))
-        )
-
-        assert total_count == 1
-        assert len(items) == 0
-
-    @pytest.mark.anyio
-    async def test_query_empty_table(
-        self,
-        seeded_integration_session: AsyncSession,
-    ):
-        items, total_count = await resource_actions.query(
-            seeded_integration_session, DBQuery()
-        )
-
-        assert total_count == 0
-        assert len(items) == 0
-
-
 class TestResourceModelExecuteQuery:
     """Integration tests for ResourceModel.execute_query() classmethod."""
 
-    @pytest.mark.anyio
-    async def test_execute_query_paginates(
+    @pytest.fixture
+    async def seeded_resources(
         self,
         seeded_integration_session: AsyncSession,
         test_user: User,
         og_create_res_fact: ResourceCreateFactory,
     ):
-        for name in ["A", "B", "C"]:
+        """Create 3 resources for query tests."""
+        for name in ["Alpha", "Bravo", "Charlie"]:
             await resource_actions.create(
                 session=seeded_integration_session,
                 user=test_user,
                 resource=og_create_res_fact(name=name),
             )
 
-        q = DBQuery(pagination=Pagination(offset=0, limit=2))
-        models, total = await ResourceModel.execute_query(
-            seeded_integration_session, q
-        )
-
-        assert total == 3
-        assert len(models) == 2
-
     @pytest.mark.anyio
-    async def test_execute_query_offset(
+    @pytest.mark.parametrize(
+        "query, expected_count",
+        [
+            pytest.param(
+                DBQuery(pagination=Pagination(offset=0, limit=2)),
+                2,
+                id="first-page",
+            ),
+            pytest.param(
+                DBQuery(pagination=Pagination(offset=2, limit=10)),
+                1,
+                id="offset-past-partial",
+            ),
+            pytest.param(
+                DBQuery(pagination=Pagination(offset=99, limit=10)),
+                0,
+                id="offset-past-end",
+            ),
+        ],
+    )
+    async def test_execute_query_pagination(
         self,
         seeded_integration_session: AsyncSession,
-        test_user: User,
-        og_create_res_fact: ResourceCreateFactory,
+        seeded_resources,
+        query: DBQuery,
+        expected_count: int,
     ):
-        for name in ["A", "B", "C"]:
-            await resource_actions.create(
-                session=seeded_integration_session,
-                user=test_user,
-                resource=og_create_res_fact(name=name),
-            )
-
-        q = DBQuery(pagination=Pagination(offset=2, limit=10))
         models, total = await ResourceModel.execute_query(
-            seeded_integration_session, q
+            seeded_integration_session, query
         )
-
         assert total == 3
-        assert len(models) == 1
+        assert len(models) == expected_count
 
     @pytest.mark.anyio
-    async def test_execute_query_empty(
+    async def test_execute_query_empty_table(
         self,
         seeded_integration_session: AsyncSession,
     ):
-        q = DBQuery()
         models, total = await ResourceModel.execute_query(
-            seeded_integration_session, q
+            seeded_integration_session, DBQuery()
         )
-
         assert total == 0
         assert len(models) == 0

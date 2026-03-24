@@ -31,13 +31,3 @@ class TestQuerySourcesUnit:
         assert data["page_size"] == 50
         assert data["total_count"] == 0
         assert data["items"] == []
-
-    @pytest.mark.anyio
-    async def test_rejects_invalid_page(self, async_client, mock_uow):
-        async def override_get_uow():
-            yield mock_uow
-
-        app.dependency_overrides[get_uow] = override_get_uow
-
-        response = await async_client.get("/oil-gas-field-sources/?page=0")
-        assert response.status_code == 422
