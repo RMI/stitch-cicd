@@ -165,7 +165,9 @@ class TestGetAllResourcesUnit:
     ):
         """GET /oil-gas-fields/ returns envelope with items and metadata."""
         resources = [
-            og_res_fact(id=i, empty=False, view=OilGasFieldBase(name=f"R{i}", country=None))
+            og_res_fact(
+                id=i, empty=False, view=OilGasFieldBase(name=f"R{i}", country=None)
+            )
             for i in range(10, 13)
         ]
 
@@ -193,6 +195,7 @@ class TestGetAllResourcesUnit:
         mock_uow,
     ):
         """GET /oil-gas-fields/?page=2&page_size=10 passes params to query."""
+
         async def override_get_uow():
             yield mock_uow
 
@@ -212,6 +215,7 @@ class TestGetAllResourcesUnit:
     @pytest.mark.anyio
     async def test_rejects_invalid_page(self, async_client, mock_uow):
         """GET /oil-gas-fields/?page=0 returns 422."""
+
         async def override_get_uow():
             yield mock_uow
 
@@ -223,6 +227,7 @@ class TestGetAllResourcesUnit:
     @pytest.mark.anyio
     async def test_rejects_oversized_page_size(self, async_client, mock_uow):
         """GET /oil-gas-fields/?page_size=101 returns 422."""
+
         async def override_get_uow():
             yield mock_uow
 

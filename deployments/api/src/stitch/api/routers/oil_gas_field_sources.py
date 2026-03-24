@@ -38,7 +38,9 @@ async def create_oil_gas_field_source(
 
 @router.get("/")
 async def query_oil_gas_field_sources(
-    uow: UnitOfWorkDep, user: CurrentUser, pagination: Annotated[PaginationParams, Query()]
+    uow: UnitOfWorkDep,
+    user: CurrentUser,
+    pagination: Annotated[PaginationParams, Query()],
 ) -> PaginatedResponse[OGFieldSource]:
     items, total_count = await og_field_source_actions.query(
         session=uow.session, page=pagination.page, page_size=pagination.page_size

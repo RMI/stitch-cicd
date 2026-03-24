@@ -18,7 +18,9 @@ class TestQuerySourcesUnit:
 
         app.dependency_overrides[get_uow] = override_get_uow
 
-        with patch("stitch.api.routers.oil_gas_field_sources.og_field_source_actions") as mock_repo:
+        with patch(
+            "stitch.api.routers.oil_gas_field_sources.og_field_source_actions"
+        ) as mock_repo:
             mock_repo.query = AsyncMock(return_value=([], 0))
 
             response = await async_client.get("/oil-gas-field-sources/")

@@ -127,7 +127,8 @@ class TestGetAllResourcesIntegration:
         # Create 3 resources
         for name in ["X", "Y", "Z"]:
             await integration_client.post(
-                "/oil-gas-fields/", json=og_create_res_fact(name=name).model_dump(mode="json")
+                "/oil-gas-fields/",
+                json=og_create_res_fact(name=name).model_dump(mode="json"),
             )
 
         response = await integration_client.get("/oil-gas-fields/?page=1&page_size=2")

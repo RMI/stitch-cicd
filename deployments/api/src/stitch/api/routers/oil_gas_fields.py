@@ -33,7 +33,10 @@ router = APIRouter(
 
 @router.get("/")
 async def get_all_resources(
-    *, uow: UnitOfWorkDep, user: CurrentUser, pagination: Annotated[PaginationParams, Query()]
+    *,
+    uow: UnitOfWorkDep,
+    user: CurrentUser,
+    pagination: Annotated[PaginationParams, Query()],
 ) -> PaginatedResponse[OGFieldListItemView]:
     resources, total_count = await resource_actions.query(
         session=uow.session, page=pagination.page, page_size=pagination.page_size

@@ -18,7 +18,8 @@ class TestQuerySourcesIntegration:
         # Create resources (which create sources + memberships)
         for name in ["A", "B", "C"]:
             await integration_client.post(
-                "/oil-gas-fields/", json=og_create_res_fact(name=name).model_dump(mode="json")
+                "/oil-gas-fields/",
+                json=og_create_res_fact(name=name).model_dump(mode="json"),
             )
 
         response = await integration_client.get("/oil-gas-field-sources/")
