@@ -147,7 +147,7 @@ class TestQueryResourcesActionIntegration:
             )
 
         items, total_count = await resource_actions.query(
-            session=seeded_integration_session, page=1, page_size=2
+            seeded_integration_session, DBQuery(pagination=Pagination(offset=0, limit=2))
         )
 
         assert total_count == 3
@@ -168,7 +168,7 @@ class TestQueryResourcesActionIntegration:
             )
 
         items, total_count = await resource_actions.query(
-            session=seeded_integration_session, page=2, page_size=2
+            seeded_integration_session, DBQuery(pagination=Pagination(offset=2, limit=2))
         )
 
         assert total_count == 3
@@ -188,7 +188,7 @@ class TestQueryResourcesActionIntegration:
         )
 
         items, total_count = await resource_actions.query(
-            session=seeded_integration_session, page=99, page_size=50
+            seeded_integration_session, DBQuery(pagination=Pagination(offset=4900, limit=50))
         )
 
         assert total_count == 1
@@ -200,7 +200,7 @@ class TestQueryResourcesActionIntegration:
         seeded_integration_session: AsyncSession,
     ):
         items, total_count = await resource_actions.query(
-            session=seeded_integration_session, page=1, page_size=50
+            seeded_integration_session, DBQuery()
         )
 
         assert total_count == 0

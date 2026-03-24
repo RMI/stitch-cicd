@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db import og_field_source_actions as source_actions
+from stitch.api.db.query import DBQuery, Pagination
 from stitch.api.entities import User
 from tests.factories import ResourceCreateFactory
 
@@ -29,12 +30,12 @@ class TestQuerySourcesActionIntegration:
 
         # Get total to know how many sources exist
         _, full_count = await source_actions.query(
-            session=seeded_integration_session, page=1, page_size=100
+            seeded_integration_session, DBQuery(pagination=Pagination(offset=0, limit=100))
         )
 
         # Now paginate with smaller page_size
         items, total_count = await source_actions.query(
-            session=seeded_integration_session, page=1, page_size=2
+            seeded_integration_session, DBQuery(pagination=Pagination(offset=0, limit=2))
         )
 
         assert total_count == full_count
@@ -46,14 +47,13 @@ class TestQuerySourcesActionIntegration:
         seeded_integration_session: AsyncSession,
     ):
         items, total_count = await source_actions.query(
-            session=seeded_integration_session, page=1, page_size=50
+            seeded_integration_session, DBQuery()
         )
 
         assert total_count == 0
         assert len(items) == 0
 
 
-from stitch.api.db.query import DBQuery, Pagination
 from stitch.api.db.model import OilGasFieldSourceModel
 
 

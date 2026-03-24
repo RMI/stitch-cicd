@@ -1,8 +1,9 @@
 from collections.abc import Sequence
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from stitch.api.db.config import AsyncSession
+from stitch.api.db.query import DBQuery
 from stitch.api.db.errors import (
     ResourceIntegrityError,
     ResourceNotFoundError,
@@ -151,21 +152,8 @@ async def list_og_sources(session: AsyncSession) -> Sequence[OGFieldSource]:
 
 
 async def query(
-    session: AsyncSession, *, page: int, page_size: int
+    session: AsyncSession,
+    db_query: DBQuery[None],
 ) -> tuple[Sequence[OGFieldSource], int]:
-    base_join = (
-        select(OilGasFieldSourceModel)
-        .join(MembershipModel, MembershipModel.source_pk == OilGasFieldSourceModel.id)
-        .where(MembershipModel.status == MembershipStatus.ACTIVE)
-        .distinct()
-    )
-
-    # Count total distinct sources with active memberships
-    count_stmt = select(func.count()).select_from(base_join.subquery())
-    total_count = await session.scalar(count_stmt) or 0
-
-    # Fetch paginated records
-    offset = (page - 1) * page_size
-    stmt = base_join.offset(offset).limit(page_size)
-    models = (await session.scalars(stmt)).all()
+    models, total_count = await OilGasFieldSourceModel.execute_query(session, db_query)
     return tuple(m.as_entity() for m in models), total_count

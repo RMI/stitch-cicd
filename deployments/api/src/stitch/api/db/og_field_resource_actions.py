@@ -2,7 +2,7 @@ import asyncio
 from collections.abc import Sequence
 from functools import partial
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette.status import HTTP_404_NOT_FOUND
@@ -13,6 +13,7 @@ from stitch.api.db.errors import (
     ResourceNotFoundError,
 )
 from stitch.api.auth import CurrentUser
+from stitch.api.db.query import DBQuery
 from stitch.api.db.og_field_source_actions import (
     attach_sources_to_resource,
     get_or_create_sources,
@@ -39,24 +40,10 @@ async def get_all(session: AsyncSession) -> Sequence[OGFieldResource]:
 
 
 async def query(
-    session: AsyncSession, *, page: int, page_size: int
+    session: AsyncSession,
+    db_query: DBQuery[None],
 ) -> tuple[Sequence[OGFieldResource], int]:
-    base_filter = ResourceModel.repointed_id.is_(None)
-
-    # Count total matching records
-    count_stmt = select(func.count()).select_from(ResourceModel).where(base_filter)
-    total_count = await session.scalar(count_stmt) or 0
-
-    # Fetch paginated records
-    offset = (page - 1) * page_size
-    stmt = (
-        select(ResourceModel)
-        .where(base_filter)
-        .options(selectinload(ResourceModel.memberships))
-        .offset(offset)
-        .limit(page_size)
-    )
-    models = (await session.scalars(stmt)).all()
+    models, total_count = await ResourceModel.execute_query(session, db_query)
     fn = partial(resource_model_to_entity, session)
     items = list(await asyncio.gather(*[fn(m) for m in models]))
     return items, total_count
