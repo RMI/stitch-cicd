@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.model import ResourceModel
+from stitch.api.db.query import DBQuery, Pagination
 from stitch.api.entities import User
 from tests.factories import ResourceCreateFactory
 
@@ -204,3 +205,64 @@ class TestQueryResourcesActionIntegration:
 
         assert total_count == 0
         assert len(items) == 0
+
+
+class TestResourceModelExecuteQuery:
+    """Integration tests for ResourceModel.execute_query() classmethod."""
+
+    @pytest.mark.anyio
+    async def test_execute_query_paginates(
+        self,
+        seeded_integration_session: AsyncSession,
+        test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
+    ):
+        for name in ["A", "B", "C"]:
+            await resource_actions.create(
+                session=seeded_integration_session,
+                user=test_user,
+                resource=og_create_res_fact(name=name),
+            )
+
+        q = DBQuery(pagination=Pagination(offset=0, limit=2))
+        models, total = await ResourceModel.execute_query(
+            seeded_integration_session, q
+        )
+
+        assert total == 3
+        assert len(models) == 2
+
+    @pytest.mark.anyio
+    async def test_execute_query_offset(
+        self,
+        seeded_integration_session: AsyncSession,
+        test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
+    ):
+        for name in ["A", "B", "C"]:
+            await resource_actions.create(
+                session=seeded_integration_session,
+                user=test_user,
+                resource=og_create_res_fact(name=name),
+            )
+
+        q = DBQuery(pagination=Pagination(offset=2, limit=10))
+        models, total = await ResourceModel.execute_query(
+            seeded_integration_session, q
+        )
+
+        assert total == 3
+        assert len(models) == 1
+
+    @pytest.mark.anyio
+    async def test_execute_query_empty(
+        self,
+        seeded_integration_session: AsyncSession,
+    ):
+        q = DBQuery()
+        models, total = await ResourceModel.execute_query(
+            seeded_integration_session, q
+        )
+
+        assert total == 0
+        assert len(models) == 0
