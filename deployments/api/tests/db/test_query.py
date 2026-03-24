@@ -1,7 +1,7 @@
 """Unit tests for db query types and translators."""
 
 import pytest
-from stitch.api.db.query import DBQuery, Pagination, Ordering, pagination_to_db
+from stitch.api.db.query import DBQuery, Pagination, pagination_to_db
 from stitch.api.entities import PaginationParams
 
 

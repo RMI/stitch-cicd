@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self
+
+if TYPE_CHECKING:
+    from stitch.api.db.query import DBQuery
 
 from pydantic import TypeAdapter
 from sqlalchemy import (
@@ -148,7 +151,6 @@ class OilGasFieldSourceModel(TimestampMixin, UserAuditMixin, Base):
         session: AsyncSession,
         query: "DBQuery[None]",
     ) -> tuple[Sequence[Self], int]:
-        from stitch.api.db.query import DBQuery  # noqa: F811 – avoid circular import
         from stitch.api.db.model.resource import MembershipModel, MembershipStatus
 
         base = (

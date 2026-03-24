@@ -1,6 +1,11 @@
+from __future__ import annotations
+
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import Self
+from typing import TYPE_CHECKING, Self
+
+if TYPE_CHECKING:
+    from stitch.api.db.query import DBQuery
 from sqlalchemy import (
     ForeignKey,
     Index,
@@ -198,8 +203,6 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
         session: AsyncSession,
         query: "DBQuery[None]",
     ) -> tuple[Sequence[Self], int]:
-        from stitch.api.db.query import DBQuery  # avoid circular import
-
         base = (
             select(cls)
             .where(cls.repointed_id.is_(None))

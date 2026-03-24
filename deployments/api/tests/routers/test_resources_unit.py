@@ -209,8 +209,9 @@ class TestGetAllResourcesUnit:
         assert response.status_code == 200
         mock_repo.query.assert_awaited_once()
         call_kwargs = mock_repo.query.call_args.kwargs
-        assert call_kwargs["page"] == 2
-        assert call_kwargs["page_size"] == 10
+        db_query = call_kwargs["db_query"]
+        assert db_query.pagination.offset == 10
+        assert db_query.pagination.limit == 10
 
     @pytest.mark.anyio
     async def test_rejects_invalid_page(self, async_client, mock_uow):

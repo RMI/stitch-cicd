@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query
 
 from stitch.api.entities import PaginatedResponse, PaginationParams
+from stitch.api.db.query import DBQuery, pagination_to_db
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.config import UnitOfWorkDep
@@ -38,8 +39,9 @@ async def get_all_resources(
     user: CurrentUser,
     pagination: Annotated[PaginationParams, Query()],
 ) -> PaginatedResponse[OGFieldListItemView]:
+    db_query = DBQuery(pagination=pagination_to_db(pagination))
     resources, total_count = await resource_actions.query(
-        session=uow.session, page=pagination.page, page_size=pagination.page_size
+        session=uow.session, db_query=db_query
     )
     return PaginatedResponse(
         items=[resource_to_list_item_view(r) for r in resources],

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db import og_field_source_actions as source_actions
+from stitch.api.db.model import OilGasFieldSourceModel
 from stitch.api.db.query import DBQuery, Pagination
 from stitch.api.entities import User
 from tests.factories import ResourceCreateFactory
@@ -52,9 +53,6 @@ class TestQuerySourcesActionIntegration:
 
         assert total_count == 0
         assert len(items) == 0
-
-
-from stitch.api.db.model import OilGasFieldSourceModel
 
 
 class TestSourceModelExecuteQuery:
