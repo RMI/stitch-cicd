@@ -11,15 +11,12 @@ from stitch.api.db import init_job as ij
 
 def test_load_settings_parses_enums(monkeypatch):
     monkeypatch.setenv("STITCH_DB_SCHEMA_MODE", ij.SchemaMode.ASSERT_ONLY.value)
-    monkeypatch.setenv("STITCH_DB_SEED_MODE", ij.SeedMode.NEVER.value)
     s = ij.load_settings()
     assert s.schema_mode is ij.SchemaMode.ASSERT_ONLY
-    assert s.seed_mode is ij.SeedMode.NEVER
 
 
 def test_load_settings_invalid_enum_raises(monkeypatch):
     monkeypatch.setenv("STITCH_DB_SCHEMA_MODE", "no-such-mode")
-    monkeypatch.setenv("STITCH_DB_SEED_MODE", ij.SeedMode.IF_NEEDED.value)
     with pytest.raises(ValueError):
         ij.load_settings()
 
@@ -89,16 +86,6 @@ def make_engine_with_connect_returning(first_value):
     engine = MagicMock()
     engine.connect.return_value = DummyConnCtx(first_value)
     return engine
-
-
-def test_seed_already_applied_true():
-    engine = make_engine_with_connect_returning(True)
-    assert ij.seed_already_applied(engine, "dev") is True
-
-
-def test_seed_already_applied_false():
-    engine = make_engine_with_connect_returning(False)
-    assert ij.seed_already_applied(engine, "dev") is False
 
 
 # ---------- advisory lock tests (mock connection) ----------
