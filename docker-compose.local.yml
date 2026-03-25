@@ -4,10 +4,6 @@ services:
     environment:
       LOG_LEVEL: debug
 
-  db-init:
-    environment:
-      STITCH_DB_SEED_MODE: if-needed
-
   adminer:
     image: adminer:latest
     ports:
