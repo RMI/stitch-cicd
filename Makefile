@@ -66,7 +66,11 @@ uv-lock-check:
 	$(UV) lock --check
 
 api-dev: stack-api-dev
-	STITCH_DB_USER=stitch_app \
+	POSTGRES_HOST=127.0.0.1 \
+	POSTGRES_PORT=5432 \
+	POSTGRES_DB=stitch \
+	POSTGRES_USER=stitch_app \
+	POSTGRES_PASSWORD="CHANGE_ME_app123!" \
 	$(UV) run --env-file .env -- \
 		uvicorn stitch.api.main:app \
 		--host 0.0.0.0 \
@@ -160,7 +164,7 @@ reboot-docker: clean-docker
 	$(DOCKER_COMPOSE_DEV) --profile full up --build
 
 stack-api-dev:
-	$(DOCKER_COMPOSE_DEV) --profile frontend --profile tools up --build -d
+	$(DOCKER_COMPOSE_DEV) --profile frontend --profile tools --profile seed up --build -d
 
 stack-frontend-dev:
 	$(DOCKER_COMPOSE_DEV) --profile api --profile tools --profile seed up --build -d
