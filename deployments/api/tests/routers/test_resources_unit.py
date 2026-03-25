@@ -212,4 +212,3 @@ class TestGetAllResourcesUnit:
         db_query = call_kwargs["db_query"]
         assert db_query.pagination.offset == 10
         assert db_query.pagination.limit == 10
-
