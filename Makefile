@@ -144,6 +144,7 @@ frontend-format-check: $(FRONTEND_INSTALL_STAMP)
 	$(NPM) run format:check
 
 frontend-dev: $(FRONTEND_INSTALL_STAMP) stack-frontend-dev
+	VITE_API_URL=http://localhost:8000/api/v1 \
 	$(NPM) run dev
 
 frontend-clean:
@@ -162,10 +163,21 @@ reboot-docker: clean-docker
 
 stack-api-dev:
 	SEED_API_BASE_URL=http://host.docker.internal:8000/api/v1 \
-	$(DOCKER_COMPOSE_DEV) --profile frontend --profile tools --profile seed up --build -d
+	$(DOCKER_COMPOSE_DEV) \
+		--profile frontend \
+		--profile tools \
+		--profile seed \
+		up --build \
+		-d
 
 stack-frontend-dev:
-	$(DOCKER_COMPOSE_DEV) --profile api --profile tools --profile seed up --build -d
+	SEED_API_BASE_URL=http://api:8000/api/v1 \
+	$(DOCKER_COMPOSE_DEV) \
+		--profile api \
+		--profile tools \
+		--profile seed \
+		up --build \
+		-d
 
 .PHONY: all build clean \
         build-python \
