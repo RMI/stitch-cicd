@@ -21,7 +21,7 @@ clean-build:
 	rm -rf build dist
 
 # ---------------------------------------------------------------------
-# Python (UV) infrasturcture
+# Python (UV) infrastructure
 # ---------------------------------------------------------------------
 
 uv-dev: uv-sync-dev
@@ -61,19 +61,19 @@ uv-test-target-exact:
 # ---------------------------------------------------------------------
 
 pkg-test-auth:
-	$(UV) run --package stitch-auth pytest packages/stitch-auth
+	$(MAKE) uv-test-target PKG=stitch-auth PATH=packages/stitch-auth
 pkg-test-exact-auth:
-	$(UV) run --package stitch-auth pytest packages/stitch-auth
+	$(MAKE) uv-test-target-exact PKG=stitch-auth PATH=packages/stitch-auth
 
 pkg-test-models:
-	$(UV) run --package stitch-models pytest packages/stitch-models
+	$(MAKE) uv-test-target PKG=stitch-models PATH=packages/stitch-models
 pkg-test-exact-models:
-	$(UV) run --package stitch-models pytest packages/stitch-models
+	$(MAKE) uv-test-target-exact PKG=stitch-models PATH=packages/stitch-models
 
 pkg-test-ogsi:
-	$(UV) run --package stitch-ogsi pytest packages/stitch-ogsi
+	$(MAKE) uv-test-target PKG=stitch-ogsi PATH=packages/stitch-ogsi
 pkg-test-exact-ogsi:
-	$(UV) run --package stitch-ogsi pytest packages/stitch-ogsi
+	$(MAKE) uv-test-target-exact PKG=stitch-ogsi PATH=packages/stitch-ogsi
 
 pkg-test: pkg-test-auth pkg-test-models pkg-test-ogsi
 pkg-test-exact: pkg-test-exact-auth pkg-test-exact-models pkg-test-exact-ogsi
