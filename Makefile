@@ -9,61 +9,83 @@ TEST_PKG := ./scripts/test-package.py
 check: lint test format-check lock-check
 	@echo "All checks passed."
 
-lint: uv-lint frontend-lint
+lint: py-lint frontend-lint
+test: py-test frontend-test
+format-check: py-format-check frontend-format-check
+lock-check: py-lock-check
 
-test: uv-test frontend-test
+format: py-format frontend-format
+clean: clean-build py-clean-cache frontend-clean clean-docker
 
-format: uv-format frontend-format
+clean-build:
+	rm -rf build dist
 
-format-check: uv-format-check frontend-format-check
-
-lock-check: uv-lock-check
-
-uv-lint: uv-dev
-	$(RUFF) check
-
-# All workspace packages with tests
-TEST_PACKAGES := stitch-api stitch-models
-
-define newline
-
-
-endef
-
-# --- local: full sync, no --exact (fast, no venv mutation) ---
-ifdef pkg
-uv-test: uv-dev
-	$(TEST_PKG) $(pkg)
-else
-uv-test: uv-dev
-	$(foreach p,$(TEST_PACKAGES),$(TEST_PKG) $(p)$(newline))
-endif
-
-# --- isolated (CI): per-package --exact deps only ---
-ifdef pkg
-uv-test-isolated:
-	$(TEST_PKG) --exact $(pkg)
-else
-uv-test-isolated:
-	$(foreach p,$(TEST_PACKAGES),$(TEST_PKG) --exact $(p)$(newline))
-endif
-
-uv-format: uv-dev
-	$(RUFF) format
-
-uv-format-check: uv-dev
-	$(RUFF) format --check
+# ---------------------------------------------------------------------
+# Python (UV) infrasturcture
+# ---------------------------------------------------------------------
 
 uv-dev: uv-sync-dev
+uv-sync-dev:
+	$(UV) sync --group dev --all-packages
+
+
+py-lint: uv-dev
+	$(RUFF) check
+
+py-test: api-test pkg-test
+
+py-format-check: uv-dev
+	$(RUFF) format --check
+
+py-lock-check:
+	$(UV) lock --check
+
+py-format: uv-dev
+	$(RUFF) format
+
+py-clean-cache:
+	rm -rf .ruff_cache .pytest_cache
 
 uv-sync:
 	$(UV) sync
 
-uv-sync-dev:
-	$(UV) sync --group dev --all-packages
+# Generic helpers
+uv-test-target:
+	$(UV) run --package $(PKG) --active pytest $(PATH) $(ARGS)
 
-uv-lock-check:
-	$(UV) lock --check
+uv-test-target-exact:
+	$(UV) run --package $(PKG) --active --exact --group dev pytest $(PATH) $(ARGS)
+
+# ---------------------------------------------------------------------
+# UV Packages
+# ---------------------------------------------------------------------
+
+pkg-test-auth:
+	$(UV) run --package stitch-auth pytest packages/stitch-auth
+pkg-test-exact-auth:
+	$(UV) run --package stitch-auth pytest packages/stitch-auth
+
+pkg-test-models:
+	$(UV) run --package stitch-models pytest packages/stitch-models
+pkg-test-exact-models:
+	$(UV) run --package stitch-models pytest packages/stitch-models
+
+pkg-test-ogsi:
+	$(UV) run --package stitch-ogsi pytest packages/stitch-ogsi
+pkg-test-exact-ogsi:
+	$(UV) run --package stitch-ogsi pytest packages/stitch-ogsi
+
+pkg-test: pkg-test-auth pkg-test-models pkg-test-ogsi
+pkg-test-exact: pkg-test-exact-auth pkg-test-exact-models pkg-test-exact-ogsi
+
+# ---------------------------------------------------------------------
+# Deployments
+# ---------------------------------------------------------------------
+
+api-test:
+	$(MAKE) uv-test-target PKG=stitch-api PATH=deployments/api
+api-test-exact:
+	$(MAKE) uv-test-target-exact PKG=stitch-api PATH=deployments/api
 
 api-dev: stack-api-dev
 	POSTGRES_HOST=127.0.0.1 \
@@ -77,18 +99,14 @@ api-dev: stack-api-dev
 		--reload-dir packages \
 		--reload-exclude '*/tests/*'
 
-# ---------------------------------------------------------------------
-# Packages and source discovery
-# ---------------------------------------------------------------------
-all: build-python frontend
-build-python:
-clean: clean-build clean-cache frontend-clean clean-docker
-
-clean-build:
-	rm -rf build dist
-clean-cache:
-	rm -rf .ruff_cache .pytest_cache
-
+stack-api-dev:
+	SEED_API_BASE_URL=http://host.docker.internal:8000/api/v1 \
+	$(DOCKER_COMPOSE_DEV) \
+		--profile frontend \
+		--profile tools \
+		--profile seed \
+		up --build \
+		-d
 
 # ---------------------------------------------------------------------
 # stitch-frontend
@@ -151,7 +169,9 @@ frontend-clean:
 	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules \
 	       $(FRONTEND_INSTALL_STAMP) $(FRONTEND_BUILD_STAMP)
 
-# docker
+# ---------------------------------------------------------------------
+# Docker
+# ---------------------------------------------------------------------
 clean-docker:
 	$(DOCKER_COMPOSE_DEV) --profile "*" down --volumes --remove-orphans
 
@@ -160,15 +180,6 @@ dev-docker:
 
 reboot-docker: clean-docker
 	$(DOCKER_COMPOSE_DEV) --profile full up --build
-
-stack-api-dev:
-	SEED_API_BASE_URL=http://host.docker.internal:8000/api/v1 \
-	$(DOCKER_COMPOSE_DEV) \
-		--profile frontend \
-		--profile tools \
-		--profile seed \
-		up --build \
-		-d
 
 stack-frontend-dev:
 	SEED_API_BASE_URL=http://api:8000/api/v1 \
