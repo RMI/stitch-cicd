@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -13,11 +14,6 @@ import click
 from stitch.api.main import app
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-
-
-# ---------------------------------------------------------------------------
-# Generation helpers (from gen_api_doc.py)
-# ---------------------------------------------------------------------------
 
 
 def resolve_ref(schema: dict, openapi: dict) -> tuple[str | None, dict]:
@@ -168,9 +164,22 @@ def generate_markdown(openapi: dict) -> str:
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
+def get_doc_endpoints(doc_path: Path) -> set[str]:
+    """Extract endpoint signatures from markdown headings."""
+    text = doc_path.read_text()
+    matches = re.findall(r"### `(\w+) (.+?)`", text)
+    return {f"{method} {path}" for method, path in matches}
+
+
+def get_openapi_endpoints() -> set[str]:
+    """Extract endpoint signatures from the OpenAPI schema."""
+    openapi = app.openapi()
+    endpoints = set()
+    for path, methods in openapi.get("paths", {}).items():
+        for method in methods:
+            if method in ("get", "post", "put", "patch", "delete"):
+                endpoints.add(f"{method.upper()} {path}")
+    return endpoints
 
 
 @click.group()
@@ -190,7 +199,7 @@ def cli():
     "--new",
     is_flag=True,
     default=False,
-    help="Write to a timestamped file next to the script.",
+    help="Write to API_REFERENCE_<timestamp>.md.",
 )
 def gen(output: str | None, new: bool):
     """Generate a Markdown API reference from the OpenAPI schema."""
@@ -211,6 +220,39 @@ def gen(output: str | None, new: bool):
         click.echo(f"Written to {output}")
     else:
         sys.stdout.write(md)
+
+
+@cli.command()
+@click.argument(
+    "path",
+    type=click.Path(exists=True),
+    default=None,
+    required=False,
+)
+def check(path: str | None):
+    """Check API reference doc against the OpenAPI schema."""
+    doc_path = Path(path) if path else (SCRIPT_DIR / ".." / "API_REFERENCE.md").resolve()
+
+    doc_endpoints = get_doc_endpoints(doc_path)
+    api_endpoints = get_openapi_endpoints()
+
+    missing = api_endpoints - doc_endpoints
+    stale = doc_endpoints - api_endpoints
+
+    if missing:
+        click.echo("Missing from doc:")
+        for endpoint in sorted(missing):
+            click.echo(f"  {endpoint}")
+
+    if stale:
+        click.echo("Stale in doc:")
+        for endpoint in sorted(stale):
+            click.echo(f"  {endpoint}")
+
+    if missing or stale:
+        sys.exit(1)
+
+    click.echo("API reference is in sync.")
 
 
 if __name__ == "__main__":
