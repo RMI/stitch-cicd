@@ -179,6 +179,9 @@ stack-frontend-dev:
 		up --build \
 		-d
 
+follow-stack-logs:
+	$(DOCKER_COMPOSE_DEV) --profile full logs -f
+
 .PHONY: all build clean \
         build-python \
         check lint test format format-check \
