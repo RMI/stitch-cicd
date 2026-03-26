@@ -17,6 +17,8 @@ lock-check: py-lock-check
 format: py-format frontend-format
 clean: clean-build py-clean-cache frontend-clean clean-docker
 
+build-all: py-build frontend-build
+
 clean-build:
 	rm -rf build dist
 
@@ -33,6 +35,7 @@ py-lint: uv-dev
 	$(RUFF) check
 
 py-test: api-test pkg-test
+py-test-exact: api-test pkg-test-exact
 
 py-format-check: uv-dev
 	$(RUFF) format --check
@@ -45,6 +48,8 @@ py-format: uv-dev
 
 py-clean-cache:
 	rm -rf .ruff_cache .pytest_cache
+
+py-build: api-build pkg-build
 
 uv-sync:
 	$(UV) sync
@@ -60,21 +65,28 @@ uv-test-target-exact:
 # UV Packages
 # ---------------------------------------------------------------------
 
+pkg-build-auth:
+	$(UV) build --package stitch-auth
 pkg-test-auth:
 	$(MAKE) uv-test-target PKG=stitch-auth PATH=packages/stitch-auth
 pkg-test-exact-auth:
 	$(MAKE) uv-test-target-exact PKG=stitch-auth PATH=packages/stitch-auth
 
+pkg-build-models:
+	$(UV) build --package stitch-models
 pkg-test-models:
 	$(MAKE) uv-test-target PKG=stitch-models PATH=packages/stitch-models
 pkg-test-exact-models:
 	$(MAKE) uv-test-target-exact PKG=stitch-models PATH=packages/stitch-models
 
+pkg-build-ogsi:
+	$(UV) build --package stitch-ogsi
 pkg-test-ogsi:
 	$(MAKE) uv-test-target PKG=stitch-ogsi PATH=packages/stitch-ogsi
 pkg-test-exact-ogsi:
 	$(MAKE) uv-test-target-exact PKG=stitch-ogsi PATH=packages/stitch-ogsi
 
+pkg-build: pkg-build-auth pkg-build-models pkg-build-ogsi
 pkg-test: pkg-test-auth pkg-test-models pkg-test-ogsi
 pkg-test-exact: pkg-test-exact-auth pkg-test-exact-models pkg-test-exact-ogsi
 
@@ -82,6 +94,8 @@ pkg-test-exact: pkg-test-exact-auth pkg-test-exact-models pkg-test-exact-ogsi
 # Deployments
 # ---------------------------------------------------------------------
 
+api-build:
+	$(UV) build --package stitch-api
 api-test:
 	$(MAKE) uv-test-target PKG=stitch-api PATH=deployments/api
 api-test-exact:
@@ -196,21 +210,23 @@ follow-stack-logs:
 .PHONY: \
 	# Workspace
 	check lint test format format-check lock-check \
+	build-all \
 	clean clean-build \
 	\
 	# Python (uv)
-	py-lint py-test py-format py-format-check py-lock-check py-clean-cache \
+	py-lint py-test py-test-exact py-format py-format-check py-lock-check py-clean-cache \
+	py-build \
 	uv-dev uv-sync uv-sync-dev \
 	uv-test-target uv-test-target-exact \
 	\
 	# Packages
 	pkg-test pkg-test-exact \
-	pkg-test-auth pkg-test-exact-auth \
-	pkg-test-models pkg-test-exact-models \
-	pkg-test-ogsi pkg-test-exact-ogsi \
+	pkg-build-auth pkg-test-auth pkg-test-exact-auth \
+	pkg-build-models pkg-test-models pkg-test-exact-models \
+	pkg-build-ogsi pkg-test-ogsi pkg-test-exact-ogsi \
 	\
 	# API
-	api-test api-test-exact api-dev stack-api-dev \
+	api-build api-test api-test-exact api-dev stack-api-dev \
 	\
 	# Frontend
 	frontend frontend-install frontend-build frontend-test frontend-lint \
