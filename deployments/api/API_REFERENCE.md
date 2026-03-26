@@ -93,7 +93,6 @@
 
 **Request Body:** Body
 
-
 **Response:** `200`
 
 - `id`: integer | null
@@ -122,7 +121,6 @@
 <!-- description -->
 
 **Request Body:** Body
-
 
 **Response:** `200`
 
