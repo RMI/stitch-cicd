@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from stitch.api.db.config import AsyncSession
 from stitch.api.db.query import DBQuery
@@ -151,9 +151,31 @@ async def list_og_sources(session: AsyncSession) -> Sequence[OGFieldSource]:
     return tuple(m.as_entity() for m in models)
 
 
+async def count(session: AsyncSession) -> int:
+    base = (
+        select(OilGasFieldSourceModel)
+        .join(MembershipModel, MembershipModel.source_pk == OilGasFieldSourceModel.id)
+        .where(MembershipModel.status == MembershipStatus.ACTIVE)
+        .distinct()
+    )
+    stmt = select(func.count()).select_from(base.subquery())
+    return await session.scalar(stmt) or 0
+
+
 async def query(
     session: AsyncSession,
     db_query: DBQuery[None],
 ) -> tuple[Sequence[OGFieldSource], int]:
-    models, total_count = await OilGasFieldSourceModel.execute_query(session, db_query)
+    total_count = await count(session)
+
+    stmt = (
+        select(OilGasFieldSourceModel)
+        .join(MembershipModel, MembershipModel.source_pk == OilGasFieldSourceModel.id)
+        .where(MembershipModel.status == MembershipStatus.ACTIVE)
+        .distinct()
+        .order_by(OilGasFieldSourceModel.id)
+        .offset(db_query.pagination.offset)
+        .limit(db_query.pagination.limit)
+    )
+    models = (await session.scalars(stmt)).all()
     return tuple(m.as_entity() for m in models), total_count

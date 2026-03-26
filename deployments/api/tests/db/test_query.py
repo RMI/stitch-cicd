@@ -1,4 +1,8 @@
-"""Unit tests for db query translators."""
+"""
+Unit tests for db query translators.
+
+Currently a placeholder for anticipated complexity in sorting & filtering.
+"""
 
 from stitch.api.db.query import pagination_to_db
 from stitch.api.entities import PaginationParams

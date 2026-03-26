@@ -2,20 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, Self
 
-if TYPE_CHECKING:
-    from stitch.api.db.query import DBQuery
 from sqlalchemy import (
     ForeignKey,
     Index,
     String,
-    func,
     literal,
     select,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, mapped_column, relationship, selectinload
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from stitch.api.db.errors import ResourceNotFoundError
 from stitch.ogsi.model import OGFieldSource, OGSISrcKey, OGFieldResource
 
@@ -196,25 +192,6 @@ class ResourceModel(TimestampMixin, UserAuditMixin, Base):
         )
 
         return resolved.union(children, parents)
-
-    @classmethod
-    async def execute_query(
-        cls,
-        session: AsyncSession,
-        query: "DBQuery[None]",
-    ) -> tuple[Sequence[Self], int]:
-        base = (
-            select(cls)
-            .where(cls.repointed_id.is_(None))
-            .options(selectinload(cls.memberships))
-        )
-
-        count_stmt = select(func.count()).select_from(base.subquery())
-        total = await session.scalar(count_stmt) or 0
-
-        stmt = base.offset(query.pagination.offset).limit(query.pagination.limit)
-        models = (await session.scalars(stmt)).all()
-        return list(models), total
 
     @classmethod
     def _root_select(cls, *resource_ids: int):

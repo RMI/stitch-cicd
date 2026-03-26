@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, ClassVar, Self
-
-if TYPE_CHECKING:
-    from stitch.api.db.query import DBQuery
+from typing import Any, ClassVar
 
 from pydantic import TypeAdapter
 from sqlalchemy import (
@@ -12,11 +9,8 @@ from sqlalchemy import (
     Integer,
     String,
     JSON,
-    func,
     inspect,
-    select,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 from stitch.ogsi.model import OGFieldSource, OilGasOperator, OilGasOwner
 from stitch.ogsi.model.types import (
@@ -144,25 +138,3 @@ class OilGasFieldSourceModel(TimestampMixin, UserAuditMixin, Base):
         column_keys = {col.key for col in mapper.columns}
         filtered = {k: v for k, v in entity.model_dump().items() if k in column_keys}
         return cls(**filtered)
-
-    @classmethod
-    async def execute_query(
-        cls,
-        session: AsyncSession,
-        query: "DBQuery[None]",
-    ) -> tuple[Sequence[Self], int]:
-        from stitch.api.db.model.resource import MembershipModel, MembershipStatus
-
-        base = (
-            select(cls)
-            .join(MembershipModel, MembershipModel.source_pk == cls.id)
-            .where(MembershipModel.status == MembershipStatus.ACTIVE)
-            .distinct()
-        )
-
-        count_stmt = select(func.count()).select_from(base.subquery())
-        total = await session.scalar(count_stmt) or 0
-
-        stmt = base.offset(query.pagination.offset).limit(query.pagination.limit)
-        models = (await session.scalars(stmt)).all()
-        return list(models), total

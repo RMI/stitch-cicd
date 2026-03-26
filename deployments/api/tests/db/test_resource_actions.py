@@ -128,8 +128,8 @@ class TestListResourcesActionIntegration:
         assert {"A", "B"} <= labels
 
 
-class TestResourceModelExecuteQuery:
-    """Integration tests for ResourceModel.execute_query() classmethod."""
+class TestResourceQueryAction:
+    """Integration tests for resource_actions.query() and count()."""
 
     @pytest.fixture
     async def seeded_resources(
@@ -167,26 +167,41 @@ class TestResourceModelExecuteQuery:
             ),
         ],
     )
-    async def test_execute_query_pagination(
+    async def test_query_pagination(
         self,
         seeded_integration_session: AsyncSession,
         seeded_resources,
         query: DBQuery,
         expected_count: int,
     ):
-        models, total = await ResourceModel.execute_query(
-            seeded_integration_session, query
-        )
+        items, total = await resource_actions.query(seeded_integration_session, query)
         assert total == 3
-        assert len(models) == expected_count
+        assert len(items) == expected_count
 
     @pytest.mark.anyio
-    async def test_execute_query_empty_table(
+    async def test_query_empty_table(
         self,
         seeded_integration_session: AsyncSession,
     ):
-        models, total = await ResourceModel.execute_query(
+        items, total = await resource_actions.query(
             seeded_integration_session, DBQuery()
         )
         assert total == 0
-        assert len(models) == 0
+        assert len(items) == 0
+
+    @pytest.mark.anyio
+    async def test_count(
+        self,
+        seeded_integration_session: AsyncSession,
+        seeded_resources,
+    ):
+        total = await resource_actions.count(seeded_integration_session)
+        assert total == 3
+
+    @pytest.mark.anyio
+    async def test_count_empty_table(
+        self,
+        seeded_integration_session: AsyncSession,
+    ):
+        total = await resource_actions.count(seeded_integration_session)
+        assert total == 0

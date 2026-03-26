@@ -1,17 +1,17 @@
-"""Database integration tests for OilGasFieldSourceModel.execute_query()."""
+"""Database integration tests for og_field_source_actions query/count."""
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from stitch.api.db import og_field_resource_actions as resource_actions
-from stitch.api.db.model import OilGasFieldSourceModel
+from stitch.api.db import og_field_source_actions as source_actions
 from stitch.api.db.query import DBQuery, Pagination
 from stitch.api.entities import User
 from tests.factories import ResourceCreateFactory
 
 
-class TestSourceModelExecuteQuery:
-    """Integration tests for OilGasFieldSourceModel.execute_query() classmethod."""
+class TestSourceQueryAction:
+    """Integration tests for source_actions.query() and count()."""
 
     @pytest.fixture
     async def seeded_sources(
@@ -29,26 +29,39 @@ class TestSourceModelExecuteQuery:
             )
 
     @pytest.mark.anyio
-    async def test_execute_query_paginates(
+    async def test_query_paginates(
         self,
         seeded_integration_session: AsyncSession,
         seeded_sources,
     ):
         q = DBQuery(pagination=Pagination(offset=0, limit=2))
-        models, total = await OilGasFieldSourceModel.execute_query(
-            seeded_integration_session, q
-        )
+        items, total = await source_actions.query(seeded_integration_session, q)
 
         assert total > 0
-        assert len(models) == min(2, total)
+        assert len(items) == min(2, total)
 
     @pytest.mark.anyio
-    async def test_execute_query_empty_table(
+    async def test_query_empty_table(
         self,
         seeded_integration_session: AsyncSession,
     ):
-        models, total = await OilGasFieldSourceModel.execute_query(
-            seeded_integration_session, DBQuery()
-        )
+        items, total = await source_actions.query(seeded_integration_session, DBQuery())
         assert total == 0
-        assert len(models) == 0
+        assert len(items) == 0
+
+    @pytest.mark.anyio
+    async def test_count(
+        self,
+        seeded_integration_session: AsyncSession,
+        seeded_sources,
+    ):
+        total = await source_actions.count(seeded_integration_session)
+        assert total > 0
+
+    @pytest.mark.anyio
+    async def test_count_empty_table(
+        self,
+        seeded_integration_session: AsyncSession,
+    ):
+        total = await source_actions.count(seeded_integration_session)
+        assert total == 0
