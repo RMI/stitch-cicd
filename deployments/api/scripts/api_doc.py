@@ -231,7 +231,9 @@ def gen(output: str | None, new: bool):
 )
 def check(path: str | None):
     """Check API reference doc against the OpenAPI schema."""
-    doc_path = Path(path) if path else (SCRIPT_DIR / ".." / "API_REFERENCE.md").resolve()
+    doc_path = (
+        Path(path) if path else (SCRIPT_DIR / ".." / "API_REFERENCE.md").resolve()
+    )
 
     doc_endpoints = get_doc_endpoints(doc_path)
     api_endpoints = get_openapi_endpoints()
