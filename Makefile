@@ -193,13 +193,30 @@ reboot-docker: clean-docker
 follow-stack-logs:
 	$(DOCKER_COMPOSE_DEV) --profile full logs -f
 
-.PHONY: all build clean \
-        build-python \
-        check lint test format format-check \
-        uv-lint uv-test uv-test-isolated uv-format uv-format-check \
-        uv-sync uv-sync-dev uv-sync-all \
-        uv-dev \
-        clean-build clean-cache \
-        lock-check uv-lock-check \
-        clean-docker dev-docker \
-        frontend frontend-install frontend-build frontend-test frontend-lint frontend-dev frontend-clean frontend-format frontend-format-check
+.PHONY: \
+	# Workspace
+	check lint test format format-check lock-check \
+	clean clean-build \
+	\
+	# Python (uv)
+	py-lint py-test py-format py-format-check py-lock-check py-clean-cache \
+	uv-dev uv-sync uv-sync-dev \
+	uv-test-target uv-test-target-exact \
+	\
+	# Packages
+	pkg-test pkg-test-exact \
+	pkg-test-auth pkg-test-exact-auth \
+	pkg-test-models pkg-test-exact-models \
+	pkg-test-ogsi pkg-test-exact-ogsi \
+	\
+	# API
+	api-test api-test-exact api-dev stack-api-dev \
+	\
+	# Frontend
+	frontend frontend-install frontend-build frontend-test frontend-lint \
+	frontend-format frontend-format-check \
+	frontend-dev frontend-clean \
+	\
+	# Docker
+	clean-docker dev-docker reboot-docker \
+	stack-frontend-dev follow-stack-logs
