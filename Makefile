@@ -56,10 +56,10 @@ uv-sync:
 
 # Generic helpers
 uv-test-target:
-	$(UV) run --package $(PKG) --active pytest $(PATH) $(ARGS)
+	$(UV) run --package $(PKG) --active pytest $(TEST_PATH) $(ARGS)
 
 uv-test-target-exact:
-	$(UV) run --package $(PKG) --active --exact --group dev pytest $(PATH) $(ARGS)
+	$(UV) run --package $(PKG) --active --exact --group dev pytest $(TEST_PATH) $(ARGS)
 
 # ---------------------------------------------------------------------
 # UV Packages
@@ -68,23 +68,23 @@ uv-test-target-exact:
 pkg-build-auth:
 	$(UV) build --package stitch-auth
 pkg-test-auth:
-	$(MAKE) uv-test-target PKG=stitch-auth PATH=packages/stitch-auth
+	$(MAKE) uv-test-target PKG=stitch-auth TEST_PATH=packages/stitch-auth
 pkg-test-exact-auth:
-	$(MAKE) uv-test-target-exact PKG=stitch-auth PATH=packages/stitch-auth
+	$(MAKE) uv-test-target-exact PKG=stitch-auth TEST_PATH=packages/stitch-auth
 
 pkg-build-models:
 	$(UV) build --package stitch-models
 pkg-test-models:
-	$(MAKE) uv-test-target PKG=stitch-models PATH=packages/stitch-models
+	$(MAKE) uv-test-target PKG=stitch-models TEST_PATH=packages/stitch-models
 pkg-test-exact-models:
-	$(MAKE) uv-test-target-exact PKG=stitch-models PATH=packages/stitch-models
+	$(MAKE) uv-test-target-exact PKG=stitch-models TEST_PATH=packages/stitch-models
 
 pkg-build-ogsi:
 	$(UV) build --package stitch-ogsi
 pkg-test-ogsi:
-	$(MAKE) uv-test-target PKG=stitch-ogsi PATH=packages/stitch-ogsi
+	$(MAKE) uv-test-target PKG=stitch-ogsi TEST_PATH=packages/stitch-ogsi
 pkg-test-exact-ogsi:
-	$(MAKE) uv-test-target-exact PKG=stitch-ogsi PATH=packages/stitch-ogsi
+	$(MAKE) uv-test-target-exact PKG=stitch-ogsi TEST_PATH=packages/stitch-ogsi
 
 pkg-build: pkg-build-auth pkg-build-models pkg-build-ogsi
 pkg-test: pkg-test-auth pkg-test-models pkg-test-ogsi
@@ -97,9 +97,9 @@ pkg-test-exact: pkg-test-exact-auth pkg-test-exact-models pkg-test-exact-ogsi
 api-build:
 	$(UV) build --package stitch-api
 api-test:
-	$(MAKE) uv-test-target PKG=stitch-api PATH=deployments/api
+	$(MAKE) uv-test-target PKG=stitch-api TEST_PATH=deployments/api
 api-test-exact:
-	$(MAKE) uv-test-target-exact PKG=stitch-api PATH=deployments/api
+	$(MAKE) uv-test-target-exact PKG=stitch-api TEST_PATH=deployments/api
 
 api-dev: stack-api-dev
 	POSTGRES_HOST=127.0.0.1 \
