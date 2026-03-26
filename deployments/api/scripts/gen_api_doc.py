@@ -1,6 +1,5 @@
 """Generate a Markdown API reference from the FastAPI OpenAPI schema."""
 
-import json
 import sys
 
 from stitch.api.main import app
@@ -113,7 +112,7 @@ def generate_markdown(openapi: dict) -> str:
 
     for tag, endpoints in grouped.items():
         # Section heading
-        heading = tag.replace("-", " ").title()
+        heading = tag.replace("-", " ").replace("_", " ").title()
         lines.append(f"## {heading}")
         lines.append("")
 
