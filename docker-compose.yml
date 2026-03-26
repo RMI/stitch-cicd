@@ -62,6 +62,7 @@ services:
     env_file:
       - .env
     environment:
+      LOG_LEVEL: ${DBINIT_LOG_LEVEL:-info}
       # db-init connects as the migrator role (DDL + seed)
       POSTGRES_USER: stitch_migrator
       POSTGRES_PASSWORD: ${STITCH_MIGRATOR_PASSWORD:?STITCH_MIGRATOR_PASSWORD must be set in .env}
