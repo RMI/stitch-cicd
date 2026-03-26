@@ -62,8 +62,8 @@ def wait_for_api(base_url: str, retries: int = 30, delay: float = 2.0) -> None:
                     attempt,
                     retries,
                 )
-        except Exception as e:
-            logger.info(f"API not reachable ({e}), attempt {attempt}/{retries}")
+        except (httpx.HTTPError, OSError) as e:
+            logger.info("API not reachable (%s), attempt %s/%s", e, attempt, retries)
 
         time.sleep(delay)
 
