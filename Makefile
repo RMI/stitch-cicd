@@ -108,6 +108,19 @@ stack-api-dev:
 		up --build \
 		-d
 
+frontend-dev: $(FRONTEND_INSTALL_STAMP) stack-frontend-dev
+	VITE_API_URL=http://localhost:8000/api/v1 \
+	$(NPM) run dev
+
+stack-frontend-dev:
+	SEED_API_BASE_URL=http://api:8000/api/v1 \
+	$(DOCKER_COMPOSE_DEV) \
+		--profile api \
+		--profile tools \
+		--profile seed \
+		up --build \
+		-d
+
 # ---------------------------------------------------------------------
 # stitch-frontend
 # ---------------------------------------------------------------------
@@ -161,10 +174,6 @@ frontend-format: $(FRONTEND_INSTALL_STAMP)
 frontend-format-check: $(FRONTEND_INSTALL_STAMP)
 	$(NPM) run format:check
 
-frontend-dev: $(FRONTEND_INSTALL_STAMP) stack-frontend-dev
-	VITE_API_URL=http://localhost:8000/api/v1 \
-	$(NPM) run dev
-
 frontend-clean:
 	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules \
 	       $(FRONTEND_INSTALL_STAMP) $(FRONTEND_BUILD_STAMP)
@@ -180,15 +189,6 @@ dev-docker:
 
 reboot-docker: clean-docker
 	$(DOCKER_COMPOSE_DEV) --profile full up --build
-
-stack-frontend-dev:
-	SEED_API_BASE_URL=http://api:8000/api/v1 \
-	$(DOCKER_COMPOSE_DEV) \
-		--profile api \
-		--profile tools \
-		--profile seed \
-		up --build \
-		-d
 
 follow-stack-logs:
 	$(DOCKER_COMPOSE_DEV) --profile full logs -f
