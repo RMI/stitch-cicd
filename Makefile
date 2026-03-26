@@ -35,7 +35,7 @@ py-lint: uv-dev
 	$(RUFF) check
 
 py-test: api-test pkg-test
-py-test-exact: api-test pkg-test-exact
+py-test-exact: api-test-exact pkg-test-exact
 
 py-format-check: uv-dev
 	$(RUFF) format --check
