@@ -1,9 +1,5 @@
 services:
 
-  api:
-    environment:
-      LOG_LEVEL: debug
-
   adminer:
     image: adminer:latest
     ports:
@@ -28,6 +24,8 @@ services:
       SEED_SOURCE: "mixed"
       NULL_PROBABILITY: 0.3
       STATIC_PAYLOAD_DIR: "/mnt/data"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./deployments/seed/data:/mnt/data:ro
     restart: "no"
