@@ -1,3 +1,5 @@
+#! /usr/bin/env -S uv run --package stitch-api --exact
+
 """Generate a Markdown API reference from the FastAPI OpenAPI schema."""
 
 import sys

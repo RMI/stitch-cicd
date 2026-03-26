@@ -1,3 +1,5 @@
+#! /usr/bin/env -S uv run --package stitch-api --exact
+
 """Check API_REFERENCE.md against the current OpenAPI schema for missing endpoints."""
 
 import re
