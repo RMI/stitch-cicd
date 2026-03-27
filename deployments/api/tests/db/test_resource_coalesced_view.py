@@ -21,7 +21,7 @@ async def _create_resource_with_sources(session, user, source_models):
     for src in source_models:
         mem = MembershipModel.create(
             created_by=user,
-            resource=resource,
+            resource_id=resource.id,
             source=src.source,
             source_pk=src.id,
         )

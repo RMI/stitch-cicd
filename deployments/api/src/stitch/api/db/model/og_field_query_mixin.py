@@ -21,6 +21,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, declarative_mixin, mapped_column
 
 from stitch.api.entities import OGFieldQueryParams
+from stitch.ogsi.model import LocationType
+from stitch.ogsi.model.types import (
+    FieldStatus,
+    PrimaryHydrocarbonGroup,
+    ProductionConventionality,
+)
 
 
 @declarative_mixin
@@ -75,10 +81,19 @@ class OGFieldQueryMixin:
     production_start_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     fid_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # location_type, production_conventionality, primary_hydrocarbon_group, and
-    # field_status are declared by each subclass with their own types (Literal
-    # enums on the source table, plain str on the coalesced view).
-    # _build_conditions uses getattr so they work regardless.
+    # Enum/Literal columns
+    location_type: Mapped[LocationType | None] = mapped_column(
+        default=None, nullable=True
+    )
+    production_conventionality: Mapped[ProductionConventionality | None] = (
+        mapped_column(default=None, nullable=True)
+    )
+    primary_hydrocarbon_group: Mapped[PrimaryHydrocarbonGroup | None] = mapped_column(
+        default=None, nullable=True
+    )
+    field_status: Mapped[FieldStatus | None] = mapped_column(
+        default=None, nullable=True
+    )
 
     # ------------------------------------------------------------------
     # Public query classmethods
@@ -117,12 +132,14 @@ class OGFieldQueryMixin:
     # ------------------------------------------------------------------
 
     @classmethod
-    def _base_query(cls, params: OGFieldQueryParams) -> Select[tuple[Self]]:
+    def _base_query[QM: OGFieldQueryMixin](
+        cls: type[QM], params: OGFieldQueryParams
+    ) -> Select[tuple[QM]]:
         """Filtered + sorted SELECT with no pagination.
 
         Override this in subclasses to modify the FROM clause (e.g. add joins).
         """
-        stmt: Select[tuple[Self]] = select(cls).distinct()
+        stmt: Select[tuple[QM]] = select(cls).distinct()
         for cond in cls._build_conditions(params):
             stmt = stmt.where(cond)
         return cls._apply_sort(stmt, params)
@@ -136,7 +153,7 @@ class OGFieldQueryMixin:
             q_term = f"%{params.q}%"
             q_conds: list[ColumnElement[bool]] = []
             for field_name in cls._q_fields:
-                col = getattr(cls, field_name, None)
+                col: ColumnElement[bool] | None = getattr(cls, field_name, None)
                 if col is not None:
                     q_conds.append(col.ilike(q_term))
             if q_conds:
@@ -152,9 +169,9 @@ class OGFieldQueryMixin:
         return conditions
 
     @classmethod
-    def _apply_sort(
-        cls, stmt: Select[tuple[Self]], params: OGFieldQueryParams
-    ) -> Select[tuple[Self]]:
+    def _apply_sort[QM: OGFieldQueryMixin](
+        cls: type[QM], stmt: Select[tuple[QM]], params: OGFieldQueryParams
+    ) -> Select[tuple[QM]]:
         """Apply ORDER BY with id tie-breaker."""
         sort_col = getattr(cls, params.sort_by)
         direction = desc if params.sort_order == "desc" else asc
@@ -164,8 +181,8 @@ class OGFieldQueryMixin:
         return stmt
 
     @classmethod
-    def _apply_pagination(
-        cls, stmt: Select[tuple[Self]], params: OGFieldQueryParams
-    ) -> Select[tuple[Self]]:
+    def _apply_pagination[QM: OGFieldQueryMixin](
+        cls: type[QM], stmt: Select[tuple[QM]], params: OGFieldQueryParams
+    ) -> Select[tuple[QM]]:
         """Apply offset/limit for pagination."""
         return stmt.offset(params.offset).limit(params.limit)

@@ -206,7 +206,7 @@ async def _repoint_memberships(
         new_memberships.append(
             MembershipModel.create(
                 created_by=user,
-                resource=res,
+                resource_id=res.id,
                 source=mem.source,
                 source_pk=mem.source_pk,
                 status=mem.status,

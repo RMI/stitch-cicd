@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from sqlalchemy import String, case, func, select, text
+from sqlalchemy import case, func, select, text
 from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy.orm import Mapped, mapped_column
 from stitch.ogsi.model.og_field import OilGasFieldBase
 
 from .common import Base
 from .og_field_query_mixin import OGFieldQueryMixin
 from .og_field_source_priority import DEFAULT_PRIORITIES, OGFieldSourcePriority
 from .oil_gas_field_source import OilGasFieldSourceModel
-from .resource import MembershipModel, MembershipStatus, ResourceModel
+from .membership import MembershipModel, MembershipStatus
+from .resource import ResourceModel
 
 
 def build_view_select(num_priorities: int = 4):
@@ -70,10 +70,3 @@ async def create_view(engine: AsyncEngine) -> None:
 class ResourceCoalescedView(OGFieldQueryMixin, Base):
     __tablename__ = "resource_coalesced_view"
     __table_args__ = {"info": {"is_view": True}}
-
-    location_type: Mapped[str | None] = mapped_column(String, nullable=True)
-    production_conventionality: Mapped[str | None] = mapped_column(
-        String, nullable=True
-    )
-    primary_hydrocarbon_group: Mapped[str | None] = mapped_column(String, nullable=True)
-    field_status: Mapped[str | None] = mapped_column(String, nullable=True)

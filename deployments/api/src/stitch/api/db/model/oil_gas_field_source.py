@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, ClassVar, Self, override
+from typing import Any, ClassVar, override
 
 from pydantic import TypeAdapter
 from sqlalchemy import (
@@ -33,26 +33,12 @@ class OilGasFieldSourceModel(OGFieldQueryMixin, TimestampMixin, UserAuditMixin, 
 
     type_adapter: ClassVar[TypeAdapter[OGFieldSource]] = TypeAdapter(OGFieldSource)
 
-    __tablename__ = "oil_gas_field_sources"
+    __tablename__: str = "oil_gas_field_sources"
 
     id: Mapped[int] = mapped_column(PORTABLE_BIGINT, primary_key=True)
 
     # SqlAlchemy will translate Literal types into Enums
     source: Mapped[OGSISrcKey] = mapped_column(nullable=False)
-
-    # Enum/Literal columns
-    location_type: Mapped[LocationType | None] = mapped_column(
-        default=None, nullable=True
-    )
-    production_conventionality: Mapped[ProductionConventionality | None] = (
-        mapped_column(default=None, nullable=True)
-    )
-    primary_hydrocarbon_group: Mapped[PrimaryHydrocarbonGroup | None] = mapped_column(
-        default=None, nullable=True
-    )
-    field_status: Mapped[FieldStatus | None] = mapped_column(
-        default=None, nullable=True
-    )
 
     # JSON columns
     owners: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
@@ -60,11 +46,13 @@ class OilGasFieldSourceModel(OGFieldQueryMixin, TimestampMixin, UserAuditMixin, 
 
     @classmethod
     @override
-    def _base_query(cls, params: OGFieldQueryParams) -> Select[tuple[Self]]:  # type: ignore[override]
+    def _base_query[QM: OGFieldQueryMixin](
+        cls: type[QM], params: OGFieldQueryParams
+    ) -> Select[tuple[QM]]:
         """Add membership join for active-only filtering."""
-        from .resource import MembershipModel, MembershipStatus
+        from .membership import MembershipModel, MembershipStatus
 
-        stmt: Select[tuple[Self]] = (
+        stmt: Select[tuple[QM]] = (
             select(cls)
             .join(MembershipModel, MembershipModel.source_pk == cls.id)
             .where(MembershipModel.status == MembershipStatus.ACTIVE)

@@ -112,7 +112,7 @@ async def attach_sources_to_resource(
     memberships = [
         MembershipModel.create(
             created_by=user,
-            resource=resource,
+            resource_id=resource.id,
             source=src.source,
             source_pk=src.id,
         )
