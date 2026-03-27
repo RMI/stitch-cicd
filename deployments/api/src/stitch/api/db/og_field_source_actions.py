@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from sqlalchemy import func, select
 
 from stitch.api.db.config import AsyncSession
-from stitch.api.db.query import DBQuery, OGFieldFilters, base_query, _build_conditions
+from stitch.api.db.query import base_query, build_conditions
 from stitch.api.db.errors import (
     ResourceIntegrityError,
     ResourceNotFoundError,
@@ -164,16 +164,9 @@ async def count(session: AsyncSession) -> int:
 
 async def query(
     session: AsyncSession,
-    db_query: DBQuery[OGFieldFilters],
+    params,
 ) -> tuple[Sequence[OGFieldSource], int]:
-    filters = db_query.filters or OGFieldFilters()
-
-    data_stmt = base_query(
-        OilGasFieldSourceModel,
-        filters=filters,
-        ordering=db_query.ordering,
-        pagination=db_query.pagination,
-    )
+    data_stmt = base_query(OilGasFieldSourceModel, params=params)
     data_stmt = (
         data_stmt.join(
             MembershipModel,
@@ -191,7 +184,7 @@ async def query(
         )
         .where(MembershipModel.status == MembershipStatus.ACTIVE)
     )
-    for cond in _build_conditions(OilGasFieldSourceModel, filters):
+    for cond in build_conditions(OilGasFieldSourceModel, params):
         joined_base = joined_base.where(cond)
     count_stmt = select(func.count()).select_from(
         joined_base.distinct().subquery()

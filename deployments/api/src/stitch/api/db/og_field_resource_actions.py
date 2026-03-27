@@ -14,7 +14,7 @@ from stitch.api.db.errors import (
 )
 from stitch.api.auth import CurrentUser
 from stitch.api.db.model.resource_coalesced_view import ResourceCoalescedView
-from stitch.api.db.query import DBQuery, OGFieldFilters, base_query, count_query
+from stitch.api.db.query import base_query, count_query
 from stitch.api.db.og_field_source_actions import (
     attach_sources_to_resource,
     get_or_create_sources,
@@ -41,24 +41,22 @@ async def get_all(session: AsyncSession) -> Sequence[OGFieldResource]:
 
 
 async def count(session: AsyncSession) -> int:
-    stmt = count_query(ResourceCoalescedView, filters=OGFieldFilters())
+    from stitch.api.entities import OGFieldFilterParams, OGFieldSortParams, PaginationParams
+
+    class _CountParams(PaginationParams, OGFieldFilterParams, OGFieldSortParams):
+        pass
+
+    stmt = count_query(ResourceCoalescedView, params=_CountParams())
     return await session.scalar(stmt) or 0
 
 
 async def query(
     session: AsyncSession,
-    db_query: DBQuery[OGFieldFilters],
+    params,
 ) -> tuple[Sequence[OGFieldResource], int]:
-    filters = db_query.filters or OGFieldFilters()
-
-    data_stmt = base_query(
-        ResourceCoalescedView,
-        filters=filters,
-        ordering=db_query.ordering,
-        pagination=db_query.pagination,
-    )
+    data_stmt = base_query(ResourceCoalescedView, params=params)
     total = await session.scalar(
-        count_query(ResourceCoalescedView, filters=filters)
+        count_query(ResourceCoalescedView, params=params)
     ) or 0
 
     view_rows = (await session.scalars(data_stmt)).all()

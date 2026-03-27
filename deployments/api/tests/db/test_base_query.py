@@ -4,14 +4,18 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from stitch.api.db.model import OilGasFieldSourceModel
-from stitch.api.db.query import (
-    OGFieldFilters,
-    Ordering,
-    Pagination,
-    base_query,
-    count_query,
+from stitch.api.db.query import base_query, count_query
+from stitch.api.entities import (
+    OGFieldFilterParams,
+    OGFieldSortParams,
+    PaginationParams,
+    User,
 )
-from stitch.api.entities import User
+from stitch.ogsi.model.types import OGSISrcKey
+
+
+class _QueryParams(PaginationParams, OGFieldFilterParams, OGFieldSortParams):
+    source: OGSISrcKey | None = None
 
 
 @pytest.fixture
@@ -76,14 +80,12 @@ async def seeded_sources(
     return sources
 
 
-async def _execute(session, filters=None, ordering=None, pagination=None):
+async def _execute(session, **overrides):
     """Helper: run base_query + count_query against source table."""
-    f = filters or OGFieldFilters()
-    o = ordering or Ordering()
-    p = pagination or Pagination(offset=0, limit=50)
+    params = _QueryParams(**overrides)
 
-    stmt = base_query(OilGasFieldSourceModel, filters=f, ordering=o, pagination=p)
-    count_stmt = count_query(OilGasFieldSourceModel, filters=f)
+    stmt = base_query(OilGasFieldSourceModel, params=params)
+    count_stmt = count_query(OilGasFieldSourceModel, params=params)
 
     rows = (await session.scalars(stmt)).all()
     total = await session.scalar(count_stmt)
@@ -100,7 +102,7 @@ class TestBaseQuerySubstringSearch:
         """q='perm' matches 'Permian Basin', 'Permian Delaware', 'permskiy basseyn'."""
         rows, total = await _execute(
             seeded_integration_session,
-            filters=OGFieldFilters(q="perm"),
+            q="perm",
         )
         names = {r.name for r in rows}
         assert total == 3
@@ -113,7 +115,8 @@ class TestBaseQuerySubstringSearch:
         """q='perm' + country='USA' narrows to 2 results."""
         rows, total = await _execute(
             seeded_integration_session,
-            filters=OGFieldFilters(q="perm", country="USA"),
+            q="perm",
+            country="USA",
         )
         names = {r.name for r in rows}
         assert total == 2
@@ -130,7 +133,8 @@ class TestBaseQueryExactFilters:
         """country=USA AND field_status=Producing returns Permian Basin, Permian Delaware."""
         rows, total = await _execute(
             seeded_integration_session,
-            filters=OGFieldFilters(country="USA", field_status="Producing"),
+            country="USA",
+            field_status="Producing",
         )
         names = {r.name for r in rows}
         assert total == 2
@@ -143,7 +147,7 @@ class TestBaseQueryExactFilters:
         """country=XYZ returns empty."""
         rows, total = await _execute(
             seeded_integration_session,
-            filters=OGFieldFilters(country="XYZ"),
+            country="XYZ",
         )
         assert total == 0
         assert len(rows) == 0
@@ -155,7 +159,7 @@ class TestBaseQueryExactFilters:
         """q='' treated as no search, returns all 8."""
         rows, total = await _execute(
             seeded_integration_session,
-            filters=OGFieldFilters(q=""),
+            q="",
         )
         assert total == 8
 
@@ -170,8 +174,10 @@ class TestBaseQuerySortAndPagination:
         """Sort by discovery_year asc, page_size=3 returns first 3 non-null years."""
         rows, total = await _execute(
             seeded_integration_session,
-            ordering=Ordering(sort_by="discovery_year", sort_order="asc"),
-            pagination=Pagination(offset=0, limit=3),
+            sort_by="discovery_year",
+            sort_order="asc",
+            page=1,
+            page_size=3,
         )
         assert total == 8
         assert len(rows) == 3
@@ -185,9 +191,12 @@ class TestBaseQuerySortAndPagination:
         """q=perm + field_status=Producing + sort by name desc + page_size=1."""
         rows, total = await _execute(
             seeded_integration_session,
-            filters=OGFieldFilters(q="perm", field_status="Producing"),
-            ordering=Ordering(sort_by="name", sort_order="desc"),
-            pagination=Pagination(offset=0, limit=1),
+            q="perm",
+            field_status="Producing",
+            sort_by="name",
+            sort_order="desc",
+            page=1,
+            page_size=1,
         )
         assert total == 2
         assert len(rows) == 1
@@ -195,6 +204,6 @@ class TestBaseQuerySortAndPagination:
 
     @pytest.mark.anyio
     async def test_invalid_sort_field_raises(self):
-        """Ordering with invalid sort_by raises ValidationError."""
+        """OGFieldSortParams with invalid sort_by raises ValidationError."""
         with pytest.raises(Exception):
-            Ordering(sort_by="owners")
+            OGFieldSortParams(sort_by="owners")

@@ -209,6 +209,6 @@ class TestGetAllResourcesUnit:
         assert response.status_code == 200
         mock_repo.query.assert_awaited_once()
         call_kwargs = mock_repo.query.call_args.kwargs
-        db_query = call_kwargs["db_query"]
-        assert db_query.pagination.offset == 10
-        assert db_query.pagination.limit == 10
+        params = call_kwargs["params"]
+        assert params.offset == 10
+        assert params.limit == 10
