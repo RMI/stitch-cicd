@@ -13,7 +13,8 @@ from stitch.api.db.errors import (
     ResourceNotFoundError,
 )
 from stitch.api.auth import CurrentUser
-from stitch.api.db.query import DBQuery
+from stitch.api.db.model.resource_coalesced_view import ResourceCoalescedView
+from stitch.api.db.query import DBQuery, OGFieldFilters, base_query, count_query
 from stitch.api.db.og_field_source_actions import (
     attach_sources_to_resource,
     get_or_create_sources,
@@ -40,30 +41,44 @@ async def get_all(session: AsyncSession) -> Sequence[OGFieldResource]:
 
 
 async def count(session: AsyncSession) -> int:
-    base = select(ResourceModel).where(ResourceModel.repointed_id.is_(None))
-    stmt = select(func.count()).select_from(base.subquery())
+    stmt = count_query(ResourceCoalescedView, filters=OGFieldFilters())
     return await session.scalar(stmt) or 0
 
 
 async def query(
     session: AsyncSession,
-    db_query: DBQuery[None],
+    db_query: DBQuery[OGFieldFilters],
 ) -> tuple[Sequence[OGFieldResource], int]:
-    total_count = await count(session)
+    filters = db_query.filters or OGFieldFilters()
+
+    data_stmt = base_query(
+        ResourceCoalescedView,
+        filters=filters,
+        ordering=db_query.ordering,
+        pagination=db_query.pagination,
+    )
+    total = await session.scalar(
+        count_query(ResourceCoalescedView, filters=filters)
+    ) or 0
+
+    view_rows = (await session.scalars(data_stmt)).all()
+
+    resource_ids = [row.id for row in view_rows]
+    if not resource_ids:
+        return [], total
 
     stmt = (
         select(ResourceModel)
-        .where(ResourceModel.repointed_id.is_(None))
+        .where(ResourceModel.id.in_(resource_ids))
         .options(selectinload(ResourceModel.memberships))
-        .order_by(ResourceModel.id)
-        .offset(db_query.pagination.offset)
-        .limit(db_query.pagination.limit)
     )
     models = (await session.scalars(stmt)).all()
+    model_map = {m.id: m for m in models}
+    ordered_models = [model_map[rid] for rid in resource_ids if rid in model_map]
 
     fn = partial(resource_model_to_entity, session)
-    items = list(await asyncio.gather(*[fn(m) for m in models]))
-    return items, total_count
+    items = list(await asyncio.gather(*[fn(m) for m in ordered_models]))
+    return items, total
 
 
 async def get(session: AsyncSession, id: int):
