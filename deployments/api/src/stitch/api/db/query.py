@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from pydantic import BaseModel, field_validator
+from sqlalchemy import Select, asc, desc, func, or_, select
 
 from stitch.api.entities import PaginationParams
 from stitch.ogsi.model.types import (
@@ -92,3 +93,65 @@ def pagination_to_db(params: PaginationParams) -> Pagination:
         offset=(params.page - 1) * params.page_size,
         limit=params.page_size,
     )
+
+
+def base_query(
+    table,
+    *,
+    filters: OGFieldFilters,
+    ordering: Ordering,
+    pagination: Pagination,
+) -> Select:
+    """Build a filtered, sorted, paginated SELECT.
+
+    Works against any table or view exposing OilGasFieldBase columns.
+    """
+    stmt = select(table)
+    for cond in _build_conditions(table, filters):
+        stmt = stmt.where(cond)
+
+    sort_col = getattr(table, ordering.sort_by)
+    direction = desc if ordering.sort_order == "desc" else asc
+    stmt = stmt.order_by(direction(sort_col).nulls_last())
+    if ordering.sort_by != "id":
+        stmt = stmt.order_by(asc(table.id))
+
+    stmt = stmt.offset(pagination.offset).limit(pagination.limit)
+    return stmt
+
+
+def count_query(table, *, filters: OGFieldFilters) -> Select:
+    """Build a COUNT query with the same filter conditions as base_query."""
+    stmt = select(func.count()).select_from(table)
+    for cond in _build_conditions(table, filters):
+        stmt = stmt.where(cond)
+    return stmt
+
+
+def _build_conditions(table, filters: OGFieldFilters) -> list:
+    """Build WHERE conditions from filters."""
+    conditions = []
+
+    if filters.q:
+        q_term = f"%{filters.q}%"
+        q_conditions = []
+        for field_name in Q_FIELDS:
+            col = getattr(table, field_name, None)
+            if col is not None:
+                q_conditions.append(col.ilike(q_term))
+        if q_conditions:
+            conditions.append(or_(*q_conditions))
+
+    _exact_fields = [
+        "id", "name", "name_local", "basin", "state_province", "region",
+        "country", "source", "field_status", "location_type",
+        "production_conventionality", "primary_hydrocarbon_group",
+    ]
+    for field_name in _exact_fields:
+        value = getattr(filters, field_name, None)
+        if value is not None:
+            col = getattr(table, field_name, None)
+            if col is not None:
+                conditions.append(col == value)
+
+    return conditions
