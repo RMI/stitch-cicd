@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import case, func, select, text
+from sqlalchemy import Insert, case, func, insert, select, text
 from sqlalchemy.ext.asyncio import AsyncEngine
 from stitch.ogsi.model.og_field import OilGasFieldBase
 
@@ -49,14 +49,27 @@ def build_view_select(num_priorities: int = 4):
     return base
 
 
+def _upsert_priority(row: dict[str, str | int], dialect: str) -> Insert:
+    """Build a dialect-appropriate INSERT ... ON CONFLICT DO NOTHING."""
+    stmt = insert(OGFieldSourcePriority).values(**row)
+    if dialect == "sqlite":
+        from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+
+        return (
+            sqlite_insert(OGFieldSourcePriority).values(**row).on_conflict_do_nothing()
+        )
+    elif dialect == "postgresql":
+        from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+        return pg_insert(OGFieldSourcePriority).values(**row).on_conflict_do_nothing()
+    return stmt
+
+
 async def create_view(engine: AsyncEngine) -> None:
     """Seed the priority table and create the SQL view."""
     async with engine.begin() as conn:
         for row in DEFAULT_PRIORITIES:
-            await conn.execute(
-                OGFieldSourcePriority.__table__.insert().prefix_with("OR IGNORE"),
-                row,
-            )
+            await conn.execute(_upsert_priority(row, engine.dialect.name))
 
         view_select = build_view_select(num_priorities=len(DEFAULT_PRIORITIES))
         compiled = view_select.compile(

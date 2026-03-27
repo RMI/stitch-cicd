@@ -6,7 +6,6 @@ from typing import Any, ClassVar, override
 from pydantic import TypeAdapter
 from sqlalchemy import (
     JSON,
-    Select,
     inspect,
     select,
 )
@@ -24,6 +23,7 @@ from stitch.api.db.model.types import PORTABLE_BIGINT
 from stitch.api.entities import OGFieldQueryParams, User
 
 from .common import Base
+from .membership import MembershipModel, MembershipStatus
 from .mixins import TimestampMixin, UserAuditMixin
 from .og_field_query_mixin import OGFieldQueryMixin
 
@@ -46,13 +46,10 @@ class OilGasFieldSourceModel(OGFieldQueryMixin, TimestampMixin, UserAuditMixin, 
 
     @classmethod
     @override
-    def _base_query[QM: OGFieldQueryMixin](
-        cls: type[QM], params: OGFieldQueryParams
-    ) -> Select[tuple[QM]]:
+    def _base_query(cls, params: OGFieldQueryParams):
         """Add membership join for active-only filtering."""
-        from .membership import MembershipModel, MembershipStatus
 
-        stmt: Select[tuple[QM]] = (
+        stmt = (
             select(cls)
             .join(MembershipModel, MembershipModel.source_pk == cls.id)
             .where(MembershipModel.status == MembershipStatus.ACTIVE)
