@@ -7,6 +7,7 @@ from pydantic import BaseModel, EmailStr, Field, computed_field
 from stitch.ogsi.model.types import (
     FieldStatus,
     LocationType,
+    OGSISrcKey,
     PrimaryHydrocarbonGroup,
     ProductionConventionality,
 )
@@ -96,3 +97,7 @@ class OGFieldFilterParams(BaseModel):
 class OGFieldSortParams(BaseModel):
     sort_by: SortableField = "name"
     sort_order: Literal["asc", "desc"] = "asc"
+
+
+class OGFieldQueryParams(PaginationParams, OGFieldFilterParams, OGFieldSortParams):
+    source: OGSISrcKey | None = None

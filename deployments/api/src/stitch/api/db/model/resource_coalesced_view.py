@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from sqlalchemy import Float, Integer, String, case, func, select, text
+from sqlalchemy import String, case, func, select, text
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm import Mapped, mapped_column
 from stitch.ogsi.model.og_field import OilGasFieldBase
 
 from .common import Base
+from .og_field_query_mixin import OGFieldQueryMixin
 from .og_field_source_priority import DEFAULT_PRIORITIES, OGFieldSourcePriority
 from .oil_gas_field_source import OilGasFieldSourceModel
 from .resource import MembershipModel, MembershipStatus, ResourceModel
@@ -41,8 +42,7 @@ def build_view_select(num_priorities: int = 4):
         if col is None:
             continue
         coalesce_args = [
-            func.max(case((p.priority == i, col)))
-            for i in range(1, num_priorities + 1)
+            func.max(case((p.priority == i, col))) for i in range(1, num_priorities + 1)
         ]
         base = base.add_columns(func.coalesce(*coalesce_args).label(field_name))
 
@@ -63,34 +63,17 @@ async def create_view(engine: AsyncEngine) -> None:
             dialect=conn.dialect, compile_kwargs={"literal_binds": True}
         )
         await conn.execute(
-            text(
-                f"CREATE VIEW IF NOT EXISTS resource_coalesced_view AS {compiled}"
-            )
+            text(f"CREATE VIEW IF NOT EXISTS resource_coalesced_view AS {compiled}")
         )
 
 
-class ResourceCoalescedView(Base):
+class ResourceCoalescedView(OGFieldQueryMixin, Base):
     __tablename__ = "resource_coalesced_view"
     __table_args__ = {"info": {"is_view": True}}
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str | None] = mapped_column(String, nullable=True)
-    country: Mapped[str | None] = mapped_column(String, nullable=True)
-    name_local: Mapped[str | None] = mapped_column(String, nullable=True)
-    state_province: Mapped[str | None] = mapped_column(String, nullable=True)
-    region: Mapped[str | None] = mapped_column(String, nullable=True)
-    basin: Mapped[str | None] = mapped_column(String, nullable=True)
-    reservoir_formation: Mapped[str | None] = mapped_column(String, nullable=True)
-    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
-    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
-    discovery_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    production_start_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    fid_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     location_type: Mapped[str | None] = mapped_column(String, nullable=True)
     production_conventionality: Mapped[str | None] = mapped_column(
         String, nullable=True
     )
-    primary_hydrocarbon_group: Mapped[str | None] = mapped_column(
-        String, nullable=True
-    )
+    primary_hydrocarbon_group: Mapped[str | None] = mapped_column(String, nullable=True)
     field_status: Mapped[str | None] = mapped_column(String, nullable=True)

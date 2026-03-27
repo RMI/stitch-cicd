@@ -1,9 +1,8 @@
 from collections.abc import Sequence
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from stitch.api.db.config import AsyncSession
-from stitch.api.db.query import base_query, build_conditions
 from stitch.api.db.errors import (
     ResourceIntegrityError,
     ResourceNotFoundError,
@@ -11,11 +10,10 @@ from stitch.api.db.errors import (
     SourceNotFoundError,
 )
 from stitch.api.db.utils import partition_by_id_none
-from stitch.api.entities import User
+from stitch.api.entities import OGFieldQueryParams, User
 from stitch.ogsi.model import OGFieldSource, OGFieldResource
 
 from .model import (
-    MembershipStatus,
     OilGasFieldSourceModel,
     ResourceModel,
     MembershipModel,
@@ -140,56 +138,13 @@ async def get_sources(
     return [model.as_entity() for model in models]
 
 
-async def list_og_sources(session: AsyncSession) -> Sequence[OGFieldSource]:
-    stmt = (
-        select(OilGasFieldSourceModel)
-        .join(MembershipModel, MembershipModel.source_pk == OilGasFieldSourceModel.id)
-        .where(MembershipModel.status == MembershipStatus.ACTIVE)
-        .distinct()
-    )
-    models = (await session.scalars(stmt)).all()
-    return tuple(m.as_entity() for m in models)
-
-
-async def count(session: AsyncSession) -> int:
-    base = (
-        select(OilGasFieldSourceModel)
-        .join(MembershipModel, MembershipModel.source_pk == OilGasFieldSourceModel.id)
-        .where(MembershipModel.status == MembershipStatus.ACTIVE)
-        .distinct()
-    )
-    stmt = select(func.count()).select_from(base.subquery())
-    return await session.scalar(stmt) or 0
+async def count(session: AsyncSession, params: OGFieldQueryParams | None = None) -> int:
+    return await OilGasFieldSourceModel.count(session, params)
 
 
 async def query(
     session: AsyncSession,
-    params,
+    params: OGFieldQueryParams,
 ) -> tuple[Sequence[OGFieldSource], int]:
-    data_stmt = base_query(OilGasFieldSourceModel, params=params)
-    data_stmt = (
-        data_stmt.join(
-            MembershipModel,
-            MembershipModel.source_pk == OilGasFieldSourceModel.id,
-        )
-        .where(MembershipModel.status == MembershipStatus.ACTIVE)
-        .distinct()
-    )
-
-    joined_base = (
-        select(OilGasFieldSourceModel.id)
-        .join(
-            MembershipModel,
-            MembershipModel.source_pk == OilGasFieldSourceModel.id,
-        )
-        .where(MembershipModel.status == MembershipStatus.ACTIVE)
-    )
-    for cond in build_conditions(OilGasFieldSourceModel, params):
-        joined_base = joined_base.where(cond)
-    count_stmt = select(func.count()).select_from(
-        joined_base.distinct().subquery()
-    )
-
-    rows = (await session.scalars(data_stmt)).all()
-    total = await session.scalar(count_stmt) or 0
-    return tuple(m.as_entity() for m in rows), total
+    models, total = await OilGasFieldSourceModel.query(session, params)
+    return tuple(m.as_entity() for m in models), total

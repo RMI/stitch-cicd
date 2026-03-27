@@ -4,10 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query
 
 from stitch.api.entities import (
+    OGFieldQueryParams,
     PaginatedResponse,
-    PaginationParams,
-    OGFieldFilterParams,
-    OGFieldSortParams,
 )
 
 from stitch.api.db import og_field_resource_actions as resource_actions
@@ -36,16 +34,12 @@ router = APIRouter(
 )
 
 
-class OGFieldResourceQueryParams(PaginationParams, OGFieldFilterParams, OGFieldSortParams):
-    pass
-
-
 @router.get("/")
 async def get_all_resources(
     *,
     uow: UnitOfWorkDep,
     _user: CurrentUser,
-    params: Annotated[OGFieldResourceQueryParams, Query()],
+    params: Annotated[OGFieldQueryParams, Query()],
 ) -> PaginatedResponse[OGFieldListItemView]:
     resources, total_count = await resource_actions.query(
         session=uow.session, params=params

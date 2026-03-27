@@ -1,21 +1,15 @@
-"""Integration tests for base_query against OilGasFieldSourceModel."""
+"""Integration tests for OGFieldQueryMixin query helpers against OilGasFieldSourceModel."""
 
 import pytest
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from stitch.api.db.model import OilGasFieldSourceModel
-from stitch.api.db.query import base_query, count_query
 from stitch.api.entities import (
-    OGFieldFilterParams,
+    OGFieldQueryParams,
     OGFieldSortParams,
-    PaginationParams,
     User,
 )
-from stitch.ogsi.model.types import OGSISrcKey
-
-
-class _QueryParams(PaginationParams, OGFieldFilterParams, OGFieldSortParams):
-    source: OGSISrcKey | None = None
 
 
 @pytest.fixture
@@ -28,51 +22,83 @@ async def seeded_sources(
     uid = test_user.id
     sources = [
         OilGasFieldSourceModel(
-            source="gem", name="Permian Basin",
-            country="USA", field_status="Producing", basin="Permian",
-            region="Texas", discovery_year=1920,
-            created_by_id=uid, last_updated_by_id=uid,
+            source="gem",
+            name="Permian Basin",
+            country="USA",
+            field_status="Producing",
+            basin="Permian",
+            region="Texas",
+            discovery_year=1920,
+            created_by_id=uid,
+            last_updated_by_id=uid,
         ),
         OilGasFieldSourceModel(
-            source="wm", name="Ghawar",
-            country="SAU", field_status="Producing", location_type="Onshore",
+            source="wm",
+            name="Ghawar",
+            country="SAU",
+            field_status="Producing",
+            location_type="Onshore",
             discovery_year=1948,
-            created_by_id=uid, last_updated_by_id=uid,
+            created_by_id=uid,
+            last_updated_by_id=uid,
         ),
         OilGasFieldSourceModel(
-            source="gem", name="Vaca Muerta",
-            country="ARG", field_status="Producing", basin="Neuquen",
+            source="gem",
+            name="Vaca Muerta",
+            country="ARG",
+            field_status="Producing",
+            basin="Neuquen",
             production_conventionality="Unconventional",
-            created_by_id=uid, last_updated_by_id=uid,
+            created_by_id=uid,
+            last_updated_by_id=uid,
         ),
         OilGasFieldSourceModel(
-            source="rmi", name="Prudhoe Bay",
-            country="USA", field_status="Non-Producing", region="Alaska",
+            source="rmi",
+            name="Prudhoe Bay",
+            country="USA",
+            field_status="Non-Producing",
+            region="Alaska",
             discovery_year=1968,
-            created_by_id=uid, last_updated_by_id=uid,
+            created_by_id=uid,
+            last_updated_by_id=uid,
         ),
         OilGasFieldSourceModel(
-            source="wm", name="Kashagan",
-            country="KAZ", field_status="Producing", location_type="Offshore",
+            source="wm",
+            name="Kashagan",
+            country="KAZ",
+            field_status="Producing",
+            location_type="Offshore",
             discovery_year=2000,
-            created_by_id=uid, last_updated_by_id=uid,
+            created_by_id=uid,
+            last_updated_by_id=uid,
         ),
         OilGasFieldSourceModel(
-            source="gem", name="permskiy basseyn",
-            country="RUS", name_local="\u043f\u0435\u0440\u043c\u0441\u043a\u0438\u0439 \u0431\u0430\u0441\u0441\u0435\u0439\u043d",
+            source="gem",
+            name="permskiy basseyn",
+            country="RUS",
+            name_local="\u043f\u0435\u0440\u043c\u0441\u043a\u0438\u0439 \u0431\u0430\u0441\u0441\u0435\u0439\u043d",
             field_status="Abandoned",
-            created_by_id=uid, last_updated_by_id=uid,
+            created_by_id=uid,
+            last_updated_by_id=uid,
         ),
         OilGasFieldSourceModel(
-            source="llm", name="Daqing",
-            country="CHN", field_status="Producing", discovery_year=1959,
-            created_by_id=uid, last_updated_by_id=uid,
+            source="llm",
+            name="Daqing",
+            country="CHN",
+            field_status="Producing",
+            discovery_year=1959,
+            created_by_id=uid,
+            last_updated_by_id=uid,
         ),
         OilGasFieldSourceModel(
-            source="gem", name="Permian Delaware",
-            country="USA", field_status="Producing", basin="Permian",
+            source="gem",
+            name="Permian Delaware",
+            country="USA",
+            field_status="Producing",
+            basin="Permian",
             state_province="New Mexico",
-            created_by_id=uid, last_updated_by_id=uid,
+            created_by_id=uid,
+            last_updated_by_id=uid,
         ),
     ]
     session.add_all(sources)
@@ -80,15 +106,19 @@ async def seeded_sources(
     return sources
 
 
-async def _execute(session, **overrides):
-    """Helper: run base_query + count_query against source table."""
-    params = _QueryParams(**overrides)
+async def _execute(session: AsyncSession, **overrides):
+    """Helper: build and execute a query using the mixin's building blocks directly."""
+    params = OGFieldQueryParams(**overrides)
+    M = OilGasFieldSourceModel
 
-    stmt = base_query(OilGasFieldSourceModel, params=params)
-    count_stmt = count_query(OilGasFieldSourceModel, params=params)
+    base = select(M).distinct()
+    for cond in M._build_conditions(params):
+        base = base.where(cond)
+    base = M._apply_sort(base, params)
 
+    total = await session.scalar(select(func.count()).select_from(base.subquery())) or 0
+    stmt = M._apply_pagination(base, params)
     rows = (await session.scalars(stmt)).all()
-    total = await session.scalar(count_stmt)
     return rows, total
 
 
@@ -97,7 +127,9 @@ class TestBaseQuerySubstringSearch:
 
     @pytest.mark.anyio
     async def test_q_matches_name_and_name_local(
-        self, seeded_integration_session, seeded_sources,
+        self,
+        seeded_integration_session,
+        seeded_sources,
     ):
         """q='perm' matches 'Permian Basin', 'Permian Delaware', 'permskiy basseyn'."""
         rows, total = await _execute(
@@ -110,7 +142,9 @@ class TestBaseQuerySubstringSearch:
 
     @pytest.mark.anyio
     async def test_q_combined_with_exact_filter(
-        self, seeded_integration_session, seeded_sources,
+        self,
+        seeded_integration_session,
+        seeded_sources,
     ):
         """q='perm' + country='USA' narrows to 2 results."""
         rows, total = await _execute(
@@ -128,7 +162,9 @@ class TestBaseQueryExactFilters:
 
     @pytest.mark.anyio
     async def test_multiple_filters_and(
-        self, seeded_integration_session, seeded_sources,
+        self,
+        seeded_integration_session,
+        seeded_sources,
     ):
         """country=USA AND field_status=Producing returns Permian Basin, Permian Delaware."""
         rows, total = await _execute(
@@ -142,7 +178,9 @@ class TestBaseQueryExactFilters:
 
     @pytest.mark.anyio
     async def test_no_matches(
-        self, seeded_integration_session, seeded_sources,
+        self,
+        seeded_integration_session,
+        seeded_sources,
     ):
         """country=XYZ returns empty."""
         rows, total = await _execute(
@@ -153,8 +191,26 @@ class TestBaseQueryExactFilters:
         assert len(rows) == 0
 
     @pytest.mark.anyio
+    async def test_id_exact_match(
+        self,
+        seeded_integration_session,
+        seeded_sources,
+    ):
+        """id filter returns a single matching row."""
+        target = seeded_sources[0]
+        rows, total = await _execute(
+            seeded_integration_session,
+            id=target.id,
+        )
+        assert total == 1
+        assert len(rows) == 1
+        assert rows[0].id == target.id
+
+    @pytest.mark.anyio
     async def test_empty_q_ignored(
-        self, seeded_integration_session, seeded_sources,
+        self,
+        seeded_integration_session,
+        seeded_sources,
     ):
         """q='' treated as no search, returns all 8."""
         rows, total = await _execute(
@@ -169,7 +225,9 @@ class TestBaseQuerySortAndPagination:
 
     @pytest.mark.anyio
     async def test_sort_and_paginate(
-        self, seeded_integration_session, seeded_sources,
+        self,
+        seeded_integration_session,
+        seeded_sources,
     ):
         """Sort by discovery_year asc, page_size=3 returns first 3 non-null years."""
         rows, total = await _execute(
@@ -186,7 +244,9 @@ class TestBaseQuerySortAndPagination:
 
     @pytest.mark.anyio
     async def test_combined_filter_sort_paginate(
-        self, seeded_integration_session, seeded_sources,
+        self,
+        seeded_integration_session,
+        seeded_sources,
     ):
         """q=perm + field_status=Producing + sort by name desc + page_size=1."""
         rows, total = await _execute(

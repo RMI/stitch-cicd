@@ -102,9 +102,7 @@ class TestResourceCoalescedView:
         assert row.country == "USA"
 
     @pytest.mark.anyio
-    async def test_null_fallthrough(
-        self, seeded_integration_session, view_seed_data
-    ):
+    async def test_null_fallthrough(self, seeded_integration_session, view_seed_data):
         """Higher-priority null falls through to lower-priority."""
         session = seeded_integration_session
         row = await session.scalar(
@@ -153,9 +151,7 @@ class TestViewFreshnessAfterMutations:
         await session.flush()
         resource = await _create_resource_with_sources(session, test_user, [s1])
         row = await session.scalar(
-            select(ResourceCoalescedView).where(
-                ResourceCoalescedView.id == resource.id
-            )
+            select(ResourceCoalescedView).where(ResourceCoalescedView.id == resource.id)
         )
         assert row is not None
         assert row.name == "New Field"

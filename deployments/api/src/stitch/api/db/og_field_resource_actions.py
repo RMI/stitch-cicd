@@ -2,7 +2,7 @@ import asyncio
 from collections.abc import Sequence
 from functools import partial
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette.status import HTTP_404_NOT_FOUND
@@ -14,7 +14,7 @@ from stitch.api.db.errors import (
 )
 from stitch.api.auth import CurrentUser
 from stitch.api.db.model.resource_coalesced_view import ResourceCoalescedView
-from stitch.api.db.query import base_query, count_query
+from stitch.api.entities import OGFieldQueryParams
 from stitch.api.db.og_field_source_actions import (
     attach_sources_to_resource,
     get_or_create_sources,
@@ -40,31 +40,29 @@ async def get_all(session: AsyncSession) -> Sequence[OGFieldResource]:
     return await asyncio.gather(*[fn(m) for m in models])
 
 
-async def count(session: AsyncSession) -> int:
-    from stitch.api.entities import OGFieldFilterParams, OGFieldSortParams, PaginationParams
-
-    class _CountParams(PaginationParams, OGFieldFilterParams, OGFieldSortParams):
-        pass
-
-    stmt = count_query(ResourceCoalescedView, params=_CountParams())
-    return await session.scalar(stmt) or 0
+async def count(session: AsyncSession, params: OGFieldQueryParams | None = None) -> int:
+    return await ResourceCoalescedView.count(session, params)
 
 
 async def query(
     session: AsyncSession,
-    params,
+    params: OGFieldQueryParams,
 ) -> tuple[Sequence[OGFieldResource], int]:
-    data_stmt = base_query(ResourceCoalescedView, params=params)
-    total = await session.scalar(
-        count_query(ResourceCoalescedView, params=params)
-    ) or 0
-
-    view_rows = (await session.scalars(data_stmt)).all()
-
-    resource_ids = [row.id for row in view_rows]
-    if not resource_ids:
+    views, total = await ResourceCoalescedView.query(session, params)
+    if not views:
         return [], total
 
+    resource_ids = [v.id for v in views]
+    models = await _load_resources(session, resource_ids)
+    fn = partial(resource_model_to_entity, session)
+    items = list(await asyncio.gather(*[fn(m) for m in models]))
+    return items, total
+
+
+async def _load_resources(
+    session: AsyncSession, resource_ids: Sequence[int]
+) -> Sequence[ResourceModel]:
+    """Fetch ResourceModels with memberships, preserving the order of resource_ids."""
     stmt = (
         select(ResourceModel)
         .where(ResourceModel.id.in_(resource_ids))
@@ -72,14 +70,10 @@ async def query(
     )
     models = (await session.scalars(stmt)).all()
     model_map = {m.id: m for m in models}
-    ordered_models = [model_map[rid] for rid in resource_ids if rid in model_map]
-
-    fn = partial(resource_model_to_entity, session)
-    items = list(await asyncio.gather(*[fn(m) for m in ordered_models]))
-    return items, total
+    return [model_map[rid] for rid in resource_ids if rid in model_map]
 
 
-async def get(session: AsyncSession, id: int):
+async def get(session: AsyncSession, id: int) -> OGFieldResource:
     stmt = (
         select(ResourceModel)
         .options(selectinload(ResourceModel.memberships))
@@ -94,7 +88,9 @@ async def get(session: AsyncSession, id: int):
     return await resource_model_to_entity(session, model)
 
 
-async def create(session: AsyncSession, user: CurrentUser, resource: OGFieldResource):
+async def create(
+    session: AsyncSession, user: CurrentUser, resource: OGFieldResource
+) -> OGFieldResource:
     """
     Here we create a resource either from new source data or existing source data. It's also possible
     to create an empty resource with no reference to source data.

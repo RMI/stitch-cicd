@@ -18,9 +18,7 @@ class TestResourceRouterParamValidation:
     @pytest.mark.anyio
     async def test_invalid_sort_by_returns_422(self, async_client: AsyncClient):
         """sort_by must be one of the SortableField values."""
-        resp = await async_client.get(
-            "/oil-gas-fields/", params={"sort_by": "owners"}
-        )
+        resp = await async_client.get("/oil-gas-fields/", params={"sort_by": "owners"})
         assert resp.status_code == 422
 
     @pytest.mark.anyio
