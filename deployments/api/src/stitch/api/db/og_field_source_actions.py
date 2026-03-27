@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from sqlalchemy import func, select
 
 from stitch.api.db.config import AsyncSession
-from stitch.api.db.query import DBQuery
+from stitch.api.db.query import DBQuery, OGFieldFilters, base_query, _build_conditions
 from stitch.api.db.errors import (
     ResourceIntegrityError,
     ResourceNotFoundError,
@@ -164,18 +164,39 @@ async def count(session: AsyncSession) -> int:
 
 async def query(
     session: AsyncSession,
-    db_query: DBQuery[None],
+    db_query: DBQuery[OGFieldFilters],
 ) -> tuple[Sequence[OGFieldSource], int]:
-    total_count = await count(session)
+    filters = db_query.filters or OGFieldFilters()
 
-    stmt = (
-        select(OilGasFieldSourceModel)
-        .join(MembershipModel, MembershipModel.source_pk == OilGasFieldSourceModel.id)
+    data_stmt = base_query(
+        OilGasFieldSourceModel,
+        filters=filters,
+        ordering=db_query.ordering,
+        pagination=db_query.pagination,
+    )
+    data_stmt = (
+        data_stmt.join(
+            MembershipModel,
+            MembershipModel.source_pk == OilGasFieldSourceModel.id,
+        )
         .where(MembershipModel.status == MembershipStatus.ACTIVE)
         .distinct()
-        .order_by(OilGasFieldSourceModel.id)
-        .offset(db_query.pagination.offset)
-        .limit(db_query.pagination.limit)
     )
-    models = (await session.scalars(stmt)).all()
-    return tuple(m.as_entity() for m in models), total_count
+
+    joined_base = (
+        select(OilGasFieldSourceModel.id)
+        .join(
+            MembershipModel,
+            MembershipModel.source_pk == OilGasFieldSourceModel.id,
+        )
+        .where(MembershipModel.status == MembershipStatus.ACTIVE)
+    )
+    for cond in _build_conditions(OilGasFieldSourceModel, filters):
+        joined_base = joined_base.where(cond)
+    count_stmt = select(func.count()).select_from(
+        joined_base.distinct().subquery()
+    )
+
+    rows = (await session.scalars(data_stmt)).all()
+    total = await session.scalar(count_stmt) or 0
+    return tuple(m.as_entity() for m in rows), total
