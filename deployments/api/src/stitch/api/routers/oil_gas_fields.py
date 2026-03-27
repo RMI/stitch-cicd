@@ -1,10 +1,10 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from stitch.api.entities import PaginatedResponse, PaginationParams
-from stitch.api.db.query import DBQuery, pagination_to_db
+from stitch.api.db.query import DBQuery, OGFieldFilters, Ordering, pagination_to_db
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.config import UnitOfWorkDep
@@ -38,8 +38,14 @@ async def get_all_resources(
     uow: UnitOfWorkDep,
     user: CurrentUser,
     pagination: Annotated[PaginationParams, Query()],
+    filters: Annotated[OGFieldFilters, Depends()],
+    ordering: Annotated[Ordering, Depends()],
 ) -> PaginatedResponse[OGFieldListItemView]:
-    db_query = DBQuery(pagination=pagination_to_db(pagination))
+    db_query = DBQuery(
+        pagination=pagination_to_db(pagination),
+        ordering=ordering,
+        filters=filters,
+    )
     resources, total_count = await resource_actions.query(
         session=uow.session, db_query=db_query
     )

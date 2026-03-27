@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, get_args
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from sqlalchemy import Select, asc, desc, func, or_, select
 
 from stitch.api.entities import PaginationParams
@@ -32,16 +32,29 @@ EXACT_MATCH_FIELDS: tuple[str, ...] = (
     "primary_hydrocarbon_group",
 )
 
-SORTABLE_FIELDS: tuple[str, ...] = (
-    *EXACT_MATCH_FIELDS,
+SortableField = Literal[
+    "name",
+    "name_local",
+    "basin",
+    "state_province",
+    "region",
+    "id",
+    "country",
+    "source",
+    "field_status",
+    "location_type",
+    "production_conventionality",
+    "primary_hydrocarbon_group",
     "discovery_year",
     "production_start_year",
     "fid_year",
     "latitude",
     "longitude",
-)
+]
 
-DEFAULT_SORT_FIELD = "name"
+SORTABLE_FIELDS: tuple[str, ...] = tuple(get_args(SortableField))
+
+DEFAULT_SORT_FIELD: SortableField = "name"
 DEFAULT_SORT_ORDER = "asc"
 
 
@@ -68,17 +81,8 @@ class OGFieldFilters(BaseModel):
 
 
 class Ordering(BaseModel):
-    sort_by: str = DEFAULT_SORT_FIELD
+    sort_by: SortableField = DEFAULT_SORT_FIELD
     sort_order: Literal["asc", "desc"] = DEFAULT_SORT_ORDER
-
-    @field_validator("sort_by")
-    @classmethod
-    def validate_sort_by(cls, v: str) -> str:
-        if v not in SORTABLE_FIELDS:
-            raise ValueError(
-                f"Invalid sort_by: '{v}'. Must be one of: {SORTABLE_FIELDS}"
-            )
-        return v
 
 
 @dataclass(frozen=True)
