@@ -110,7 +110,7 @@ async def async_client(test_user: User) -> AsyncIterator[AsyncClient]:
 async def integration_engine():
     """In-memory SQLite async engine for integration tests."""
     from sqlalchemy import text
-    from stitch.api.db.model import create_view
+    from stitch.api.db.model import create_og_field_coalesced_view
 
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
@@ -120,7 +120,7 @@ async def integration_engine():
         await conn.run_sync(StitchBase.metadata.create_all)
     async with engine.begin() as conn:
         await conn.execute(text("DROP TABLE IF EXISTS resource_coalesced_view"))
-    await create_view(engine)
+    await create_og_field_coalesced_view(engine)
     yield engine
     await engine.dispose()
 
