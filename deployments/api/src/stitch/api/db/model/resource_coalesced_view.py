@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import Insert, case, func, insert, select, text
+from sqlalchemy import Engine, Insert, case, func, insert, select, text
 from sqlalchemy.ext.asyncio import AsyncEngine
 from stitch.ogsi.model.og_field import OilGasFieldBase
 
@@ -65,8 +65,23 @@ def _upsert_priority(row: dict[str, str | int], dialect: str) -> Insert:
     return stmt
 
 
+def create_view_sync(engine: Engine) -> None:
+    """Seed the priority table and create the SQL view (sync engine)."""
+    with engine.begin() as conn:
+        for row in DEFAULT_PRIORITIES:
+            conn.execute(_upsert_priority(row, engine.dialect.name))
+
+        view_select = build_view_select(num_priorities=len(DEFAULT_PRIORITIES))
+        compiled = view_select.compile(
+            dialect=conn.dialect, compile_kwargs={"literal_binds": True}
+        )
+        conn.execute(
+            text(f"CREATE VIEW IF NOT EXISTS resource_coalesced_view AS {compiled}")
+        )
+
+
 async def create_view(engine: AsyncEngine) -> None:
-    """Seed the priority table and create the SQL view."""
+    """Seed the priority table and create the SQL view (async engine)."""
     async with engine.begin() as conn:
         for row in DEFAULT_PRIORITIES:
             await conn.execute(_upsert_priority(row, engine.dialect.name))
