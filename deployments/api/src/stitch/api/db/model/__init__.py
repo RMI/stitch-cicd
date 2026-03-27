@@ -4,7 +4,10 @@ from .og_field_source_priority import OGFieldSourcePriority
 from .oil_gas_field_source import OilGasFieldSourceModel
 from .membership import MembershipModel, MembershipStatus
 from .resource import ResourceModel
-from .resource_coalesced_view import ResourceCoalescedView, create_view
+from .resource_coalesced_view import (
+    ResourceCoalescedView,
+    create_view as create_og_field_coalesced_view,
+)
 from .user import User as UserModel
 
 __all__ = [
@@ -17,5 +20,5 @@ __all__ = [
     "ResourceModel",
     "StitchBase",
     "UserModel",
-    "create_view",
+    "create_og_field_coalesced_view",
 ]
