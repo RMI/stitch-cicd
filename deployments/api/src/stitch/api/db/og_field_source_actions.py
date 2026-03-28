@@ -138,13 +138,10 @@ async def get_sources(
     return [model.as_entity() for model in models]
 
 
-async def count(session: AsyncSession, params: OGFieldQueryParams | None = None) -> int:
-    return await OilGasFieldSourceModel.count(session, params)
-
-
 async def query(
     session: AsyncSession,
     params: OGFieldQueryParams,
 ) -> tuple[Sequence[OGFieldSource], int]:
-    models, total = await OilGasFieldSourceModel.query(session, params)
+    models = await OilGasFieldSourceModel.query(session, params)
+    total = await OilGasFieldSourceModel.count(session, params)
     return tuple(m.as_entity() for m in models), total

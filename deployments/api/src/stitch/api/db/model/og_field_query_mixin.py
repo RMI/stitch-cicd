@@ -104,15 +104,12 @@ class OGFieldQueryMixin:
         cls,
         session: AsyncSession,
         params: OGFieldQueryParams,
-    ) -> tuple[Sequence[Self], int]:
+    ) -> Sequence[Self]:
         """Execute a filtered, sorted, paginated query and return (rows, total)."""
         base = cls._base_query(params)
-        total = (
-            await session.scalar(select(func.count()).select_from(base.subquery())) or 0
-        )
         stmt = cls._apply_pagination(base, params)
         rows = (await session.scalars(stmt)).all()
-        return rows, total
+        return rows
 
     @classmethod
     async def count(

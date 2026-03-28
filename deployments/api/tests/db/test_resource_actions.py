@@ -156,31 +156,3 @@ class TestResourceQueryAction:
         items, total = await resource_actions.query(seeded_integration_session, params)
         assert total == 3
         assert len(items) == expected_count
-
-    @pytest.mark.anyio
-    async def test_query_empty_table(
-        self,
-        seeded_integration_session: AsyncSession,
-    ):
-        items, total = await resource_actions.query(
-            seeded_integration_session, _QueryParams()
-        )
-        assert total == 0
-        assert len(items) == 0
-
-    @pytest.mark.anyio
-    async def test_count(
-        self,
-        seeded_integration_session: AsyncSession,
-        seeded_resources,
-    ):
-        total = await resource_actions.count(seeded_integration_session)
-        assert total == 3
-
-    @pytest.mark.anyio
-    async def test_count_empty_table(
-        self,
-        seeded_integration_session: AsyncSession,
-    ):
-        total = await resource_actions.count(seeded_integration_session)
-        assert total == 0

@@ -29,15 +29,12 @@ from .model import (
 from .utils import resource_model_to_entity
 
 
-async def count(session: AsyncSession, params: OGFieldQueryParams | None = None) -> int:
-    return await ResourceCoalescedView.count(session, params)
-
-
 async def query(
     session: AsyncSession,
     params: OGFieldQueryParams,
 ) -> tuple[Sequence[OGFieldResource], int]:
-    views, total = await ResourceCoalescedView.query(session, params)
+    views = await ResourceCoalescedView.query(session, params)
+    total = await ResourceCoalescedView.count(session, params)
     if not views:
         return [], total
 

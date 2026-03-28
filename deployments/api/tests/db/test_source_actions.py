@@ -58,20 +58,3 @@ class TestSourceQueryAction:
         )
         assert total == 0
         assert len(items) == 0
-
-    @pytest.mark.anyio
-    async def test_count(
-        self,
-        seeded_integration_session: AsyncSession,
-        seeded_sources,
-    ):
-        total = await source_actions.count(seeded_integration_session)
-        assert total > 0
-
-    @pytest.mark.anyio
-    async def test_count_empty_table(
-        self,
-        seeded_integration_session: AsyncSession,
-    ):
-        total = await source_actions.count(seeded_integration_session)
-        assert total == 0
