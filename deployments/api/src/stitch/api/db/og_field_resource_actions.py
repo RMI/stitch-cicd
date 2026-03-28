@@ -29,17 +29,6 @@ from .model import (
 from .utils import resource_model_to_entity
 
 
-async def get_all(session: AsyncSession) -> Sequence[OGFieldResource]:
-    stmt = (
-        select(ResourceModel)
-        .where(ResourceModel.repointed_id.is_(None))
-        .options(selectinload(ResourceModel.memberships))
-    )
-    models = (await session.scalars(stmt)).all()
-    fn = partial(resource_model_to_entity, session)
-    return await asyncio.gather(*[fn(m) for m in models])
-
-
 async def count(session: AsyncSession, params: OGFieldQueryParams | None = None) -> int:
     return await ResourceCoalescedView.count(session, params)
 

@@ -106,36 +106,6 @@ class TestGetResourceActionIntegration:
         assert exc_info.value.status_code == 404
 
 
-class TestListResourcesActionIntegration:
-    """Integration tests for resource_actions.get_all() with real database."""
-
-    @pytest.mark.anyio
-    async def test_get_all_returns_sequence(
-        self,
-        seeded_integration_session: AsyncSession,
-        test_user: User,
-        og_create_res_fact: ResourceCreateFactory,
-    ):
-        # create a couple resources
-        await resource_actions.create(
-            session=seeded_integration_session,
-            user=test_user,
-            resource=og_create_res_fact(name="A"),
-        )
-        await resource_actions.create(
-            session=seeded_integration_session,
-            user=test_user,
-            resource=og_create_res_fact(name="B"),
-        )
-
-        results = await resource_actions.get_all(session=seeded_integration_session)
-        assert isinstance(results, (list, tuple))
-        assert len(results) >= 2
-
-        labels = {r.view.name for r in results if r.view is not None}
-        assert {"A", "B"} <= labels
-
-
 class TestResourceQueryAction:
     """Integration tests for resource_actions.query() and count()."""
 
