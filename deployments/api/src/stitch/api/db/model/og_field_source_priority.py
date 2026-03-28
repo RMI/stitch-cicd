@@ -1,6 +1,6 @@
 """Source priority lookup table for coalescing field values."""
 
-from sqlalchemy import Integer, String
+from sqlalchemy import Integer, String, event, insert
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .common import Base
@@ -19,3 +19,9 @@ DEFAULT_PRIORITIES = [
     {"source": "wm", "priority": 3},
     {"source": "llm", "priority": 4},
 ]
+
+
+@event.listens_for(OGFieldSourcePriority.__table__, "after_create")
+def _seed_priorities(target, connection, **kw):
+    for row in DEFAULT_PRIORITIES:
+        connection.execute(insert(OGFieldSourcePriority).values(**row))

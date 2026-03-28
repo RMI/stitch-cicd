@@ -6,8 +6,7 @@ from .membership import MembershipModel, MembershipStatus
 from .resource import ResourceModel
 from .resource_coalesced_view import (
     ResourceCoalescedView,
-    create_view as create_og_field_coalesced_view,
-    create_view_sync as create_og_field_coalesced_view_sync,
+    create_coalesced_view,
 )
 from .user import User as UserModel
 
@@ -21,6 +20,5 @@ __all__ = [
     "ResourceModel",
     "StitchBase",
     "UserModel",
-    "create_og_field_coalesced_view",
-    "create_og_field_coalesced_view_sync",
+    "create_coalesced_view",
 ]

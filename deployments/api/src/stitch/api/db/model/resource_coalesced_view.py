@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import Engine, Insert, case, func, insert, select, text
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy import Connection, case, func, select, text
 from stitch.ogsi.model.og_field import OilGasFieldBase
 
 from .common import Base
@@ -49,50 +48,19 @@ def build_view_select(num_priorities: int = 4):
     return base
 
 
-def _upsert_priority(row: dict[str, str | int], dialect: str) -> Insert:
-    """Build a dialect-appropriate INSERT ... ON CONFLICT DO NOTHING."""
-    stmt = insert(OGFieldSourcePriority).values(**row)
-    if dialect == "sqlite":
-        from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+def create_coalesced_view(conn: Connection) -> None:
+    """Create the coalesced resource SQL view.
 
-        return (
-            sqlite_insert(OGFieldSourcePriority).values(**row).on_conflict_do_nothing()
-        )
-    elif dialect == "postgresql":
-        from sqlalchemy.dialects.postgresql import insert as pg_insert
-
-        return pg_insert(OGFieldSourcePriority).values(**row).on_conflict_do_nothing()
-    return stmt
-
-
-def create_view_sync(engine: Engine) -> None:
-    """Seed the priority table and create the SQL view (sync engine)."""
-    with engine.begin() as conn:
-        for row in DEFAULT_PRIORITIES:
-            conn.execute(_upsert_priority(row, engine.dialect.name))
-
-        view_select = build_view_select(num_priorities=len(DEFAULT_PRIORITIES))
-        compiled = view_select.compile(
-            dialect=conn.dialect, compile_kwargs={"literal_binds": True}
-        )
-        conn.execute(
-            text(f"CREATE VIEW IF NOT EXISTS resource_coalesced_view AS {compiled}")
-        )
-
-
-async def create_view(engine: AsyncEngine) -> None:
-    """Seed the priority table and create the SQL view (async engine)."""
-    async with engine.begin() as conn:
-        for row in DEFAULT_PRIORITIES:
-            await conn.execute(_upsert_priority(row, engine.dialect.name))
-
-        view_select = build_view_select(num_priorities=len(DEFAULT_PRIORITIES))
-        compiled = view_select.compile(
-            dialect=conn.dialect, compile_kwargs={"literal_binds": True}
-        )
-        await conn.execute(
-            text(f"CREATE VIEW IF NOT EXISTS resource_coalesced_view AS {compiled}")
-        )
+    Accepts a sync Connection — use with ``engine.begin()`` or
+    ``async_conn.run_sync()`` for async contexts.
+    """
+    view_select = build_view_select(num_priorities=len(DEFAULT_PRIORITIES))
+    compiled = view_select.compile(
+        dialect=conn.dialect, compile_kwargs={"literal_binds": True}
+    )
+    conn.execute(
+        text(f"CREATE VIEW IF NOT EXISTS resource_coalesced_view AS {compiled}")
+    )
 
 
 class ResourceCoalescedView(OGFieldQueryMixin, Base):

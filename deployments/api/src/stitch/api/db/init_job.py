@@ -15,7 +15,7 @@ from sqlalchemy.sql.schema import Column
 
 from stitch.api.db.model import (
     StitchBase,
-    create_og_field_coalesced_view_sync,
+    create_coalesced_view,
 )
 
 logger = logging.getLogger("db-init")
@@ -314,8 +314,14 @@ def main() -> None:
 
             if state == "empty":
                 logger.info("creating schema from ORM metadata...")
-                StitchBase.metadata.create_all(engine)
-                create_og_field_coalesced_view_sync(engine)
+                non_view_tables = [
+                    t
+                    for t in StitchBase.metadata.sorted_tables
+                    if not t.info.get("is_view")
+                ]
+                StitchBase.metadata.create_all(engine, tables=non_view_tables)
+                with engine.begin() as conn:
+                    create_coalesced_view(conn)
                 ensure_meta_tables(engine)
                 version = schema_fingerprint(StitchBase.metadata)
                 mark_schema_version(engine, version=version)
