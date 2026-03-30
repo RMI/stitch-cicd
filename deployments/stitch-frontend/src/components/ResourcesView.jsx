@@ -5,8 +5,9 @@ import FetchButton from "./FetchButton";
 import ClearCacheButton from "./ClearCacheButton";
 import ResourcesTable from "./ResourcesTable";
 import FilterBar from "./FilterBar";
+import Pagination from "./Pagination";
 import { EMPTY_FILTERS } from "../config/filters";
-import { resourceKeys } from "../queries/resources";
+import { resourceKeys, DEFAULT_PAGE_SIZE, DEFAULT_PAGE } from "../queries/resources";
 import config from "../config/env";
 
 // OR within a field, AND across fields.
@@ -21,13 +22,35 @@ function applyFilters(resources, filters) {
 
 export default function ResourcesView({ className, endpoint }) {
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, refetch } = useResources(endpoint);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [enabled, setEnabled] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
-  console.log("data", data);
+  const { data, isLoading, isError, refetch } = useResources(endpoint, {
+    page,
+    page_size: pageSize,
+    enabled,
+  });
+
+  const handleFetch = () => {
+    setEnabled(true);
+    refetch();
+  };
 
   const handleClear = () => {
-    queryClient.setQueryData(resourceKeys.lists(endpoint), []);
+    queryClient.removeQueries({ queryKey: resourceKeys.lists(endpoint) });
+    setEnabled(false);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setPage(1);
   };
 
   const filteredData = applyFilters(data?.items, filters);
@@ -41,13 +64,13 @@ export default function ResourcesView({ className, endpoint }) {
         </span>
       </div>
       <div className="mb-4 flex gap-3">
-        <FetchButton onFetch={() => refetch()} isLoading={isLoading} />
+        <FetchButton onFetch={handleFetch} isLoading={isLoading} />
         <ClearCacheButton
           onClear={handleClear}
           disabled={!data?.items?.length && !isError}
         />
       </div>
-      {data?.length > 0 && (
+      {data?.items?.length > 0 && (
         <div className="mb-4">
           <FilterBar
             resources={data?.items}
@@ -67,6 +90,16 @@ export default function ResourcesView({ className, endpoint }) {
         </p>
       )}
       <ResourcesTable resources={filteredData} />
+      {data && (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={data.total_count}
+          totalPages={data.total_pages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
     </div>
   );
 }
