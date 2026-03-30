@@ -27,6 +27,7 @@ from stitch.ogsi.model.types import OGSISrcKey
 from .model import (
     MembershipModel,
     MembershipStatus,
+    OGFieldSourcePriority,
     OilGasFieldSourceModel,
     ResourceModel,
 )
@@ -77,11 +78,18 @@ async def _load_provenance(
     rows: Sequence[Row[tuple[int, OilGasFieldSourceModel]]] = (
         await session.execute(stmt)
     ).all()
+    priorities = (
+        await session.scalars(
+            select(OGFieldSourcePriority.source).order_by(
+                OGFieldSourcePriority.priority
+            )
+        )
+    ).all()
 
     result: dict[int, ProvAttrs] = {}
     for rid, group in groupby(rows, key=lambda r: r[0]):
         sources = [src.as_entity() for _, src in group]
-        _, prov = coalesce_og_field_resource(sources)
+        _, prov = coalesce_og_field_resource(sources, priorities)
         result[rid] = prov
 
     return result
