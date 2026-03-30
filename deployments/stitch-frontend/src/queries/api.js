@@ -1,7 +1,12 @@
 import config from "../config/env";
 
-export async function getResources(fetcher, endpoint = "resources") {
-  const url = `${config.apiBaseUrl}/${endpoint}/`;
+export async function getResources(
+  fetcher,
+  endpoint = "resources",
+  { page = 1, page_size = 50 } = {},
+) {
+  const params = new URLSearchParams({ page, page_size });
+  const url = `${config.apiBaseUrl}/${endpoint}/?${params}`;
   const response = await fetcher(url);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
