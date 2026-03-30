@@ -24,11 +24,13 @@ export default function ResourcesView({ className, endpoint }) {
   const { data, isLoading, isError, refetch } = useResources(endpoint);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
+  console.log("data", data);
+
   const handleClear = () => {
     queryClient.setQueryData(resourceKeys.lists(endpoint), []);
   };
 
-  const filteredData = applyFilters(data, filters);
+  const filteredData = applyFilters(data?.items, filters);
 
   return (
     <div className={`max-w-4xl mx-auto ${className}`}>
@@ -42,13 +44,13 @@ export default function ResourcesView({ className, endpoint }) {
         <FetchButton onFetch={() => refetch()} isLoading={isLoading} />
         <ClearCacheButton
           onClear={handleClear}
-          disabled={!data?.length && !isError}
+          disabled={!data?.items?.length && !isError}
         />
       </div>
       {data?.length > 0 && (
         <div className="mb-4">
           <FilterBar
-            resources={data}
+            resources={data?.items}
             filters={filters}
             onFiltersChange={setFilters}
           />
