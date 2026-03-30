@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useResources } from "../hooks/useResources";
 import FetchButton from "./FetchButton";
@@ -22,8 +23,9 @@ function applyFilters(resources, filters) {
 
 export default function ResourcesView({ className, endpoint }) {
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Number(searchParams.get("page") ?? DEFAULT_PAGE);
+  const pageSize = Number(searchParams.get("page_size") ?? DEFAULT_PAGE_SIZE);
   const [enabled, setEnabled] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
@@ -41,16 +43,15 @@ export default function ResourcesView({ className, endpoint }) {
   const handleClear = () => {
     queryClient.removeQueries({ queryKey: resourceKeys.lists(endpoint) });
     setEnabled(false);
-    setPage(1);
+    setSearchParams({});
   };
 
   const handlePageChange = (newPage) => {
-    setPage(newPage);
+    setSearchParams({ page: newPage, page_size: pageSize });
   };
 
   const handlePageSizeChange = (newSize) => {
-    setPageSize(newSize);
-    setPage(1);
+    setSearchParams({ page: DEFAULT_PAGE, page_size: newSize });
   };
 
   const filteredData = applyFilters(data?.items, filters);
