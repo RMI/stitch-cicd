@@ -47,14 +47,15 @@ class OilGasFieldSourceModel(OGFieldQueryMixin, TimestampMixin, UserAuditMixin, 
     @classmethod
     @override
     def _base_query(cls, params: OGFieldQueryParams):
-        """Add membership join for active-only filtering."""
+        """Filter to sources with at least one active membership."""
 
-        stmt = (
-            select(cls)
-            .join(MembershipModel, MembershipModel.source_pk == cls.id)
+        active_membership = (
+            select(1)
+            .where(MembershipModel.source_pk == cls.id)
             .where(MembershipModel.status == MembershipStatus.ACTIVE)
-            .distinct()
+            .exists()
         )
+        stmt = select(cls).where(active_membership)
         for cond in cls._build_conditions(params):
             stmt = stmt.where(cond)
         return cls._apply_sort(stmt, params)

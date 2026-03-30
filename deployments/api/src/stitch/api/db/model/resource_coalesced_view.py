@@ -58,9 +58,11 @@ def create_coalesced_view(conn: Connection) -> None:
     compiled = view_select.compile(
         dialect=conn.dialect, compile_kwargs={"literal_binds": True}
     )
-    conn.execute(
-        text(f"CREATE VIEW IF NOT EXISTS resource_coalesced_view AS {compiled}")
-    )
+    if conn.dialect.name == "postgresql":
+        ddl = f"CREATE OR REPLACE VIEW resource_coalesced_view AS {compiled}"
+    else:
+        ddl = f"CREATE VIEW IF NOT EXISTS resource_coalesced_view AS {compiled}"
+    conn.execute(text(ddl))
 
 
 class ResourceCoalescedView(OGFieldQueryMixin, Base):
