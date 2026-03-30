@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import HTTPException
 from starlette.status import HTTP_404_NOT_FOUND
-from stitch.ogsi.model import OilGasFieldBase
+from stitch.ogsi.model import OGFieldListItemView, OilGasFieldBase
 
 from stitch.api.db.config import get_uow
 from stitch.api.main import app
@@ -161,12 +161,13 @@ class TestGetAllResourcesUnit:
         self,
         async_client,
         mock_uow,
-        og_res_fact: ResourceCreateFactory,
     ):
         """GET /oil-gas-fields/ returns envelope with items and metadata."""
-        resources = [
-            og_res_fact(
-                id=i, empty=False, view=OilGasFieldBase(name=f"R{i}", country=None)
+        list_items = [
+            OGFieldListItemView(
+                id=i,
+                data=OilGasFieldBase(name=f"R{i}", country=None),
+                provenance={"name": "rmi"},
             )
             for i in range(10, 13)
         ]
@@ -177,7 +178,7 @@ class TestGetAllResourcesUnit:
         app.dependency_overrides[get_uow] = override_get_uow
 
         with patch("stitch.api.routers.oil_gas_fields.resource_actions") as mock_repo:
-            mock_repo.query = AsyncMock(return_value=(resources, 3))
+            mock_repo.query = AsyncMock(return_value=(list_items, 3))
 
             response = await async_client.get("/oil-gas-fields/")
 

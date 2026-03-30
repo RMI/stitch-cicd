@@ -156,3 +156,18 @@ class TestResourceQueryAction:
         items, total = await resource_actions.query(seeded_integration_session, params)
         assert total == 3
         assert len(items) == expected_count
+
+    @pytest.mark.anyio
+    async def test_items_have_data_and_provenance(
+        self,
+        seeded_integration_session: AsyncSession,
+        seeded_resources,
+    ):
+        """List items include coalesced data and provenance dict."""
+        params = _QueryParams(page=1, page_size=10)
+        items, _ = await resource_actions.query(seeded_integration_session, params)
+        assert len(items) > 0
+        for item in items:
+            assert item.id is not None
+            assert item.data is not None
+            assert isinstance(item.provenance, dict)

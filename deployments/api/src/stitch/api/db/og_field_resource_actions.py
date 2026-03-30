@@ -1,12 +1,13 @@
-import asyncio
 from collections.abc import Sequence
-from functools import partial
+from itertools import groupby
+
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import Row, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette.status import HTTP_404_NOT_FOUND
 
+from stitch.api.coalesce import ProvAttrs, coalesce_og_field_resource
 from stitch.api.db.errors import (
     InvalidActionError,
     ResourceIntegrityError,
@@ -19,11 +20,14 @@ from stitch.api.db.og_field_source_actions import (
     attach_sources_to_resource,
     get_or_create_sources,
 )
-from stitch.ogsi.model import OGFieldResource
+from stitch.ogsi.model import OGFieldListItemView, OGFieldResource
+from stitch.ogsi.model.og_field import OilGasFieldBase
+from stitch.ogsi.model.types import OGSISrcKey
 
 from .model import (
     MembershipModel,
     MembershipStatus,
+    OilGasFieldSourceModel,
     ResourceModel,
 )
 from .utils import resource_model_to_entity
@@ -32,31 +36,55 @@ from .utils import resource_model_to_entity
 async def query(
     session: AsyncSession,
     params: OGFieldQueryParams,
-) -> tuple[Sequence[OGFieldResource], int]:
+) -> tuple[list[OGFieldListItemView], int]:
+    """Query coalesced view for list items with provenance."""
     views = await ResourceCoalescedView.query(session, params)
     total = await ResourceCoalescedView.count(session, params)
     if not views:
         return [], total
 
     resource_ids = [v.id for v in views]
-    models = await _load_resources(session, resource_ids)
-    fn = partial(resource_model_to_entity, session)
-    items = list(await asyncio.gather(*[fn(m) for m in models]))
+    prov_map = await _load_provenance(session, resource_ids)
+
+    items: list[OGFieldListItemView] = []
+    for v in views:
+        data = OilGasFieldBase(
+            **{f: getattr(v, f, None) for f in OilGasFieldBase.model_fields}
+        )
+        raw_prov = prov_map.get(v.id, {})
+        provenance: dict[str, OGSISrcKey | None] = {
+            k: (None if val is None else val[1]) for k, val in raw_prov.items()
+        }
+        items.append(OGFieldListItemView(id=v.id, data=data, provenance=provenance))
+
     return items, total
 
 
-async def _load_resources(
+async def _load_provenance(
     session: AsyncSession, resource_ids: Sequence[int]
-) -> Sequence[ResourceModel]:
-    """Fetch ResourceModels with memberships, preserving the order of resource_ids."""
+) -> dict[int, ProvAttrs]:
+    """Batch-load provenance for resources via memberships → sources → coalesce."""
     stmt = (
-        select(ResourceModel)
-        .where(ResourceModel.id.in_(resource_ids))
-        .options(selectinload(ResourceModel.memberships))
+        select(MembershipModel.resource_id, OilGasFieldSourceModel)
+        .join(
+            OilGasFieldSourceModel,
+            MembershipModel.source_pk == OilGasFieldSourceModel.id,
+        )
+        .where(MembershipModel.resource_id.in_(resource_ids))
+        .where(MembershipModel.status == MembershipStatus.ACTIVE)
+        .order_by(MembershipModel.resource_id)
     )
-    models = (await session.scalars(stmt)).all()
-    model_map = {m.id: m for m in models}
-    return [model_map[rid] for rid in resource_ids if rid in model_map]
+    rows: Sequence[Row[tuple[int, OilGasFieldSourceModel]]] = (
+        await session.execute(stmt)
+    ).all()
+
+    result: dict[int, ProvAttrs] = {}
+    for rid, group in groupby(rows, key=lambda r: r[0]):
+        sources = [src.as_entity() for _, src in group]
+        _, prov = coalesce_og_field_resource(sources)
+        result[rid] = prov
+
+    return result
 
 
 async def get(session: AsyncSession, id: int) -> OGFieldResource:

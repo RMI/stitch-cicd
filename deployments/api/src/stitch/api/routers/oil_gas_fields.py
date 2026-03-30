@@ -13,7 +13,6 @@ from stitch.api.db.config import UnitOfWorkDep
 from stitch.api.auth import CurrentUser
 from stitch.api.db.utils import (
     resource_to_view,
-    resource_to_list_item_view,
     resource_to_detail_view,
 )
 
@@ -41,11 +40,11 @@ async def get_all_resources(
     _user: CurrentUser,
     params: Annotated[OGFieldQueryParams, Query()],
 ) -> PaginatedResponse[OGFieldListItemView]:
-    resources, total_count = await resource_actions.query(
+    items, total_count = await resource_actions.query(
         session=uow.session, params=params
     )
     return PaginatedResponse(
-        items=[resource_to_list_item_view(r) for r in resources],
+        items=items,
         total_count=total_count,
         page=params.page,
         page_size=params.page_size,
