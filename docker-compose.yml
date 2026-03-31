@@ -1,4 +1,5 @@
 services:
+
   api:
     build:
       context: .
@@ -6,14 +7,10 @@ services:
     env_file:
       - .env
     environment:
-      LOG_LEVEL: info
-      POSTGRES_DB: stitch
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
+      LOG_LEVEL: ${API_LOG_LEVEL:-info}
       # API connects as the app role (no DDL)
-      STITCH_DB_USER: stitch_app
-      STITCH_DB_PASSWORD: ${STITCH_APP_PASSWORD:?STITCH_APP_PASSWORD must be set in .env}
-      AUTH_DISABLED: "true"
+      POSTGRES_USER: stitch_app
+      POSTGRES_PASSWORD: ${STITCH_APP_PASSWORD:?STITCH_APP_PASSWORD must be set in .env}
     healthcheck:
       test:
         [
@@ -25,9 +22,9 @@ services:
       retries: 3
       start_period: 5s
       start_interval: 1s
-
     ports:
       - "8000:8000"
+    profiles: ["api", "full"]
     depends_on:
       db:
         condition: service_healthy
@@ -50,21 +47,13 @@ services:
     env_file:
       - .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./deployments/db/00-init-roles.sh:/docker-entrypoint-initdb.d/00-init-roles.sh:ro
-
-  adminer:
-    image: adminer:latest
-    ports:
-      - "8081:8080"
-    depends_on:
-      db:
-        condition: service_healthy
 
   db-init:
     build:
@@ -73,13 +62,10 @@ services:
     env_file:
       - .env
     environment:
-      STITCH_DB_SCHEMA_MODE: "if-empty"
-      STITCH_DB_SEED_MODE: "never"
-      STITCH_DB_SEED_PROFILE: "dev"
+      LOG_LEVEL: ${DBINIT_LOG_LEVEL:-info}
       # db-init connects as the migrator role (DDL + seed)
-      STITCH_DB_USER: stitch_migrator
-      STITCH_DB_PASSWORD: ${STITCH_MIGRATOR_PASSWORD}
-
+      POSTGRES_USER: stitch_migrator
+      POSTGRES_PASSWORD: ${STITCH_MIGRATOR_PASSWORD:?STITCH_MIGRATOR_PASSWORD must be set in .env}
     depends_on:
       db:
         condition: service_healthy
@@ -91,12 +77,13 @@ services:
       context: deployments/stitch-frontend
       dockerfile: Dockerfile
       args:
-        VITE_AUTH0_DOMAIN: ${VITE_AUTH0_DOMAIN:-}
-        VITE_AUTH0_CLIENT_ID: ${VITE_AUTH0_CLIENT_ID:-}
-        VITE_AUTH0_AUDIENCE: ${VITE_AUTH0_AUDIENCE:-}
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
+        VITE_AUTH0_DOMAIN: ${VITE_AUTH0_DOMAIN?}
+        VITE_AUTH0_CLIENT_ID: ${VITE_AUTH0_CLIENT_ID?}
+        VITE_AUTH0_AUDIENCE: ${VITE_AUTH0_AUDIENCE?}
+        VITE_API_URL: ${VITE_API_URL?}
     ports:
       - "3000:80"
+    profiles: ["frontend", "full"]
 
 volumes:
   db_data:
