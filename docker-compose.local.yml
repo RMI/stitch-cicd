@@ -30,3 +30,31 @@ services:
       - ./deployments/seed/data:/mnt/data:ro
     restart: "no"
     profiles: ["seed", "full"]
+
+  entity-linkage:
+    build:
+      context: .
+      dockerfile: deployments/entity-linkage/Dockerfile
+    env_file:
+      - .env
+    environment:
+      LOG_LEVEL: ${ENTITYLINKAGE_LOG_LEVEL:-info}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2).read()\" || exit 1"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+      start_interval: 1s
+    ports:
+      - "8001:8000"
+    profiles: ["entity-linkage", "full", "friends"]
+    depends_on:
+      api:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
