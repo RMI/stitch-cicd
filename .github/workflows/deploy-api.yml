@@ -1,0 +1,33 @@
+on:
+  workflow_call:
+    inputs:
+      full-image-name:
+        description: "Full pushed image name including host/registry, name, and tag"
+        required: true
+        type: string
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    # permissions:
+    #   packages: write
+    #   contents: read
+    timeout-minutes: 25
+    # outputs:
+    #   full-image-name: ${{ steps.export-output.outputs.full-image-name }}
+
+    steps:
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and deploy Container App
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          # imageToDeploy: mcr.microsoft.com/azuredocs/containerapps-helloworld:latest
+          imageToDeploy: ${{ inputs.full-image-name }}
+          resourceGroup: STITCH-DEV-RG
+          containerAppEnvironment: stitch-dev

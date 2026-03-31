@@ -27,6 +27,14 @@ jobs:
           github.sha
         }}
 
+  deploy-docker:
+    name: "Deploy"
+    uses: ./.github/workflows/deploy-api.yml
+    secrets: inherit
+    with:
+      full-image-name: ${{ jobs.build_docker_image.outputs.full-image-name }}
+    needs: [build_docker_image]
+
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}
     uses: RMI-PACTA/actions/.github/workflows/add-comment-table.yml@main
