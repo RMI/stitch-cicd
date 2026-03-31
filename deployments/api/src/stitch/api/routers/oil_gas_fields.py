@@ -1,5 +1,10 @@
 import logging
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Query
+
+from stitch.api.entities import PaginatedResponse, PaginationParams
+from stitch.api.db.query import DBQuery, pagination_to_db
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.config import UnitOfWorkDep
@@ -27,12 +32,23 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[OGFieldListItemView])
+@router.get("/")
 async def get_all_resources(
-    *, uow: UnitOfWorkDep, user: CurrentUser
-) -> list[OGFieldListItemView]:
-    resources = list(await resource_actions.get_all(session=uow.session))
-    return [resource_to_list_item_view(r) for r in resources]
+    *,
+    uow: UnitOfWorkDep,
+    user: CurrentUser,
+    pagination: Annotated[PaginationParams, Query()],
+) -> PaginatedResponse[OGFieldListItemView]:
+    db_query = DBQuery(pagination=pagination_to_db(pagination))
+    resources, total_count = await resource_actions.query(
+        session=uow.session, db_query=db_query
+    )
+    return PaginatedResponse(
+        items=[resource_to_list_item_view(r) for r in resources],
+        total_count=total_count,
+        page=pagination.page,
+        page_size=pagination.page_size,
+    )
 
 
 @router.get("/{id}", response_model=OGFieldView)

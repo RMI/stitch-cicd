@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from collections.abc import Sequence
 from enum import StrEnum
+
 from sqlalchemy import (
     ForeignKey,
     Index,

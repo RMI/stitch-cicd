@@ -1,5 +1,6 @@
+from math import ceil
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, computed_field
 
 
 class Timestamped(BaseModel):
@@ -20,3 +21,20 @@ class User(BaseModel):
     role: str | None = None
     email: EmailStr
     name: str
+
+
+class PaginationParams(BaseModel):
+    page: int = Field(1, ge=1)
+    page_size: int = Field(50, ge=1, le=200)
+
+
+class PaginatedResponse[T](BaseModel):
+    items: list[T]
+    total_count: int
+    page: int
+    page_size: int
+
+    @computed_field
+    @property
+    def total_pages(self) -> int:
+        return ceil(self.total_count / self.page_size)
