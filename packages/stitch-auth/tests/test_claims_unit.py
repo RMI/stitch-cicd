@@ -35,7 +35,7 @@ class TestTokenClaimsConstruction:
     def test_sub_is_required(self):
         """Missing sub raises ValidationError."""
         with pytest.raises(ValidationError):
-            TokenClaims()  # pyright: ignore[reportCallIssue]
+            TokenClaims()
 
     def test_raw_defaults_to_empty_dict(self):
         """raw field defaults to empty dict, not shared reference."""

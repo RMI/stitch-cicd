@@ -1,0 +1,61 @@
+---
+on:
+  workflow_call:
+
+jobs:
+  scan:
+    name: Check for forbidden patterns
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Check for Forbidden Patterns
+        uses: RMI/actions/actions/admin/forbidden-patterns@main
+        with:
+          # Regex patterns (one per line)
+          patterns: |
+            # --- Debugging leftovers
+            console\.log\(
+            debugger
+            # --- Lint/TypeScript escape hatches
+            @ts-ignore
+            @ts-nocheck
+            eslint-disable(-next-line)?
+            # --- Debugging leftovers (Python)
+            breakpoint\(
+            pdb\.set_trace\(
+            ipdb\.set_trace\(
+            # --- Python escape hatches
+            type:[[:space:]]*ignore
+            pyright:[[:space:]]*ignore
+            noqa
+            pylint:[[:space:]]*disable
+          default_patterns: true
+          mode: regex
+          ignore_case: true
+          include: |
+            **/*.cjs
+            **/*.js
+            **/*.json
+            **/*.jsx
+            **/*.md
+            **/*.mjs
+            **/*.py
+            **/*.toml
+            **/*.ts
+            **/*.tsx
+            **/*.yaml
+            **/*.yml
+          # Common exclusions to reduce noise
+          exclude: |
+            .git/**/*
+            .github/**/*
+            **/node_modules/**/*
+            **/dist/**/*
+            **/build/**/*
+            **/.venv/**/*
+            **/__pycache__/**/*
+            **/package-lock.json
+            **/uv.lock

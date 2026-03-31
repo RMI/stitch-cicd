@@ -55,7 +55,7 @@ class Resource[TResId: IdType, TSrc: Source](BaseModel):
     repointed_to: TResId | None = Field(default=None)
     constituents: frozenset[TResId] = Field(default_factory=frozenset)
 
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
 
     @model_validator(mode="after")
     def _no_self_reference(self):

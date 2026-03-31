@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.model import ResourceModel
 from stitch.api.entities import User
-from tests.utils import make_create_resource, make_empty_resource
+from tests.factories import ResourceCreateFactory
 
 
 class TestCreateResourceActionIntegration:
@@ -18,17 +18,17 @@ class TestCreateResourceActionIntegration:
         self,
         seeded_integration_session: AsyncSession,
         test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
     ):
-        resource_in = make_empty_resource(name=None)
+        resource_in = og_create_res_fact()
 
         result = await resource_actions.create(
             session=seeded_integration_session,
             user=test_user,
-            resource=resource_in.model,
+            resource=resource_in,
         )
 
         assert result.id is not None
-        assert result.name is None
 
         db_resource = await seeded_integration_session.get(ResourceModel, result.id)
         assert db_resource is not None
@@ -38,17 +38,19 @@ class TestCreateResourceActionIntegration:
         self,
         seeded_integration_session: AsyncSession,
         test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
     ):
-        resource_in = make_create_resource(name="Test Label")
+        resource_in = og_create_res_fact(name="Test Label")
 
         result = await resource_actions.create(
             session=seeded_integration_session,
             user=test_user,
-            resource=resource_in.model,
+            resource=resource_in,
         )
 
         assert result.id is not None
-        assert result.name == "Test Label"
+        assert result.view is not None
+        assert result.view.name == "Test Label"
 
         db_resource = await seeded_integration_session.get(ResourceModel, result.id)
         assert db_resource is not None
@@ -64,11 +66,13 @@ class TestGetResourceActionIntegration:
         self,
         seeded_integration_session: AsyncSession,
         test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
     ):
+        res = og_create_res_fact(name="Get Test")
         created = await resource_actions.create(
             session=seeded_integration_session,
             user=test_user,
-            resource=make_create_resource(name="Get Test").model,
+            resource=res,
         )
 
         result = await resource_actions.get(
@@ -77,7 +81,8 @@ class TestGetResourceActionIntegration:
         )
 
         assert result.id == created.id
-        assert result.name == "Get Test"
+        assert result.view is not None
+        assert result.view.name == "Get Test"
 
     @pytest.mark.anyio
     async def test_get_nonexistent_raises_404(
@@ -100,22 +105,23 @@ class TestListResourcesActionIntegration:
         self,
         seeded_integration_session: AsyncSession,
         test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
     ):
         # create a couple resources
         await resource_actions.create(
             session=seeded_integration_session,
             user=test_user,
-            resource=make_create_resource(name="A").model,
+            resource=og_create_res_fact(name="A"),
         )
         await resource_actions.create(
             session=seeded_integration_session,
             user=test_user,
-            resource=make_create_resource(name="B").model,
+            resource=og_create_res_fact(name="B"),
         )
 
         results = await resource_actions.get_all(session=seeded_integration_session)
         assert isinstance(results, (list, tuple))
         assert len(results) >= 2
 
-        labels = {r.name for r in results}
+        labels = {r.view.name for r in results if r.view is not None}
         assert {"A", "B"} <= labels

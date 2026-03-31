@@ -3,40 +3,42 @@ from __future__ import annotations
 import os
 import sys
 import time
+import logging
 from enum import Enum
 from dataclasses import dataclass
-from typing import Any
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import Session
+import hashlib
+import json
+from sqlalchemy.sql.schema import Column
 
 from stitch.api.db.model import (
-    ResourceModel,
-    MembershipModel,
     StitchBase,
-    UserModel,
-    OilGasFieldSourceModel,
-)
-from stitch.api.entities import (
-    User as UserEntity,
 )
 
-# Domain model from stitch-ogsi package
-from stitch.ogsi.model.og_field import OilGasFieldBase
+logger = logging.getLogger("db-init")
+
+
+def setup_logging() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        stream=sys.stdout,
+    )
+
 
 """
-DB init/seed job.
+DB init job.
 
 This module is intended to be run as a one-shot job (e.g. a `db-init` service)
 *before* the API starts. It can:
   - create schema from SQLAlchemy metadata if the DB is empty
   - fail fast on partial/mismatched schemas (no auto-healing)
-  - apply a seed profile once and record that it ran
 
 Role separation / env vars:
   - The recommended setup uses two Postgres roles:
-      * migrator/seeder role: DDL + seed (used by the init job)
+      * migrator role: DDL (used by the init job)
       * app role: no DDL (used by the API)
   - Set STITCH_DB_USER / STITCH_DB_PASSWORD on a per-service basis to choose
     which role connects (migrator for `db-init`, app for `api`).
@@ -45,7 +47,6 @@ Role separation / env vars:
 """
 
 META_SCHEMA_TABLE = "stitch_schema_meta"
-META_SEED_TABLE = "stitch_seed_meta"
 
 
 class SchemaMode(str, Enum):
@@ -54,20 +55,9 @@ class SchemaMode(str, Enum):
     NEVER = "never"
 
 
-class SeedProfile(str, Enum):
-    DEV = "dev"
-
-
-class SeedMode(str, Enum):
-    IF_NEEDED = "if-needed"
-    NEVER = "never"
-
-
 @dataclass(frozen=True)
 class Settings:
     schema_mode: SchemaMode
-    seed_profile: SeedProfile
-    seed_mode: SeedMode
     connect_timeout_s: int
     connect_retry_interval_s: float
     database_url: str
@@ -106,8 +96,6 @@ def load_settings() -> Settings:
         schema_mode=SchemaMode(
             _env("STITCH_DB_SCHEMA_MODE", SchemaMode.IF_EMPTY.value)
         ),
-        seed_profile=SeedProfile(_env("STITCH_DB_SEED_PROFILE", SeedProfile.DEV.value)),
-        seed_mode=SeedMode(_env("STITCH_DB_SEED_MODE", SeedMode.IF_NEEDED.value)),
         connect_timeout_s=int(_env("STITCH_DB_CONNECT_TIMEOUT_S", "60")),
         connect_retry_interval_s=float(
             _env("STITCH_DB_CONNECT_RETRY_INTERVAL_S", "1.0")
@@ -160,16 +148,6 @@ def ensure_meta_tables(engine) -> None:
                 """
             )
         )
-        conn.execute(
-            text(
-                f"""
-                CREATE TABLE IF NOT EXISTS {META_SEED_TABLE} (
-                  profile TEXT PRIMARY KEY,
-                  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                )
-                """
-            )
-        )
 
 
 def mark_schema_version(engine, version: str) -> None:
@@ -184,28 +162,6 @@ def mark_schema_version(engine, version: str) -> None:
                 """
             ),
             {"v": version},
-        )
-
-
-def seed_already_applied(engine, profile: str) -> bool:
-    with engine.connect() as conn:
-        try:
-            row = conn.execute(
-                text(f"SELECT 1 FROM {META_SEED_TABLE} WHERE profile=:p"),
-                {"p": profile},
-            ).first()
-            return row is not None
-        except OperationalError:
-            return False
-
-
-def mark_seed_applied(engine, profile: str) -> None:
-    with engine.begin() as conn:
-        conn.execute(
-            text(
-                f"INSERT INTO {META_SEED_TABLE}(profile) VALUES (:p) ON CONFLICT DO NOTHING"
-            ),
-            {"p": profile},
         )
 
 
@@ -247,157 +203,103 @@ def fail_partial(existing_tables: set[str], expected: set[str]) -> None:
     )
 
 
-# -------------------------
-# Seed dataset(s)
-# -------------------------
+def _type_repr(col: Column) -> str:
+    # compile-like string is better than repr() for stability
+    return str(col.type)
 
 
-def create_seed_user() -> UserModel:
-    return UserModel(
-        sub="seed|system",
-        name="Seed User",
-        email="seed@example.com",
-    )
+def schema_fingerprint(metadata) -> str:
+    tables_payload = []
 
+    for table in sorted(metadata.tables.values(), key=lambda t: t.name):
+        table_payload = {
+            "name": table.name,
+            "columns": [],
+            "primary_key": sorted(col.name for col in table.primary_key.columns),
+            "indexes": [],
+            "unique_constraints": [],
+            "foreign_keys": [],
+        }
 
-def create_dev_user() -> UserModel:
-    return UserModel(
-        sub="dev|local-placeholder",
-        name="Dev Deverson",
-        email="dev@example.com",
-    )
+        for col in table.columns:
+            table_payload["columns"].append(
+                {
+                    "name": col.name,
+                    "type": _type_repr(col),
+                    "nullable": col.nullable,
+                    "primary_key": col.primary_key,
+                    "unique": bool(col.unique),
+                }
+            )
 
+            for fk in sorted(col.foreign_keys, key=lambda f: str(f.target_fullname)):
+                table_payload["foreign_keys"].append(
+                    {
+                        "column": col.name,
+                        "target": fk.target_fullname,
+                    }
+                )
 
-def create_seed_resources(user: UserEntity) -> list[ResourceModel]:
-    resources = [
-        ResourceModel.create(user, name="Resource Foo01"),
-        ResourceModel.create(user, name="Resource Bar01"),
-    ]
-    return resources
+        for idx in sorted(table.indexes, key=lambda i: i.name or ""):
+            table_payload["indexes"].append(
+                {
+                    "name": idx.name,
+                    "columns": sorted(col.name for col in idx.columns),
+                    "unique": idx.unique,
+                }
+            )
 
+        for constraint in sorted(
+            table.constraints,
+            key=lambda c: getattr(c, "name", "") or c.__class__.__name__,
+        ):
+            if constraint.__class__.__name__ == "UniqueConstraint":
+                cols = sorted(col.name for col in constraint.columns)
+                table_payload["unique_constraints"].append(cols)
 
-def create_seed_memberships(
-    user: UserEntity,
-    resources: list[ResourceModel],
-    sources: list[OilGasFieldSourceModel],
-) -> list[MembershipModel]:
-    memberships = [
-        MembershipModel.create(user, resources[0], "gem", 1),
-        MembershipModel.create(user, resources[1], "wm", 2),
-    ]
-    for i, mem in enumerate(memberships, start=1):
-        mem.id = i
-    return memberships
+        table_payload["columns"].sort(key=lambda c: c["name"])
+        table_payload["foreign_keys"].sort(key=lambda fk: (fk["column"], fk["target"]))
+        table_payload["indexes"].sort(key=lambda i: (i["name"] or "", i["columns"]))
+        table_payload["unique_constraints"].sort()
 
+        tables_payload.append(table_payload)
 
-def create_seed_oil_gas_source_fields(
-    user: UserEntity,
-    resources: list[ResourceModel],
-) -> list[OilGasFieldSourceModel]:
-    """Create example OilGasField rows linked 1:1 with seeded resources."""
-
-    raw_payloads: list[dict[str, Any]] = [
-        # pretend this came from some upstream system (GEM/WM/etc)
-        {
-            "name": "Permian Alpha",
-            "country": "USA",
-            "basin": "Permian",
-            # extra keys demonstrate why we keep original_payload
-            "upstream_id": "seed-gem-0001",
-            "notes": "seed example",
-        },
-        {
-            "name": "North Sea Bravo",
-            "country": "GBR",
-            "basin": "North Sea",
-            "upstream_id": "seed-wm-0002",
-            "notes": "seed example",
-        },
-    ]
-
-    og_models: list[OilGasFieldSourceModel] = []
-
-    for resource, raw in zip(resources, raw_payloads):
-        domain = OilGasFieldBase.model_validate(raw)
-        model = OilGasFieldSourceModel(
-            created_by_id=user.id,
-            last_updated_by_id=user.id,
-        )
-        # Raw input (includes extra fields not in OilGasFieldBase)
-        model.original_payload = raw
-        # Canonical validated payload
-        model.payload = raw
-        model.name = domain.name
-        model.country = domain.country
-        model.basin = domain.basin
-        model.source = "dev-seed"
-        # Populate domain columns for queryability
-        og_models.append(model)
-
-    return og_models
-
-
-def seed_dev(engine) -> None:
-    with Session(engine) as session:
-        user_model = create_seed_user()
-        session.add(user_model)
-        session.flush()
-
-        dev_model = create_dev_user()
-        session.add(dev_model)
-        session.flush()
-
-        user_entity = UserEntity(
-            id=user_model.id,
-            sub=user_model.sub,
-            email=user_model.email,
-            name=user_model.name,
-        )
-
-        resources = create_seed_resources(user_entity)
-        session.add_all(resources)
-        session.flush()
-        #
-        # Add sample OilGasField rows for the first two resources only
-        og_fields = create_seed_oil_gas_source_fields(user_entity, resources)
-        session.add_all(og_fields)
-
-        memberships = create_seed_memberships(user_entity, resources, og_fields)
-        session.add_all(memberships)
-
-        session.commit()
-
-
-def seed(engine, profile: SeedProfile | str) -> None:
-    if profile == "dev":
-        seed_dev(engine)
-        return
-    raise RuntimeError(f"Unknown seed profile '{profile}'")
+    payload = {"tables": tables_payload}
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(blob.encode("utf-8")).hexdigest()
+    logger.debug("digest: %s", digest)
+    return f"orm-sha256:{digest}"
 
 
 def main() -> None:
+    setup_logging()
+
     settings = load_settings()
     engine = create_engine(settings.database_url, pool_pre_ping=True)
 
-    print("[db-init] waiting for DB...", flush=True)
+    logger.info("waiting for DB...")
     wait_for_db(
         engine,
         timeout_s=settings.connect_timeout_s,
         interval_s=settings.connect_retry_interval_s,
     )
 
-    print("[db-init] connecting db engine...", flush=True)
+    logger.info("connecting db engine...")
     conn = engine.connect()
+
     try:
-        print("[db-init] acquiring advisory lock...", flush=True)
+        logger.info("acquiring advisory lock...")
         acquire_lock(conn)
+
         expected = expected_table_names()
         state, existing = classify_db_state(engine, expected)
-        print(f"[db-init] schema state: {state}", flush=True)
+
+        logger.info("schema state: %s", state)
 
         if settings.schema_mode is SchemaMode.NEVER:
             if state == "partial_or_mismatch":
                 fail_partial(existing, expected)
+
         elif settings.schema_mode is SchemaMode.ASSERT_ONLY:
             if state == "empty":
                 raise RuntimeError(
@@ -410,39 +312,24 @@ def main() -> None:
                 fail_partial(existing, expected)
 
             if state == "empty":
-                print("[db-init] creating schema from ORM metadata...", flush=True)
+                logger.info("creating schema from ORM metadata...")
                 StitchBase.metadata.create_all(engine)
                 ensure_meta_tables(engine)
-                mark_schema_version(engine, version="dev-orm-metadata")
+                version = schema_fingerprint(StitchBase.metadata)
+                mark_schema_version(engine, version=version)
             else:
                 ensure_meta_tables(engine)
         else:
             raise RuntimeError(f"Unknown STITCH_DB_SCHEMA_MODE: {settings.schema_mode}")
 
-        if settings.seed_mode is not SeedMode.NEVER and settings.seed_profile:
-            ensure_meta_tables(engine)
-            if seed_already_applied(engine, settings.seed_profile):
-                print(
-                    f"[db-init] seed '{settings.seed_profile}' already applied; skipping.",
-                    flush=True,
-                )
-            else:
-                print(f"[db-init] seeding '{settings.seed_profile}'...", flush=True)
-                seed(engine, settings.seed_profile)
-                mark_seed_applied(engine, settings.seed_profile)
-                print(f"[db-init] seed '{settings.seed_profile}' applied.", flush=True)
+        logger.info("done.")
 
-        print("[db-init] done.", flush=True)
     finally:
-        print("[db-init] releasing advisory lock...", flush=True)
+        logger.info("releasing advisory lock...")
         try:
             release_lock(conn)
-        except Exception as e:
-            print(
-                f"[db-init] ERROR releasing advisory lock: {e}",
-                file=sys.stderr,
-                flush=True,
-            )
+        except Exception:
+            logger.exception("ERROR releasing advisory lock")
         finally:
             conn.close()
         engine.dispose()
@@ -451,6 +338,6 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
-        print(f"[db-init] ERROR: {e}", file=sys.stderr, flush=True)
+    except Exception:
+        logger.exception("ERROR during db-init")
         raise

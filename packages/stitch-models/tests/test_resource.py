@@ -140,7 +140,7 @@ class TestResourceValidation:
     def test_rejects_wrong_source_in_payload(self):
         bar = BarSource(id=uuid4(), label="test")
         with pytest.raises(ValidationError) as exc_info:
-            FooPayload(foos={1: bar})  # type: ignore[arg-type]
+            FooPayload(foos={1: bar})
         errors = exc_info.value.errors()
         error_types = {e["type"] for e in errors}
         assert error_types & {"int_parsing", "literal_error", "missing"}
