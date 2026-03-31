@@ -9,74 +9,131 @@ TEST_PKG := ./scripts/test-package.py
 check: lint test format-check lock-check
 	@echo "All checks passed."
 
-lint: uv-lint frontend-lint
+lint: py-lint frontend-lint
+test: py-test frontend-test
+format-check: py-format-check frontend-format-check
+lock-check: py-lock-check
 
-test: uv-test frontend-test
+format: py-format frontend-format
+clean: clean-build py-clean-cache frontend-clean clean-docker
 
-format: uv-format frontend-format
+build-all: py-build frontend-build
 
-format-check: uv-format-check frontend-format-check
+clean-build:
+	rm -rf build dist
 
-lock-check: uv-lock-check
-
-uv-lint: uv-dev
-	$(RUFF) check
-
-# All workspace packages with tests
-TEST_PACKAGES := stitch-api stitch-models
-
-define newline
-
-
-endef
-
-# --- local: full sync, no --exact (fast, no venv mutation) ---
-ifdef pkg
-uv-test: uv-dev
-	$(TEST_PKG) $(pkg)
-else
-uv-test: uv-dev
-	$(foreach p,$(TEST_PACKAGES),$(TEST_PKG) $(p)$(newline))
-endif
-
-# --- isolated (CI): per-package --exact deps only ---
-ifdef pkg
-uv-test-isolated:
-	$(TEST_PKG) --exact $(pkg)
-else
-uv-test-isolated:
-	$(foreach p,$(TEST_PACKAGES),$(TEST_PKG) --exact $(p)$(newline))
-endif
-
-uv-format: uv-dev
-	$(RUFF) format
-
-uv-format-check: uv-dev
-	$(RUFF) format --check
+# ---------------------------------------------------------------------
+# Python (UV) infrastructure
+# ---------------------------------------------------------------------
 
 uv-dev: uv-sync-dev
+uv-sync-dev:
+	$(UV) sync --group dev --all-packages
+
+
+py-lint: uv-dev
+	$(RUFF) check
+
+py-test: api-test pkg-test
+py-test-exact: api-test-exact pkg-test-exact
+
+py-format-check: uv-dev
+	$(RUFF) format --check
+
+py-lock-check:
+	$(UV) lock --check
+
+py-format: uv-dev
+	$(RUFF) format
+
+py-clean-cache:
+	rm -rf .ruff_cache .pytest_cache
+
+py-build: api-build pkg-build
 
 uv-sync:
 	$(UV) sync
 
-uv-sync-dev:
-	$(UV) sync --group dev --all-packages
+# Generic helpers
+uv-test-target:
+	$(UV) run --package $(PKG) --active pytest $(TEST_PATH) $(ARGS)
 
-uv-lock-check:
-	$(UV) lock --check
+uv-test-target-exact:
+	$(UV) run --package $(PKG) --active --exact --group dev pytest $(TEST_PATH) $(ARGS)
 
 # ---------------------------------------------------------------------
-# Packages and source discovery
+# UV Packages
 # ---------------------------------------------------------------------
-all: build-python frontend
-build-python:
-clean: clean-build clean-cache frontend-clean clean-docker
 
-clean-build:
-	rm -rf build dist
-clean-cache:
-	rm -rf .ruff_cache .pytest_cache
+pkg-build-auth:
+	$(UV) build --package stitch-auth
+pkg-test-auth:
+	$(MAKE) uv-test-target PKG=stitch-auth TEST_PATH=packages/stitch-auth
+pkg-test-exact-auth:
+	$(MAKE) uv-test-target-exact PKG=stitch-auth TEST_PATH=packages/stitch-auth
 
+pkg-build-models:
+	$(UV) build --package stitch-models
+pkg-test-models:
+	$(MAKE) uv-test-target PKG=stitch-models TEST_PATH=packages/stitch-models
+pkg-test-exact-models:
+	$(MAKE) uv-test-target-exact PKG=stitch-models TEST_PATH=packages/stitch-models
+
+pkg-build-ogsi:
+	$(UV) build --package stitch-ogsi
+pkg-test-ogsi:
+	$(MAKE) uv-test-target PKG=stitch-ogsi TEST_PATH=packages/stitch-ogsi
+pkg-test-exact-ogsi:
+	$(MAKE) uv-test-target-exact PKG=stitch-ogsi TEST_PATH=packages/stitch-ogsi
+
+pkg-build: pkg-build-auth pkg-build-models pkg-build-ogsi
+pkg-test: pkg-test-auth pkg-test-models pkg-test-ogsi
+pkg-test-exact: pkg-test-exact-auth pkg-test-exact-models pkg-test-exact-ogsi
+
+# ---------------------------------------------------------------------
+# Deployments
+# ---------------------------------------------------------------------
+
+api-build:
+	$(UV) build --package stitch-api
+api-test:
+	$(MAKE) uv-test-target PKG=stitch-api TEST_PATH=deployments/api
+api-test-exact:
+	$(MAKE) uv-test-target-exact PKG=stitch-api TEST_PATH=deployments/api
+
+api-dev: stack-api-dev
+	POSTGRES_HOST=127.0.0.1 \
+	POSTGRES_USER=stitch_app \
+	$(UV) run --env-file .env -- \
+		uvicorn stitch.api.main:app \
+		--host 0.0.0.0 \
+		--port 8000 \
+		--reload \
+		--reload-dir deployments/api/src \
+		--reload-dir packages \
+		--reload-exclude '*/tests/*'
+
+stack-api-dev:
+	SEED_API_BASE_URL=http://host.docker.internal:8000/api/v1 \
+	$(DOCKER_COMPOSE_DEV) \
+		--profile frontend \
+		--profile tools \
+		--profile seed \
+		up --build \
+		-d
+
+frontend-dev: $(FRONTEND_INSTALL_STAMP) stack-frontend-dev
+	VITE_API_URL=http://localhost:8000/api/v1 \
+	$(NPM) run dev
+
+stack-frontend-dev:
+	SEED_API_BASE_URL=http://api:8000/api/v1 \
+	$(DOCKER_COMPOSE_DEV) \
+		--profile api \
+		--profile tools \
+		--profile seed \
+		up --build \
+		-d
 
 # ---------------------------------------------------------------------
 # stitch-frontend
@@ -131,33 +188,51 @@ frontend-format: $(FRONTEND_INSTALL_STAMP)
 frontend-format-check: $(FRONTEND_INSTALL_STAMP)
 	$(NPM) run format:check
 
-frontend-dev: $(FRONTEND_INSTALL_STAMP)
-	$(NPM) run dev
-
 frontend-clean:
 	rm -rf $(FRONTEND_DIR)/dist $(FRONTEND_DIR)/node_modules \
 	       $(FRONTEND_INSTALL_STAMP) $(FRONTEND_BUILD_STAMP)
 
-# docker
+# ---------------------------------------------------------------------
+# Docker
+# ---------------------------------------------------------------------
 clean-docker:
-	$(DOCKER_COMPOSE_DEV) down --volumes --remove-orphans
+	$(DOCKER_COMPOSE_DEV) --profile "*" down --volumes --remove-orphans
 
 dev-docker:
-	$(DOCKER_COMPOSE_DEV) up
+	$(DOCKER_COMPOSE_DEV) --profile full up
 
 reboot-docker: clean-docker
-	$(DOCKER_COMPOSE_DEV) up --build
+	$(DOCKER_COMPOSE_DEV) --profile full up --build
 
-prod-docker:
-	$(DOCKER_COMPOSE) up
+follow-stack-logs:
+	$(DOCKER_COMPOSE_DEV) --profile full logs -f
 
-.PHONY: all build clean \
-        build-python \
-        check lint test format format-check \
-        uv-lint uv-test uv-test-isolated uv-format uv-format-check \
-        uv-sync uv-sync-dev uv-sync-all \
-        uv-dev \
-        clean-build clean-cache \
-        lock-check uv-lock-check \
-        clean-docker dev-docker \
-        frontend frontend-install frontend-build frontend-test frontend-lint frontend-dev frontend-clean frontend-format frontend-format-check
+.PHONY: \
+	# Workspace
+	check lint test format format-check lock-check \
+	build-all \
+	clean clean-build \
+	\
+	# Python (uv)
+	py-lint py-test py-test-exact py-format py-format-check py-lock-check py-clean-cache \
+	py-build \
+	uv-dev uv-sync uv-sync-dev \
+	uv-test-target uv-test-target-exact \
+	\
+	# Packages
+	pkg-test pkg-test-exact \
+	pkg-build-auth pkg-test-auth pkg-test-exact-auth \
+	pkg-build-models pkg-test-models pkg-test-exact-models \
+	pkg-build-ogsi pkg-test-ogsi pkg-test-exact-ogsi \
+	\
+	# API
+	api-build api-test api-test-exact api-dev stack-api-dev \
+	\
+	# Frontend
+	frontend frontend-install frontend-build frontend-test frontend-lint \
+	frontend-format frontend-format-check \
+	frontend-dev frontend-clean \
+	\
+	# Docker
+	clean-docker dev-docker reboot-docker \
+	stack-frontend-dev follow-stack-logs
