@@ -2,7 +2,7 @@ import asyncio
 from collections.abc import Sequence
 from functools import partial
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette.status import HTTP_404_NOT_FOUND
@@ -13,6 +13,7 @@ from stitch.api.db.errors import (
     ResourceNotFoundError,
 )
 from stitch.api.auth import CurrentUser
+from stitch.api.db.query import DBQuery
 from stitch.api.db.og_field_source_actions import (
     attach_sources_to_resource,
     get_or_create_sources,
@@ -36,6 +37,33 @@ async def get_all(session: AsyncSession) -> Sequence[OGFieldResource]:
     models = (await session.scalars(stmt)).all()
     fn = partial(resource_model_to_entity, session)
     return await asyncio.gather(*[fn(m) for m in models])
+
+
+async def count(session: AsyncSession) -> int:
+    base = select(ResourceModel).where(ResourceModel.repointed_id.is_(None))
+    stmt = select(func.count()).select_from(base.subquery())
+    return await session.scalar(stmt) or 0
+
+
+async def query(
+    session: AsyncSession,
+    db_query: DBQuery[None],
+) -> tuple[Sequence[OGFieldResource], int]:
+    total_count = await count(session)
+
+    stmt = (
+        select(ResourceModel)
+        .where(ResourceModel.repointed_id.is_(None))
+        .options(selectinload(ResourceModel.memberships))
+        .order_by(ResourceModel.id)
+        .offset(db_query.pagination.offset)
+        .limit(db_query.pagination.limit)
+    )
+    models = (await session.scalars(stmt)).all()
+
+    fn = partial(resource_model_to_entity, session)
+    items = list(await asyncio.gather(*[fn(m) for m in models]))
+    return items, total_count
 
 
 async def get(session: AsyncSession, id: int):

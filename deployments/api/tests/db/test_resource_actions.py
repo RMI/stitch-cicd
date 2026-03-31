@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.model import ResourceModel
+from stitch.api.db.query import DBQuery, Pagination
 from stitch.api.entities import User
 from tests.factories import ResourceCreateFactory
 
@@ -125,3 +126,82 @@ class TestListResourcesActionIntegration:
 
         labels = {r.view.name for r in results if r.view is not None}
         assert {"A", "B"} <= labels
+
+
+class TestResourceQueryAction:
+    """Integration tests for resource_actions.query() and count()."""
+
+    @pytest.fixture
+    async def seeded_resources(
+        self,
+        seeded_integration_session: AsyncSession,
+        test_user: User,
+        og_create_res_fact: ResourceCreateFactory,
+    ):
+        """Create 3 resources for query tests."""
+        for name in ["Alpha", "Bravo", "Charlie"]:
+            await resource_actions.create(
+                session=seeded_integration_session,
+                user=test_user,
+                resource=og_create_res_fact(name=name),
+            )
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize(
+        "query, expected_count",
+        [
+            pytest.param(
+                DBQuery(pagination=Pagination(offset=0, limit=2)),
+                2,
+                id="first-page",
+            ),
+            pytest.param(
+                DBQuery(pagination=Pagination(offset=2, limit=10)),
+                1,
+                id="offset-past-partial",
+            ),
+            pytest.param(
+                DBQuery(pagination=Pagination(offset=99, limit=10)),
+                0,
+                id="offset-past-end",
+            ),
+        ],
+    )
+    async def test_query_pagination(
+        self,
+        seeded_integration_session: AsyncSession,
+        seeded_resources,
+        query: DBQuery,
+        expected_count: int,
+    ):
+        items, total = await resource_actions.query(seeded_integration_session, query)
+        assert total == 3
+        assert len(items) == expected_count
+
+    @pytest.mark.anyio
+    async def test_query_empty_table(
+        self,
+        seeded_integration_session: AsyncSession,
+    ):
+        items, total = await resource_actions.query(
+            seeded_integration_session, DBQuery()
+        )
+        assert total == 0
+        assert len(items) == 0
+
+    @pytest.mark.anyio
+    async def test_count(
+        self,
+        seeded_integration_session: AsyncSession,
+        seeded_resources,
+    ):
+        total = await resource_actions.count(seeded_integration_session)
+        assert total == 3
+
+    @pytest.mark.anyio
+    async def test_count_empty_table(
+        self,
+        seeded_integration_session: AsyncSession,
+    ):
+        total = await resource_actions.count(seeded_integration_session)
+        assert total == 0

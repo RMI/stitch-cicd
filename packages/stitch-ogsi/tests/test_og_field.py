@@ -61,14 +61,8 @@ class TestOGFieldResource:
     def test_has_both_base_class_fields(self, og_payload: Sequence[OGFieldSource]):
         resource = OGFieldResource(
             id=1,
-            name="Merged Field",
-            country="USA",
             source_data=og_payload,
-            location_type="Onshore",
         )
-        # OilAndGasFieldBase fields
-        assert resource.name == "Merged Field"
-        assert resource.location_type == "Onshore"
         # Resource fields
         assert resource.id == 1
         assert resource.source_data == og_payload
@@ -79,8 +73,6 @@ class TestOGFieldResource:
         with pytest.raises(ValidationError, match="constituent of itself"):
             OGFieldResource(
                 id=1,
-                name="Bad",
-                country="USA",
                 source_data=og_payload,
                 constituents=[1],
             )

@@ -18,4 +18,4 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Build
-        run: make build-python
+        run: make py-build

@@ -151,3 +151,64 @@ class TestCreateResourceUnit:
         response = await async_client.post("/oil-gas-fields/", json={"label": 123})
 
         assert response.status_code == 422
+
+
+class TestGetAllResourcesUnit:
+    """Unit tests for GET /oil-gas-fields/ paginated endpoint."""
+
+    @pytest.mark.anyio
+    async def test_returns_paginated_response(
+        self,
+        async_client,
+        mock_uow,
+        og_res_fact: ResourceCreateFactory,
+    ):
+        """GET /oil-gas-fields/ returns envelope with items and metadata."""
+        resources = [
+            og_res_fact(
+                id=i, empty=False, view=OilGasFieldBase(name=f"R{i}", country=None)
+            )
+            for i in range(10, 13)
+        ]
+
+        async def override_get_uow():
+            yield mock_uow
+
+        app.dependency_overrides[get_uow] = override_get_uow
+
+        with patch("stitch.api.routers.oil_gas_fields.resource_actions") as mock_repo:
+            mock_repo.query = AsyncMock(return_value=(resources, 3))
+
+            response = await async_client.get("/oil-gas-fields/")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_count"] == 3
+        assert data["page"] == 1
+        assert data["page_size"] == 50
+        assert len(data["items"]) == 3
+
+    @pytest.mark.anyio
+    async def test_passes_pagination_params(
+        self,
+        async_client,
+        mock_uow,
+    ):
+        """GET /oil-gas-fields/?page=2&page_size=10 passes params to query."""
+
+        async def override_get_uow():
+            yield mock_uow
+
+        app.dependency_overrides[get_uow] = override_get_uow
+
+        with patch("stitch.api.routers.oil_gas_fields.resource_actions") as mock_repo:
+            mock_repo.query = AsyncMock(return_value=([], 0))
+
+            response = await async_client.get("/oil-gas-fields/?page=2&page_size=10")
+
+        assert response.status_code == 200
+        mock_repo.query.assert_awaited_once()
+        call_kwargs = mock_repo.query.call_args.kwargs
+        db_query = call_kwargs["db_query"]
+        assert db_query.pagination.offset == 10
+        assert db_query.pagination.limit == 10

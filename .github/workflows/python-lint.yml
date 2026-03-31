@@ -18,4 +18,4 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Run Linter
-        run: make uv-lint
+        run: make py-lint
