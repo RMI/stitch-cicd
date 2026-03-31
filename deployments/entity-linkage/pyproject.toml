@@ -1,5 +1,5 @@
 [project]
-name = "stitch-api"
+name = "stitch-entity-linkage"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -7,24 +7,21 @@ authors = [{ name = "Michael Barlow", email = "mbarlow@rmi.org" }]
 requires-python = ">=3.12.12"
 dependencies = [
   "fastapi[standard]>=0.124.0",
-  "greenlet>=3.3.0",
-  "psycopg[binary]>=3.2.12",
   "pydantic-settings>=2.12.0",
-  "sqlalchemy>=2.0.44",
   "stitch-auth",
   "stitch-models",
   "stitch-ogsi",
 ]
 
 [project.scripts]
-stitch-api = "stitch.api.__main__:main"
+stitch-entity-linkage = "stitch.entity-linkage.__main__:main"
 
 [build-system]
 requires = ["uv_build>=0.9.16,<0.10.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "stitch.api"
+module-name = "stitch.entity-linkage"
 
 [dependency-groups]
 dev = [
