@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from math import ceil
 from datetime import datetime
 from typing import Literal
@@ -31,6 +32,17 @@ class User(BaseModel):
     role: str | None = None
     email: EmailStr
     name: str
+
+
+@dataclass(frozen=True, slots=True)
+class RequestAuthContext:
+    """
+    Request-scoped auth context for transparent relay.
+
+    TODO: replace raw bearer-token relay with downstream machine/OBO auth.
+    """
+    user: User
+    bearer_token: str | None
 
 
 class PaginationParams(BaseModel):

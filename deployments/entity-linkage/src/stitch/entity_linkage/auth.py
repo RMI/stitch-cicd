@@ -10,7 +10,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 from stitch.auth import JWTValidator, OIDCSettings, TokenClaims
 from stitch.auth.errors import AuthError, JWKSFetchError
 
-from stitch.entity_linkage.entities import User
+from stitch.entity_linkage.entities import RequestAuthContext, User
 from stitch.entity_linkage.settings import Environment, get_settings
 
 logger = logging.getLogger(__name__)
@@ -49,6 +49,44 @@ def validate_auth_config_at_startup() -> None:
         logger.warning("Auth is disabled — all requests use dev credentials")
         return
     get_oidc_settings()  # fail fast if required OIDC fields missing
+
+
+def _extract_bearer_token_from_request(request: Request) -> str | None:
+    """
+    Return the raw bearer token from the Authorization header.
+
+    This exists separately from JWT validation so that downstream callers can
+    relay the original token when operating in transparent-relay mode.
+
+    TODO: replace transparent relay with proper downstream machine/OBO auth.
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return None
+
+    scheme, _, token = auth_header.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        return None
+
+    return token
+
+
+def _dev_bearer_token() -> str:
+    """
+    Placeholder token used only when auth is disabled in local development.
+
+    TODO: once machine auth exists, remove the need for any fake bearer value.
+    """
+    return "dev-placeholder-token"
+
+
+def _claims_to_user(claims: TokenClaims) -> User:
+    return User(
+        id=1,
+        sub=claims.sub,
+        email=claims.email or "unknown@example.com",
+        name=claims.name or claims.email or claims.sub,
+    )
 
 
 async def get_token_claims(
@@ -105,27 +143,52 @@ async def get_token_claims(
 Claims = Annotated[TokenClaims, Depends(get_token_claims)]
 
 
-async def get_current_user(claims: Claims, uow) -> User:
-    """Resolve TokenClaims to a User entity. JIT provision on first login.
-
-    Race-safe: uses a savepoint so concurrent first-login requests
-    don't corrupt the outer transaction on IntegrityError.
+async def get_current_user(claims: Claims) -> User:
     """
-    session = uow.session
+    Resolve validated token claims to a lightweight request user.
 
-    # TODO: Use real auth
-    user_model = None
-
-    return _to_entity(user_model)
-
-
-def _to_entity(model) -> User:
-    return User(
-        id = 1,
-        sub = "FAKE",
-        email = "fake@example.com",
-        name = "CHANGEME"
-    )
+    TODO: when entity-linkage has its own persistence model, replace this with
+    a real lookup / JIT-provisioning flow if needed.
+    """
+    if get_settings().auth_disabled:
+        return User(
+            id=1,
+            sub=_DEV_CLAIMS.sub,
+            email=_DEV_CLAIMS.email or "dev@example.com",
+            name=_DEV_CLAIMS.name or "Dev User",
+        )
+    return _claims_to_user(claims)
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_request_auth_context(
+    request: Request,
+    user: CurrentUser,
+) -> RequestAuthContext:
+    """
+    Build the request-scoped auth context used by downstream API clients.
+
+    In the current transparent-relay model, this includes the caller's raw
+    bearer token so entity-linkage can call Stitch API on the caller's behalf.
+
+    TODO:
+    - replace bearer-token relay with downstream token acquisition
+    - add explicit audit/provenance headers, e.g. initiated-by user metadata
+    """
+    if get_settings().auth_disabled:
+        bearer_token = _dev_bearer_token()
+    else:
+        bearer_token = _extract_bearer_token_from_request(request)
+
+    return RequestAuthContext(
+        user=user,
+        bearer_token=bearer_token,
+    )
+
+
+AuthContext = Annotated[
+    RequestAuthContext,
+    Depends(get_request_auth_context),
+]
