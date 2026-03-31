@@ -5,6 +5,8 @@ import logging
 from typing import Any, Iterable
 
 import httpx
+import time
+
 
 from .openapi_validate import OpenAPIRequestValidator
 
@@ -41,3 +43,28 @@ def post_payloads(
         )
 
         resp.raise_for_status()
+
+
+def wait_for_api(base_url: str, retries: int = 30, delay: float = 2.0) -> None:
+    url = f"{base_url.rstrip('/')}/health"
+    logger.info("url: %s", url)
+
+    for attempt in range(1, retries + 1):
+        try:
+            r = httpx.get(url, timeout=2.0)
+            if 200 <= r.status_code < 300:
+                logger.info("API ready after %s attempt(s)", attempt)
+                return
+            else:
+                logger.info(
+                    "API not ready (status %s), attempt %s of %s",
+                    r.status_code,
+                    attempt,
+                    retries,
+                )
+        except (httpx.HTTPError, OSError) as e:
+            logger.info("API not reachable (%s), attempt %s/%s", e, attempt, retries)
+
+        time.sleep(delay)
+
+    raise RuntimeError("API did not become ready in time")

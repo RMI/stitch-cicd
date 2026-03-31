@@ -1,85 +1,173 @@
 # Hacking on Stitch
 
-This guide covers day-to-day development in the current Stitch monorepo.
+This guide covers the day-to-day development workflow in the Stitch monorepo.
 
 ## Monorepo layout
 
-- `packages/stitch-auth`: auth/claims/validation package
-- `deployments/api`: FastAPI service (`stitch-api`)
-- `deployments/stitch-frontend`: React + Vite frontend
-- `deployments/db`: DB bootstrap/role scripts
+* `deployments/api` — FastAPI service (`stitch-api`)
+* `deployments/stitch-frontend` — React + Vite frontend
+* `deployments/db` — database bootstrap and role scripts
+* `deployments/seed` — local seed data tooling
+* `packages/` — shared Python packages
 
 ## Prerequisites
 
-- Docker Desktop (`docker`, `docker compose`)
-- `uv` for Python dependency/workspace management
-- Node.js + npm (for frontend-only workflows)
+* Docker Desktop (`docker`, `docker compose`)
+* `uv` for Python dependency and workspace management
+* Node.js + npm for frontend development
 
 ## First-time setup
 
+From the repo root:
+
 ```bash
 cp env.example .env
+make uv-sync-dev
+```
+
+You can also run the equivalent `uv` command directly:
+
+```bash
 uv sync --group dev --all-packages
 ```
 
-If you are running the full stack via Docker, `uv sync` is optional unless you also run tests/tools on host.
+## The main entrypoints
 
-## Run the stack (recommended)
+In most cases, start with one of these three commands:
+
+* `make frontend-dev`
+* `make api-dev`
+* `make dev-docker` (or `make reboot-docker`)
+
+### `make frontend-dev`
+
+Use this when you are primarily working on the frontend.
+
+This target:
+
+* installs frontend dependencies if needed
+* starts the supporting local services in Docker
+* runs the Vite dev server on the host
+
+The API and supporting services run in Docker, while the frontend runs locally with fast rebuilds.
 
 ```bash
-docker compose up --build
+make frontend-dev
 ```
 
-Or:
+### `make api-dev`
+
+Use this when you are primarily working on the API.
+
+This target:
+
+* starts the supporting local services in Docker
+* runs the FastAPI app on the host with reload enabled
+
+The frontend and supporting services run in Docker, while the API runs locally for a tighter backend loop.
+
+```bash
+make api-dev
+```
+
+### `make dev-docker`
+
+Use this when you want the whole local stack running in Docker.
+
+This is the best choice when you want the most production-like local setup or do not need to run either app directly on the host.
 
 ```bash
 make dev-docker
 ```
 
-Useful local URLs:
+## Which one should I use?
 
-- Frontend: http://localhost:3000
-- API docs: http://localhost:8000/docs
-- Adminer: http://localhost:8081
+A simple rule of thumb:
 
-## Common dev commands
+* changing React/UI code: `make frontend-dev`
+* changing FastAPI/backend code: `make api-dev`
+* validating the whole stack together: `make dev-docker`
 
-Run from repo root.
+## Useful local URLs
+
+Depending on which entrypoint you use, these are the main local endpoints:
+
+* Frontend: `http://localhost:3000`
+* API docs: `http://localhost:8000/docs`
+* Adminer: `http://localhost:8081`
+
+## Other useful targets
+
+You do not need to memorize the whole Makefile, but these are worth knowing.
+
+### `make check`
+
+Runs the main verification suite in one command:
+
+* lint
+* tests
+* format checks
+* lockfile checks
+
+Use this before pushing or when you want a quick confidence pass.
+
+```bash
+make check
+```
+
+### `make clean`
+
+Resets local build artifacts, caches, frontend install/build outputs, and Docker state.
+
+⚠️ **Warning:** this target includes `clean-docker`, which removes Docker containers **and volumes**. This will delete your local database data.
+
+Use this when you want a completely fresh environment.
+
+```bash
+make clean
+```
+
+### `make reboot-docker`
+
+Performs a clean Docker reset and immediately brings the full stack back up with builds.
+
+This is a convenience target for the common “wipe it and restart everything” workflow.
+
+```bash
+make reboot-docker
+```
+
+### `make follow-stack-logs`
+
+Follows logs for the full Docker-based local stack.
+
+Useful when debugging service startup or cross-service interactions.
+
+```bash
+make follow-stack-logs
+```
+
+## Common quality commands
+
+From the repo root:
 
 ```bash
 make lint
 make test
 make format
 make format-check
+make lock-check
 make check
 ```
 
-Python-only:
+## When things get weird
+
+A good escalation path is:
 
 ```bash
-uv run ruff check
-uv run ruff format
-uv run pytest deployments/api
+make check
+make clean
+make reboot-docker
 ```
 
-Frontend-only:
-
-```bash
-npm --prefix deployments/stitch-frontend ci
-npm --prefix deployments/stitch-frontend run dev
-npm --prefix deployments/stitch-frontend run lint
-npm --prefix deployments/stitch-frontend run test:run
-```
-## Reset local DB data
-
-```bash
-docker compose down -v
-docker compose up db api frontend
-```
-
-Or:
-
-```bash
-make clean-docker
-make dev-docker
-```
+That sequence catches most local issues caused by stale caches, stale frontend installs, or stale Docker volumes.

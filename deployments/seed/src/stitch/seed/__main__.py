@@ -1,5 +1,5 @@
 import httpx
-from .client import post_payloads
+from .client import post_payloads, wait_for_api
 from .config import configure_logging, load_config, logger
 from .openapi_validate import OpenAPIRequestValidator
 from .payloads import iter_payloads
@@ -12,6 +12,8 @@ def main() -> None:
     logger.info("Seed starting")
     logger.info("API_BASE_URL=%s", cfg.api_base_url)
     logger.info("FAKER_POST_COUNT=%s", cfg.faker_post_count)
+
+    wait_for_api(cfg.api_base_url)
 
     validator = OpenAPIRequestValidator(cfg.api_base_url, openapi_url=cfg.openapi_url)
     payloads = iter_payloads(
