@@ -1,6 +1,6 @@
 import click
 import uvicorn
-from stitch.api.main import app
+from stitch.entity_linkage.main import app
 
 
 @click.command()

@@ -35,4 +35,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV PATH="/app/.venv/bin:$PATH"
 USER stitch-app
 
-CMD ["uvicorn", "stitch.entity-linkage.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "stitch.entity_linkage.main:app", "--host", "0.0.0.0", "--port", "8000"]

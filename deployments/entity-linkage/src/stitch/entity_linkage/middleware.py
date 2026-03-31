@@ -1,7 +1,7 @@
 from typing import Final
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from stitch.api.settings import Settings
+from stitch.entity_linkage.settings import Settings
 
 ALLOWED_METHODS: Final[tuple[str, ...]] = (
     "GET",
