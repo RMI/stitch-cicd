@@ -32,7 +32,7 @@ jobs:
     uses: ./.github/workflows/deploy-api.yml
     secrets: inherit
     with:
-      full-image-name: ${{ jobs.build_docker_image.outputs.full-image-name }}
+      full-image-name: ${{ needs.build_docker_image.outputs.full-image-name }}
     needs: [build_docker_image]
 
   add-comment:
