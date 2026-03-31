@@ -8,9 +8,10 @@ on:
 jobs:
   deploy-api:
     runs-on: ubuntu-latest
-    # permissions:
-    #   packages: write
-    #   contents: read
+    permissions:
+      id-token: write
+      contents: read
+      packages: read
     timeout-minutes: 25
     # outputs:
     #   full-image-name: ${{ steps.export-output.outputs.full-image-name }}
