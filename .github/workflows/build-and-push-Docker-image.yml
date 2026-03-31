@@ -22,7 +22,7 @@ jobs:
       contents: read
     timeout-minutes: 25
     outputs:
-      full-image-name: ${{ steps.export-output.outputs.full-image-name }}
+      full-image-name: ${{ steps.export-outputs.outputs.full-image-name }}
 
     steps:
       - name: Checkout
