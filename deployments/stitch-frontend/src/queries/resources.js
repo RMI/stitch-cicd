@@ -26,9 +26,9 @@ export const resourceKeys = {
 
 // Query definitions
 export const resourceQueries = {
-  list: (endpoint = "resources", page = DEFAULT_PAGE, page_size = DEFAULT_PAGE_SIZE) => ({
-    queryKey: resourceKeys.list(endpoint, { page, page_size }),
-    queryFn: (fetcher) => getResources(fetcher, endpoint, { page, page_size }),
+  list: (endpoint = "resources", page = DEFAULT_PAGE, page_size = DEFAULT_PAGE_SIZE, filters = {}) => ({
+    queryKey: resourceKeys.list(endpoint, { page, page_size, ...filters }),
+    queryFn: (fetcher) => getResources(fetcher, endpoint, { page, page_size, filters }),
     enabled: false,
     staleTime: DEFAULT_STALE_TIME,
   }),

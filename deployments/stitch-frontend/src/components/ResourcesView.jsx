@@ -11,16 +11,6 @@ import { EMPTY_FILTERS } from "../config/filters";
 import { resourceKeys, DEFAULT_PAGE_SIZE, DEFAULT_PAGE } from "../queries/resources";
 import config from "../config/env";
 
-// OR within a field, AND across fields.
-function applyFilters(resources, filters) {
-  if (!resources) return resources;
-  return resources.filter((resource) =>
-    Object.entries(filters).every(
-      ([field, values]) => !values.length || values.includes(resource[field]),
-    ),
-  );
-}
-
 export default function ResourcesView({ className, endpoint }) {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -33,6 +23,7 @@ export default function ResourcesView({ className, endpoint }) {
     page,
     page_size: pageSize,
     enabled,
+    filters,
   });
 
   const handleFetch = () => {
@@ -43,6 +34,7 @@ export default function ResourcesView({ className, endpoint }) {
   const handleClear = () => {
     queryClient.removeQueries({ queryKey: resourceKeys.lists(endpoint) });
     setEnabled(false);
+    setFilters(EMPTY_FILTERS);
     setSearchParams({});
   };
 
@@ -54,7 +46,10 @@ export default function ResourcesView({ className, endpoint }) {
     setSearchParams({ page: DEFAULT_PAGE, page_size: newSize });
   };
 
-  const filteredData = applyFilters(data?.items, filters);
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+    setSearchParams({ page: DEFAULT_PAGE, page_size: pageSize });
+  };
 
   return (
     <div className={`max-w-4xl mx-auto ${className}`}>
@@ -76,7 +71,7 @@ export default function ResourcesView({ className, endpoint }) {
           <FilterBar
             resources={data?.items}
             filters={filters}
-            onFiltersChange={setFilters}
+            onFiltersChange={handleFiltersChange}
           />
         </div>
       )}
@@ -85,12 +80,12 @@ export default function ResourcesView({ className, endpoint }) {
           Failed to load resources. Check your connection and try again.
         </p>
       )}
-      {!isError && data && filteredData?.length === 0 && (
+      {!isError && data && data.items?.length === 0 && (
         <p className="text-sm text-gray-400">
           No resources match the current filters.
         </p>
       )}
-      <ResourcesTable resources={filteredData} />
+      <ResourcesTable resources={data?.items} />
       {data && (
         <Pagination
           page={page}

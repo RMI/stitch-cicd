@@ -3,9 +3,14 @@ import config from "../config/env";
 export async function getResources(
   fetcher,
   endpoint = "resources",
-  { page = 1, page_size = 50 } = {},
+  { page = 1, page_size = 50, filters = {} } = {},
 ) {
   const params = new URLSearchParams({ page, page_size });
+  for (const [key, values] of Object.entries(filters)) {
+    for (const v of values) {
+      params.append(key, v);
+    }
+  }
   const url = `${config.apiBaseUrl}/${endpoint}/?${params}`;
   const response = await fetcher(url);
   if (!response.ok) {
