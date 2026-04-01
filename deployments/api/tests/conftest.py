@@ -109,12 +109,19 @@ async def async_client(test_user: User) -> AsyncIterator[AsyncClient]:
 @pytest.fixture
 async def integration_engine():
     """In-memory SQLite async engine for integration tests."""
+    from stitch.api.db.model import create_coalesced_view
+
+    non_view_tables = [
+        t for t in StitchBase.metadata.sorted_tables if not t.info.get("is_view")
+    ]
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
         echo=False,
     )
     async with engine.begin() as conn:
-        await conn.run_sync(StitchBase.metadata.create_all)
+        await conn.run_sync(StitchBase.metadata.create_all, tables=non_view_tables)
+    async with engine.begin() as conn:
+        await conn.run_sync(create_coalesced_view)
     yield engine
     await engine.dispose()
 

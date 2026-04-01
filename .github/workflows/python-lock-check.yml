@@ -18,4 +18,4 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Lock check
-        run: make uv-lock-check
+        run: make py-lock-check

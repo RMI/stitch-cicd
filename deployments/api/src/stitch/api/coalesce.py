@@ -11,7 +11,7 @@ from stitch.ogsi.model import (
 from stitch.ogsi.model.og_field import OilGasFieldBase
 from stitch.ogsi.model.types import OGSISrcKey
 
-SRC_PRIORITY = (RMI_SRC, WM_SRC, GEM_SRC, LLM_SRC)
+SRC_PRIORITY = (RMI_SRC, GEM_SRC, WM_SRC, LLM_SRC)
 
 
 type ProvAttrs = dict[str, tuple[Any, OGSISrcKey, int] | None]
@@ -19,6 +19,7 @@ type ProvAttrs = dict[str, tuple[Any, OGSISrcKey, int] | None]
 
 def coalesce_og_field_resource(
     source_data: Sequence[OGFieldSource],
+    priorities: Sequence[OGSISrcKey] = SRC_PRIORITY,
 ) -> tuple[OilGasFieldBase, ProvAttrs]:
     """
     Coalesce all source payloads into a single `OGFieldView`.
@@ -45,7 +46,7 @@ def coalesce_og_field_resource(
     ordered_sources = sorted(
         source_data,
         reverse=True,
-        key=lambda src: SRC_PRIORITY.index(src.source),
+        key=lambda src: priorities.index(src.source),
     )
 
     provenanced_attrs = reduce(

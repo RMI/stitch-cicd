@@ -6,9 +6,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db.model import ResourceModel
-from stitch.api.db.query import DBQuery, Pagination
-from stitch.api.entities import User
+from stitch.api.entities import (
+    OGFieldFilterParams,
+    OGFieldSortParams,
+    PaginationParams,
+    User,
+)
 from tests.factories import ResourceCreateFactory
+
+
+class _QueryParams(PaginationParams, OGFieldFilterParams, OGFieldSortParams):
+    pass
 
 
 class TestCreateResourceActionIntegration:
@@ -98,36 +106,6 @@ class TestGetResourceActionIntegration:
         assert exc_info.value.status_code == 404
 
 
-class TestListResourcesActionIntegration:
-    """Integration tests for resource_actions.get_all() with real database."""
-
-    @pytest.mark.anyio
-    async def test_get_all_returns_sequence(
-        self,
-        seeded_integration_session: AsyncSession,
-        test_user: User,
-        og_create_res_fact: ResourceCreateFactory,
-    ):
-        # create a couple resources
-        await resource_actions.create(
-            session=seeded_integration_session,
-            user=test_user,
-            resource=og_create_res_fact(name="A"),
-        )
-        await resource_actions.create(
-            session=seeded_integration_session,
-            user=test_user,
-            resource=og_create_res_fact(name="B"),
-        )
-
-        results = await resource_actions.get_all(session=seeded_integration_session)
-        assert isinstance(results, (list, tuple))
-        assert len(results) >= 2
-
-        labels = {r.view.name for r in results if r.view is not None}
-        assert {"A", "B"} <= labels
-
-
 class TestResourceQueryAction:
     """Integration tests for resource_actions.query() and count()."""
 
@@ -148,20 +126,20 @@ class TestResourceQueryAction:
 
     @pytest.mark.anyio
     @pytest.mark.parametrize(
-        "query, expected_count",
+        "params_kwargs, expected_count",
         [
             pytest.param(
-                DBQuery(pagination=Pagination(offset=0, limit=2)),
+                {"page": 1, "page_size": 2},
                 2,
                 id="first-page",
             ),
             pytest.param(
-                DBQuery(pagination=Pagination(offset=2, limit=10)),
+                {"page": 2, "page_size": 2},
                 1,
                 id="offset-past-partial",
             ),
             pytest.param(
-                DBQuery(pagination=Pagination(offset=99, limit=10)),
+                {"page": 50, "page_size": 10},
                 0,
                 id="offset-past-end",
             ),
@@ -171,37 +149,25 @@ class TestResourceQueryAction:
         self,
         seeded_integration_session: AsyncSession,
         seeded_resources,
-        query: DBQuery,
+        params_kwargs: dict,
         expected_count: int,
     ):
-        items, total = await resource_actions.query(seeded_integration_session, query)
+        params = _QueryParams(**params_kwargs)
+        items, total = await resource_actions.query(seeded_integration_session, params)
         assert total == 3
         assert len(items) == expected_count
 
     @pytest.mark.anyio
-    async def test_query_empty_table(
-        self,
-        seeded_integration_session: AsyncSession,
-    ):
-        items, total = await resource_actions.query(
-            seeded_integration_session, DBQuery()
-        )
-        assert total == 0
-        assert len(items) == 0
-
-    @pytest.mark.anyio
-    async def test_count(
+    async def test_items_have_data_and_provenance(
         self,
         seeded_integration_session: AsyncSession,
         seeded_resources,
     ):
-        total = await resource_actions.count(seeded_integration_session)
-        assert total == 3
-
-    @pytest.mark.anyio
-    async def test_count_empty_table(
-        self,
-        seeded_integration_session: AsyncSession,
-    ):
-        total = await resource_actions.count(seeded_integration_session)
-        assert total == 0
+        """List items include coalesced data and provenance dict."""
+        params = _QueryParams(page=1, page_size=10)
+        items, _ = await resource_actions.query(seeded_integration_session, params)
+        assert len(items) > 0
+        for item in items:
+            assert item.id is not None
+            assert item.data is not None
+            assert isinstance(item.provenance, dict)
