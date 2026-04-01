@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, within, fireEvent } from "@testing-library/react";
 import { renderWithQueryClient } from "../test/utils";
 import ResourcesView from "./ResourcesView";
 import { useResources } from "../hooks/useResources";
+import { DEFAULT_PAGE_SIZE, DEFAULT_PAGE } from "../queries/resources";
 
 vi.mock("../hooks/useResources");
 
-const mockResourceData = [
+const mockItems = [
   {
     id: 1,
     data: {
@@ -37,6 +38,14 @@ const mockResourceData = [
     },
   },
 ];
+
+const mockResourceData = {
+  items: mockItems,
+  page: DEFAULT_PAGE,
+  page_size: DEFAULT_PAGE_SIZE,
+  total_count: 2,
+  total_pages: 1,
+};
 
 const defaultHookReturn = {
   data: undefined,
@@ -165,5 +174,192 @@ describe("ResourcesView", () => {
     expect(
       screen.getByRole("button", { name: /clear cache/i }),
     ).not.toBeDisabled();
+  });
+
+  describe("pagination", () => {
+    it("does not render pagination when only one page", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: mockResourceData,
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      expect(screen.queryByLabelText("Previous page")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Next page")).not.toBeInTheDocument();
+    });
+
+    it("renders pagination when multiple pages exist", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: { ...mockResourceData, total_pages: 5, total_count: 250 },
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      expect(screen.getByLabelText("Previous page")).toBeInTheDocument();
+      expect(screen.getByLabelText("Next page")).toBeInTheDocument();
+    });
+
+    it("disables previous button on first page", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: { ...mockResourceData, total_pages: 3, total_count: 150 },
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      expect(screen.getByLabelText("Previous page")).toBeDisabled();
+      expect(screen.getByLabelText("Next page")).not.toBeDisabled();
+    });
+
+    it("shows correct item range", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: { ...mockResourceData, total_pages: 3, total_count: 150 },
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      expect(
+        screen.getByText(`Showing 1–${DEFAULT_PAGE_SIZE} of 150`),
+      ).toBeInTheDocument();
+    });
+
+    it("renders page size selector", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: { ...mockResourceData, total_pages: 3, total_count: 150 },
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      expect(screen.getByLabelText("Per page:")).toBeInTheDocument();
+    });
+
+    it("calls useResources with page, page_size, filters, and sort params", () => {
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      expect(useResources).toHaveBeenCalledWith(
+        ENDPOINT,
+        expect.objectContaining({
+          page: DEFAULT_PAGE,
+          page_size: DEFAULT_PAGE_SIZE,
+          filters: expect.any(Object),
+          sort_by: undefined,
+          sort_order: undefined,
+        }),
+      );
+    });
+
+    it("passes updated page_size to useResources when changed", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: { ...mockResourceData, total_pages: 3, total_count: 150 },
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      fireEvent.change(screen.getByLabelText("Per page:"), {
+        target: { value: "25" },
+      });
+
+      expect(useResources).toHaveBeenLastCalledWith(
+        ENDPOINT,
+        expect.objectContaining({ page: DEFAULT_PAGE, page_size: 25 }),
+      );
+    });
+  });
+
+  describe("sorting", () => {
+    it("passes sort_by and sort_order to useResources when a column header is clicked", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: mockResourceData,
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      // scope to the table to avoid matching the FilterBar's Basin dropdown button
+      const table = screen.getByRole("table");
+      fireEvent.click(within(table).getByRole("button", { name: /^basin/i }));
+
+      expect(useResources).toHaveBeenLastCalledWith(
+        ENDPOINT,
+        expect.objectContaining({ sort_by: "basin", sort_order: "asc" }),
+      );
+    });
+
+    it("toggles sort_order to desc on second click of same column", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: mockResourceData,
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      const table = screen.getByRole("table");
+      fireEvent.click(within(table).getByRole("button", { name: /^basin/i }));
+      fireEvent.click(within(table).getByRole("button", { name: /^basin/i }));
+
+      expect(useResources).toHaveBeenLastCalledWith(
+        ENDPOINT,
+        expect.objectContaining({ sort_by: "basin", sort_order: "desc" }),
+      );
+    });
+  });
+
+  describe("filtering", () => {
+    it("passes active filters to useResources", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: mockResourceData,
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      // open the Region dropdown and check "Middle East"
+      fireEvent.click(
+        within(screen.getByTestId("filter-bar")).getByRole("button", {
+          name: /region/i,
+        }),
+      );
+      fireEvent.click(screen.getByRole("checkbox", { name: /middle east/i }));
+
+      expect(useResources).toHaveBeenLastCalledWith(
+        ENDPOINT,
+        expect.objectContaining({
+          filters: expect.objectContaining({ region: ["Middle East"] }),
+        }),
+      );
+    });
+
+    it("resets filters when Clear Cache is clicked", () => {
+      vi.mocked(useResources).mockReturnValue({
+        ...defaultHookReturn,
+        data: mockResourceData,
+      });
+
+      renderWithQueryClient(<ResourcesView endpoint={ENDPOINT} />);
+
+      fireEvent.click(
+        within(screen.getByTestId("filter-bar")).getByRole("button", {
+          name: /region/i,
+        }),
+      );
+      fireEvent.click(screen.getByRole("checkbox", { name: /middle east/i }));
+      fireEvent.click(screen.getByRole("button", { name: /clear cache/i }));
+
+      expect(useResources).toHaveBeenLastCalledWith(
+        ENDPOINT,
+        expect.objectContaining({
+          filters: expect.objectContaining({
+            region: [],
+            basin: [],
+            state_province: [],
+          }),
+        }),
+      );
+    });
   });
 });

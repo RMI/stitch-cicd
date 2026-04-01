@@ -24,9 +24,59 @@ describe("API Functions", () => {
       const result = await getResources(mockFetcher);
 
       expect(mockFetcher).toHaveBeenCalledWith(
-        "http://localhost:8000/api/v1/resources/",
+        "http://localhost:8000/api/v1/resources/?page=1&page_size=50",
       );
       expect(result).toEqual(mockResources);
+    });
+
+    it("appends filter values as repeated query params", async () => {
+      mockFetcher.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => [],
+      });
+
+      await getResources(mockFetcher, "resources", {
+        filters: { basin: ["Arabian", "Permian"], region: ["Middle East"] },
+      });
+
+      const calledUrl = mockFetcher.mock.calls[0][0];
+      const url = new URL(calledUrl);
+      expect(url.searchParams.getAll("basin")).toEqual(["Arabian", "Permian"]);
+      expect(url.searchParams.getAll("region")).toEqual(["Middle East"]);
+    });
+
+    it("appends sort_by and sort_order to the URL", async () => {
+      mockFetcher.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => [],
+      });
+
+      await getResources(mockFetcher, "resources", {
+        sort_by: "basin",
+        sort_order: "desc",
+      });
+
+      const calledUrl = mockFetcher.mock.calls[0][0];
+      const url = new URL(calledUrl);
+      expect(url.searchParams.get("sort_by")).toBe("basin");
+      expect(url.searchParams.get("sort_order")).toBe("desc");
+    });
+
+    it("omits sort params when not provided", async () => {
+      mockFetcher.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => [],
+      });
+
+      await getResources(mockFetcher);
+
+      const calledUrl = mockFetcher.mock.calls[0][0];
+      const url = new URL(calledUrl);
+      expect(url.searchParams.has("sort_by")).toBe(false);
+      expect(url.searchParams.has("sort_order")).toBe(false);
     });
 
     it("throws error when response is not ok", async () => {
