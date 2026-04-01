@@ -5,9 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db import og_field_source_actions as source_actions
-from stitch.api.db.query import DBQuery, Pagination
-from stitch.api.entities import User
+from stitch.api.entities import (
+    OGFieldFilterParams,
+    OGFieldSortParams,
+    PaginationParams,
+    User,
+)
 from tests.factories import ResourceCreateFactory
+
+
+class _QueryParams(PaginationParams, OGFieldFilterParams, OGFieldSortParams):
+    pass
 
 
 class TestSourceQueryAction:
@@ -34,8 +42,8 @@ class TestSourceQueryAction:
         seeded_integration_session: AsyncSession,
         seeded_sources,
     ):
-        q = DBQuery(pagination=Pagination(offset=0, limit=2))
-        items, total = await source_actions.query(seeded_integration_session, q)
+        params = _QueryParams(page=1, page_size=2)
+        items, total = await source_actions.query(seeded_integration_session, params)
 
         assert total > 0
         assert len(items) == min(2, total)
@@ -45,23 +53,8 @@ class TestSourceQueryAction:
         self,
         seeded_integration_session: AsyncSession,
     ):
-        items, total = await source_actions.query(seeded_integration_session, DBQuery())
+        items, total = await source_actions.query(
+            seeded_integration_session, _QueryParams()
+        )
         assert total == 0
         assert len(items) == 0
-
-    @pytest.mark.anyio
-    async def test_count(
-        self,
-        seeded_integration_session: AsyncSession,
-        seeded_sources,
-    ):
-        total = await source_actions.count(seeded_integration_session)
-        assert total > 0
-
-    @pytest.mark.anyio
-    async def test_count_empty_table(
-        self,
-        seeded_integration_session: AsyncSession,
-    ):
-        total = await source_actions.count(seeded_integration_session)
-        assert total == 0

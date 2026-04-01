@@ -1,6 +1,16 @@
 from math import ceil
 from datetime import datetime
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr, Field, computed_field
+
+from stitch.ogsi.model.types import (
+    FieldStatus,
+    LocationType,
+    OGSISrcKey,
+    PrimaryHydrocarbonGroup,
+    ProductionConventionality,
+)
 
 
 class Timestamped(BaseModel):
@@ -27,6 +37,14 @@ class PaginationParams(BaseModel):
     page: int = Field(1, ge=1)
     page_size: int = Field(50, ge=1, le=200)
 
+    @property
+    def offset(self) -> int:
+        return (self.page - 1) * self.page_size
+
+    @property
+    def limit(self) -> int:
+        return self.page_size
+
 
 class PaginatedResponse[T](BaseModel):
     items: list[T]
@@ -38,3 +56,48 @@ class PaginatedResponse[T](BaseModel):
     @property
     def total_pages(self) -> int:
         return ceil(self.total_count / self.page_size)
+
+
+SortableField = Literal[
+    "name",
+    "name_local",
+    "basin",
+    "state_province",
+    "region",
+    "id",
+    "country",
+    "source",
+    "field_status",
+    "location_type",
+    "production_conventionality",
+    "primary_hydrocarbon_group",
+    "discovery_year",
+    "production_start_year",
+    "fid_year",
+    "latitude",
+    "longitude",
+]
+
+
+class OGFieldFilterParams(BaseModel):
+    q: str | None = None
+    id: int | None = None
+    name: str | None = None
+    name_local: str | None = None
+    basin: str | None = None
+    state_province: str | None = None
+    region: str | None = None
+    country: str | None = None
+    field_status: FieldStatus | None = None
+    location_type: LocationType | None = None
+    production_conventionality: ProductionConventionality | None = None
+    primary_hydrocarbon_group: PrimaryHydrocarbonGroup | None = None
+
+
+class OGFieldSortParams(BaseModel):
+    sort_by: SortableField = "name"
+    sort_order: Literal["asc", "desc"] = "asc"
+
+
+class OGFieldQueryParams(PaginationParams, OGFieldFilterParams, OGFieldSortParams):
+    source: OGSISrcKey | None = None

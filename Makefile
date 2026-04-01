@@ -122,19 +122,6 @@ stack-api-dev:
 		up --build \
 		-d
 
-frontend-dev: $(FRONTEND_INSTALL_STAMP) stack-frontend-dev
-	VITE_API_URL=http://localhost:8000/api/v1 \
-	$(NPM) run dev
-
-stack-frontend-dev:
-	SEED_API_BASE_URL=http://api:8000/api/v1 \
-	$(DOCKER_COMPOSE_DEV) \
-		--profile api \
-		--profile tools \
-		--profile seed \
-		up --build \
-		-d
-
 # ---------------------------------------------------------------------
 # stitch-frontend
 # ---------------------------------------------------------------------
@@ -159,6 +146,19 @@ FRONTEND_BUILD_INPUTS := \
 	$(FRONTEND_INSTALL_INPUTS)
 
 frontend: frontend-build
+
+frontend-dev: $(FRONTEND_INSTALL_STAMP) stack-frontend-dev
+	VITE_API_URL=http://localhost:8000/api/v1 \
+	$(NPM) run dev
+
+stack-frontend-dev:
+	SEED_API_BASE_URL=http://api:8000/api/v1 \
+	$(DOCKER_COMPOSE_DEV) \
+		--profile api \
+		--profile tools \
+		--profile seed \
+		up --build \
+		-d
 
 # --- install deps (keyed off lockfile) ---
 frontend-install: $(FRONTEND_INSTALL_STAMP)

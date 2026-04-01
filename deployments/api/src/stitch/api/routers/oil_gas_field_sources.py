@@ -8,8 +8,10 @@ from stitch.ogsi.model import OGFieldSource
 from stitch.api.auth import CurrentUser
 from stitch.api.db import og_field_source_actions
 from stitch.api.db.config import UnitOfWorkDep
-from stitch.api.entities import PaginatedResponse, PaginationParams
-from stitch.api.db.query import DBQuery, pagination_to_db
+from stitch.api.entities import (
+    OGFieldQueryParams,
+    PaginatedResponse,
+)
 
 router = APIRouter(prefix="/oil-gas-field-sources", tags=["oil_gas_field_sources"])
 
@@ -41,17 +43,16 @@ async def create_oil_gas_field_source(
 async def query_oil_gas_field_sources(
     uow: UnitOfWorkDep,
     user: CurrentUser,
-    pagination: Annotated[PaginationParams, Query()],
+    params: Annotated[OGFieldQueryParams, Query()],
 ) -> PaginatedResponse[OGFieldSource]:
-    db_query = DBQuery(pagination=pagination_to_db(pagination))
     items, total_count = await og_field_source_actions.query(
-        session=uow.session, db_query=db_query
+        session=uow.session, params=params
     )
     return PaginatedResponse(
         items=list(items),
         total_count=total_count,
-        page=pagination.page,
-        page_size=pagination.page_size,
+        page=params.page,
+        page_size=params.page_size,
     )
 
 
