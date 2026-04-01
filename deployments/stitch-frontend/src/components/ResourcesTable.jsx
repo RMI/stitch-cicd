@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import SourceMixBar from "./SourceMixBar";
 
@@ -38,31 +37,6 @@ function getField(resource, key) {
   return resource?.data?.[key] ?? null;
 }
 
-// Pure sort utility — accepts the sort config object so it can be
-// reused / moved server-side when pagination is introduced.
-function applySort(data, sortConfig) {
-  if (!sortConfig.column) return data;
-
-  const col = COLUMNS.find((c) => c.key === sortConfig.column);
-  if (!col?.sortable) return data;
-
-  return [...data].sort((a, b) => {
-    const aVal = getField(a, sortConfig.column);
-    const bVal = getField(b, sortConfig.column);
-
-    // Nulls always last, regardless of direction
-    if (aVal == null && bVal == null) return 0;
-    if (aVal == null) return 1;
-    if (bVal == null) return -1;
-
-    const cmp =
-      col.sortType === "number"
-        ? aVal - bVal
-        : String(aVal).localeCompare(String(bVal));
-
-    return sortConfig.direction === "asc" ? cmp : -cmp;
-  });
-}
 
 function SortIndicator({ column, sortConfig }) {
   if (sortConfig.column !== column) {
@@ -75,25 +49,20 @@ function SortIndicator({ column, sortConfig }) {
   );
 }
 
-export default function ResourcesTable({ resources }) {
-  // sortConfig is isolated here for now; lift to parent + pass as prop
-  // when server-side sort params are needed for pagination.
-  const [sortConfig, setSortConfig] = useState({
-    column: null,
-    direction: "asc",
-  });
-
+export default function ResourcesTable({ resources, sortConfig, onSort }) {
   if (!resources?.length) return null;
 
   function handleSort(key) {
-    setSortConfig((prev) => ({
+    onSort({
       column: key,
       direction:
-        prev.column === key && prev.direction === "asc" ? "desc" : "asc",
-    }));
+        sortConfig.column === key && sortConfig.direction === "asc"
+          ? "desc"
+          : "asc",
+    });
   }
 
-  const sorted = applySort(resources, sortConfig);
+  const sorted = resources;
 
   return (
     <div className="overflow-x-auto">

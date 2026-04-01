@@ -18,12 +18,15 @@ export default function ResourcesView({ className, endpoint }) {
   const pageSize = Number(searchParams.get("page_size") ?? DEFAULT_PAGE_SIZE);
   const [enabled, setEnabled] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [sortConfig, setSortConfig] = useState({ column: null, direction: "asc" });
 
   const { data, isLoading, isError, refetch } = useResources(endpoint, {
     page,
     page_size: pageSize,
     enabled,
     filters,
+    sort_by: sortConfig.column ?? undefined,
+    sort_order: sortConfig.column ? sortConfig.direction : undefined,
   });
 
   const handleFetch = () => {
@@ -48,6 +51,11 @@ export default function ResourcesView({ className, endpoint }) {
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
+    setSearchParams({ page: DEFAULT_PAGE, page_size: pageSize });
+  };
+
+  const handleSortChange = (newSortConfig) => {
+    setSortConfig(newSortConfig);
     setSearchParams({ page: DEFAULT_PAGE, page_size: pageSize });
   };
 
@@ -85,7 +93,11 @@ export default function ResourcesView({ className, endpoint }) {
           No resources match the current filters.
         </p>
       )}
-      <ResourcesTable resources={data?.items} />
+      <ResourcesTable
+        resources={data?.items}
+        sortConfig={sortConfig}
+        onSort={handleSortChange}
+      />
       {data && (
         <Pagination
           page={page}

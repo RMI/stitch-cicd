@@ -10,10 +10,10 @@ const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === "true";
 //--------------------------------
 function useResourcesReal(
   endpoint = "resources",
-  { page = DEFAULT_PAGE, page_size = DEFAULT_PAGE_SIZE, enabled = false, filters = {} } = {},
+  { page = DEFAULT_PAGE, page_size = DEFAULT_PAGE_SIZE, enabled = false, filters = {}, sort_by, sort_order } = {},
 ) {
   return useAuthenticatedQuery({
-    ...resourceQueries.list(endpoint, page, page_size, filters),
+    ...resourceQueries.list(endpoint, page, page_size, filters, sort_by, sort_order),
     enabled,
   });
 }
