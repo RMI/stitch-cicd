@@ -1,15 +1,15 @@
 from contextlib import asynccontextmanager
-from fastapi import APIRouter, FastAPI, Request
-from fastapi.responses import JSONResponse
-from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
+from fastapi import APIRouter, FastAPI
 from .middleware import register_middlewares
 from .auth import validate_auth_config_at_startup
 from .settings import get_settings
 
 from .routers.health import router as health_router
+from .routers.start import router as start_router
 
 base_router = APIRouter(prefix="/api/v1")
 base_router.include_router(health_router)
+base_router.include_router(start_router)
 
 
 @asynccontextmanager

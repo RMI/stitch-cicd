@@ -7,6 +7,7 @@ authors = [{ name = "Michael Barlow", email = "mbarlow@rmi.org" }]
 requires-python = ">=3.12.12"
 dependencies = [
   "fastapi[standard]>=0.124.0",
+  "httpx>=0.28.0",
   "pydantic-settings>=2.12.0",
   "stitch-auth",
   "stitch-models",
