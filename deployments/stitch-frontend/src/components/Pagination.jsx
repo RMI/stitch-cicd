@@ -4,7 +4,11 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 // Each slot is { page, visible, ellipsis }
 function getSlots(currentPage, totalPages) {
   const slot = (page, visible = true) => ({ page, visible, ellipsis: false });
-  const ellipsis = (visible = true) => ({ page: null, visible, ellipsis: true });
+  const ellipsis = (visible = true) => ({
+    page: null,
+    visible,
+    ellipsis: true,
+  });
 
   // Near the start: 1 2 3 4 5 … last
   if (currentPage <= 4) {
@@ -33,7 +37,15 @@ function getSlots(currentPage, totalPages) {
   }
 
   // Middle: 1 … prev current next … last
-  return [slot(1), ellipsis(), slot(currentPage - 1), slot(currentPage), slot(currentPage + 1), ellipsis(), slot(totalPages)];
+  return [
+    slot(1),
+    ellipsis(),
+    slot(currentPage - 1),
+    slot(currentPage),
+    slot(currentPage + 1),
+    ellipsis(),
+    slot(totalPages),
+  ];
 }
 
 const pageButtonBase =
@@ -84,7 +96,7 @@ export default function Pagination({
                 onClick={() => slot.visible && onPageChange(slot.page)}
                 aria-current={slot.page === page ? "page" : undefined}
                 style={{ visibility: slot.visible ? "visible" : "hidden" }}
-                tabIndex={slot.visible ? 0 : -1}  // focusable if visible
+                tabIndex={slot.visible ? 0 : -1} // focusable if visible
                 className={`${pageButtonBase} ${
                   slot.page === page
                     ? "bg-blue-600 text-white"

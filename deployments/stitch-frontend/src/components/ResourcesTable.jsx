@@ -37,7 +37,6 @@ function getField(resource, key) {
   return resource?.data?.[key] ?? null;
 }
 
-
 function SortIndicator({ column, sortConfig }) {
   if (sortConfig.column !== column) {
     return <span className="ml-1 text-gray-medium">⬍</span>;

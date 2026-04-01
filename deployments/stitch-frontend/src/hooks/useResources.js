@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuthenticatedQuery } from "./useAuthenticatedQuery";
-import { resourceQueries, resourceKeys, DEFAULT_PAGE_SIZE, DEFAULT_PAGE } from "../queries/resources";
+import {
+  resourceQueries,
+  resourceKeys,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_PAGE,
+} from "../queries/resources";
 import mockResources from "../mockData/og_field_resources.json";
 
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === "true";
@@ -10,10 +15,24 @@ const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === "true";
 //--------------------------------
 function useResourcesReal(
   endpoint = "resources",
-  { page = DEFAULT_PAGE, page_size = DEFAULT_PAGE_SIZE, enabled = false, filters = {}, sort_by, sort_order } = {},
+  {
+    page = DEFAULT_PAGE,
+    page_size = DEFAULT_PAGE_SIZE,
+    enabled = false,
+    filters = {},
+    sort_by,
+    sort_order,
+  } = {},
 ) {
   return useAuthenticatedQuery({
-    ...resourceQueries.list(endpoint, page, page_size, filters, sort_by, sort_order),
+    ...resourceQueries.list(
+      endpoint,
+      page,
+      page_size,
+      filters,
+      sort_by,
+      sort_order,
+    ),
     enabled,
   });
 }

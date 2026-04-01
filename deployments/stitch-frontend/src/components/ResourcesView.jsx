@@ -8,7 +8,11 @@ import ResourcesTable from "./ResourcesTable";
 import FilterBar from "./FilterBar";
 import Pagination from "./Pagination";
 import { EMPTY_FILTERS } from "../config/filters";
-import { resourceKeys, DEFAULT_PAGE_SIZE, DEFAULT_PAGE } from "../queries/resources";
+import {
+  resourceKeys,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_PAGE,
+} from "../queries/resources";
 import config from "../config/env";
 
 export default function ResourcesView({ className, endpoint }) {
@@ -18,7 +22,10 @@ export default function ResourcesView({ className, endpoint }) {
   const pageSize = Number(searchParams.get("page_size") ?? DEFAULT_PAGE_SIZE);
   const [enabled, setEnabled] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [sortConfig, setSortConfig] = useState({ column: null, direction: "asc" });
+  const [sortConfig, setSortConfig] = useState({
+    column: null,
+    direction: "asc",
+  });
 
   const { data, isLoading, isError, refetch } = useResources(endpoint, {
     page,
