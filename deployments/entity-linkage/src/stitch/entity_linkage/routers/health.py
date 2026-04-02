@@ -8,4 +8,6 @@ router = APIRouter()
 
 @router.get("/health")
 async def check_health():
-    return JSONResponse({"service": "entity_linkage", "status": "ok"}, status_code=HTTP_200_OK)
+    return JSONResponse(
+        {"service": "entity_linkage", "status": "ok"}, status_code=HTTP_200_OK
+    )

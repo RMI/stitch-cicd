@@ -5,6 +5,7 @@ from typing import Annotated, ClassVar
 from pydantic import AfterValidator, HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Environment(StrEnum):
     DEV = "dev"
     TEST = "test"
@@ -34,6 +35,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
 
 @lru_cache
 def get_settings() -> Settings:

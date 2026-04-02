@@ -45,7 +45,9 @@ def _extract_user_label(user: User) -> str:
     return user.name or user.email or user.sub
 
 
-def _group_duplicate_names(items: list[FieldCandidate]) -> dict[str, list[FieldCandidate]]:
+def _group_duplicate_names(
+    items: list[FieldCandidate],
+) -> dict[str, list[FieldCandidate]]:
     grouped: dict[str, list[FieldCandidate]] = defaultdict(list)
     for item in items:
         if item.normalized_name is None:
@@ -149,7 +151,9 @@ async def start(
         relay_mode="transparent",
         pages_fetched=pages_fetched,
         total_records_fetched=len(items),
-        duplicate_name_candidate_count=sum(len(group) for group in duplicate_groups.values()),
+        duplicate_name_candidate_count=sum(
+            len(group) for group in duplicate_groups.values()
+        ),
         detail_records_fetched=detail_records_fetched,
         match_groups=[group.ids for group in match_groups],
         merge_results=merge_results,
