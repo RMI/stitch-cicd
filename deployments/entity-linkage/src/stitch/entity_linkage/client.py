@@ -66,6 +66,59 @@ class StitchApiClient:
         self._raise_for_status(response, "GET /oil-gas-fields/")
         return response.json()
 
+
+
+    async def collect_oil_gas_fields(
+        self,
+        *,
+        start_page: int = 1,
+        page_size: int = 50,
+        max_pages: int = 5,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """
+        Fetch multiple pages and flatten them into a single list.
+
+        Returns:
+        - flattened items
+        - number of pages fetched
+
+        TODO:
+        - once the API pagination contract is finalized, tighten the stop logic
+        - later stream directly into local persistence instead of building a list
+        """
+        items: list[dict[str, Any]] = []
+        pages_fetched = 0
+
+        for page in range(start_page, start_page + max_pages):
+            payload = await self.list_oil_gas_fields(page=page, page_size=page_size)
+            page_items = self._extract_items(payload)
+            pages_fetched += 1
+
+            if not page_items:
+                break
+
+            items.extend(page_items)
+
+            if len(page_items) < page_size:
+                break
+
+        return items, pages_fetched
+
+    @staticmethod
+    def _extract_items(
+        payload: dict[str, Any] | list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        if isinstance(payload, list):
+            return payload
+
+        items = payload.get("items")
+        if isinstance(items, list):
+            return items
+
+        return []
+
+
+
     async def post_merge(
         self,
         *,

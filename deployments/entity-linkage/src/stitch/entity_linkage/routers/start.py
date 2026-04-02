@@ -24,29 +24,29 @@ class StartRequest(BaseModel):
     )
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=50, ge=1, le=200)
+    max_pages: int = Field(
+        default=5,
+        ge=1,
+        le=100,
+        description="Maximum number of pages to fetch in this run.",
+    )
 
 
 class StartResponse(BaseModel):
     initiated_by: str
     apply_merges: bool
     relay_mode: str
-    downstream_preview_count: int
-    downstream_payload: dict[str, Any] | list[dict[str, Any]]
+    pages_fetched: int
+    total_records_fetched: int
+    preview_items: list[dict[str, Any]]
 
 
 def _extract_user_label(user: User) -> str:
     return user.name or user.email or user.sub
 
 
-def _preview_count(payload: dict[str, Any] | list[dict[str, Any]]) -> int:
-    if isinstance(payload, list):
-        return len(payload)
-
-    items = payload.get("items")
-    if isinstance(items, list):
-        return len(items)
-
-    return 0
+def _preview_items(items: list[dict[str, Any]], limit: int = 5) -> list[dict[str, Any]]:
+    return items[:limit]
 
 
 @router.post("/start", response_model=StartResponse)
@@ -65,9 +65,10 @@ async def start(
     """
     try:
         async with StitchApiClient(auth_context=auth_context) as client:
-            downstream_payload = await client.list_oil_gas_fields(
-                page=request.page,
+            items, pages_fetched = await client.collect_oil_gas_fields(
+                start_page=request.page,
                 page_size=request.page_size,
+                max_pages=request.max_pages,
             )
     except StitchAPIError as exc:
         raise HTTPException(
@@ -79,6 +80,7 @@ async def start(
         initiated_by=_extract_user_label(auth_context.user),
         apply_merges=request.apply_merges,
         relay_mode="transparent",
-        downstream_preview_count=_preview_count(downstream_payload),
-        downstream_payload=downstream_payload,
+        pages_fetched=pages_fetched,
+        total_records_fetched=len(items),
+        preview_items=_preview_items(items),
     )
