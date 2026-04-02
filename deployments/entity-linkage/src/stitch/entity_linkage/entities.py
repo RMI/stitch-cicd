@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from math import ceil
 from datetime import datetime
+from math import ceil
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, computed_field
@@ -19,13 +19,6 @@ class Timestamped(BaseModel):
     updated: datetime = Field(default_factory=datetime.now)
 
 
-# The sources will come in and be initially stored in a raw table.
-# That raw table will be an append-only table.
-# We'll translate that data into one of the below structures, so each source will have a `UUID` or similar that
-# references their id in the "raw" table.
-# When pulling into the internal "sources" table, each will get a new unique id which is what the memberships will reference
-
-
 class User(BaseModel):
     id: int = Field(...)
     sub: str = Field(...)
@@ -39,10 +32,39 @@ class RequestAuthContext:
     """
     Request-scoped auth context for transparent relay.
 
-    TODO: replace raw bearer-token relay with downstream machine/OBO auth.
+    TODO:
+    - replace raw bearer-token relay with downstream machine/OBO auth
+    - keep user attribution/provenance as separate metadata
     """
+
     user: User
     bearer_token: str | None
+
+
+class FieldCandidate(BaseModel):
+    id: int
+    name: str | None = None
+    country: str | None = None
+
+    @computed_field
+    @property
+    def normalized_name(self) -> str | None:
+        if self.name is None:
+            return None
+        normalized = self.name.strip().casefold()
+        return normalized or None
+
+
+class FieldDetailCandidate(BaseModel):
+    id: int
+    name: str | None = None
+    country: str | None = None
+
+
+class MatchGroup(BaseModel):
+    ids: list[int]
+    normalized_name: str
+    country: str
 
 
 class PaginationParams(BaseModel):
