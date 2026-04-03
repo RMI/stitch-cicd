@@ -7,8 +7,10 @@ import { LogoutButton } from "./components/LogoutButton";
 function App() {
   return (
     <div className="min-h-screen w-screen bg-white p-8">
-      <Link to="/">Home</Link>
-      <Link to="/entity-linkage">Entity Linkage</Link>
+      <nav className="flex gap-4 mb-4" aria-label="Primary">
+        <Link to="/">Home</Link>
+        <Link to="/entity-linkage">Entity Linkage</Link>
+      </nav>
       <div className="max-w-4xl mx-auto flex justify-end mb-4">
         <LogoutButton />
       </div>
