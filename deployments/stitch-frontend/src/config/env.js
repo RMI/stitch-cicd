@@ -21,6 +21,8 @@ function loadConfig() {
       audience: import.meta.env.VITE_AUTH0_AUDIENCE,
     }),
     apiBaseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1",
+    entityLinkageBaseUrl:
+      import.meta.env.VITE_ENTITY_LINKAGE_URL || "http://localhost:8001/api/v1",
   });
 }
 

@@ -119,6 +119,7 @@ stack-api-dev:
 		--profile frontend \
 		--profile tools \
 		--profile seed \
+		--profile friends \
 		up --build \
 		-d
 
@@ -157,6 +158,7 @@ stack-frontend-dev:
 		--profile api \
 		--profile tools \
 		--profile seed \
+		--profile friends \
 		up --build \
 		-d
 
