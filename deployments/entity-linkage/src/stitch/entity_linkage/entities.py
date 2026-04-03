@@ -32,7 +32,7 @@ class RequestAuthContext:
     """
     Request-scoped auth context for transparent relay.
 
-    TODO:
+    not implemented:
     - replace raw bearer-token relay with downstream machine/OBO auth
     - keep user attribution/provenance as separate metadata
     """

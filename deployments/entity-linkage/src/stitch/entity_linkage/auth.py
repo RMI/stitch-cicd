@@ -57,8 +57,6 @@ def _extract_bearer_token_from_request(request: Request) -> str | None:
 
     This exists separately from JWT validation so that downstream callers can
     relay the original token when operating in transparent-relay mode.
-
-    TODO: replace transparent relay with proper downstream machine/OBO auth.
     """
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -74,8 +72,6 @@ def _extract_bearer_token_from_request(request: Request) -> str | None:
 def _dev_bearer_token() -> str:
     """
     Placeholder token used only when auth is disabled in local development.
-
-    TODO: once machine auth exists, remove the need for any fake bearer value.
     """
     return "dev-placeholder-token"
 
@@ -146,9 +142,6 @@ Claims = Annotated[TokenClaims, Depends(get_token_claims)]
 async def get_current_user(claims: Claims) -> User:
     """
     Resolve validated token claims to a lightweight request user.
-
-    TODO: when entity-linkage has its own persistence model, replace this with
-    a real lookup / JIT-provisioning flow if needed.
     """
     if get_settings().auth_disabled:
         return User(
@@ -172,10 +165,6 @@ async def get_request_auth_context(
 
     In the current transparent-relay model, this includes the caller's raw
     bearer token so entity-linkage can call Stitch API on the caller's behalf.
-
-    TODO:
-    - replace bearer-token relay with downstream token acquisition
-    - add explicit audit/provenance headers, e.g. initiated-by user metadata
     """
     if get_settings().auth_disabled:
         bearer_token = _dev_bearer_token()

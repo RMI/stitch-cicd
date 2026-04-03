@@ -111,7 +111,7 @@ async def start(
     - confirm same-country matches
     - optionally POST merge operations
 
-    TODO:
+    Not implemented:
     - add concurrency controls for detail fetches
     - add stronger second-phase inspection beyond country equality
     - add machine/OBO auth for downstream API calls

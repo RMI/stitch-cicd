@@ -16,9 +16,6 @@ from stitch.entity_linkage.settings import get_settings
 def _get_api_base_url() -> str:
     """
     Resolve the downstream Stitch API base URL.
-
-    TODO:
-    - standardize the exact setting name once the deployment contract settles
     """
     settings = get_settings()
     return (
@@ -50,10 +47,6 @@ class StitchApiClient:
         if self._auth_context.bearer_token:
             headers["Authorization"] = f"Bearer {self._auth_context.bearer_token}"
 
-        # TODO:
-        # - add provenance headers separately from auth
-        # - e.g. initiated-by user metadata
-        # - replace transparent relay with machine/OBO auth later
         return headers
 
     async def list_oil_gas_fields_page(
