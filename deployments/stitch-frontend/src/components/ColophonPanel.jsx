@@ -61,11 +61,12 @@ export default function ColophonPanel() {
       "Build Info": {
         Environment: config.appEnv,
         "API Base URL": config.apiBaseUrl,
-        "App Version": getEnvValue("VITE_APP_VERSION"),
-        "Build ID": getEnvValue("VITE_BUILD_ID"),
-        "Git SHA": getEnvValue("VITE_GIT_SHA").slice(0, 7),
-        "Node Version": getEnvValue("VITE_NODE_VERSION"),
-        "Vite Version": getEnvValue("VITE_VERSION"),
+        "App Version": config.build.appVersion,
+        "Build ID": config.build.buildId,
+        "Git SHA": config.build.gitSha.slice(0, 7),
+        "Node Version": config.build.nodeVersion,
+        "Vite Version": config.build.viteVersion,
+        "Build Time": config.build.buildTime,
       },
       "Runtime Info": {
         "User Agent": systemInfo.userAgent,
