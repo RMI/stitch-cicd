@@ -11,7 +11,7 @@ from stitch.auth import JWTValidator, OIDCSettings, TokenClaims
 from stitch.auth.errors import AuthError, JWKSFetchError
 
 from stitch.entity_linkage.entities import RequestAuthContext, User
-from stitch.entity_linkage.settings import Environment, get_settings
+from stitch.entity_linkage.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +39,14 @@ _bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def validate_auth_config_at_startup() -> None:
-    """Called from FastAPI lifespan. Fail fast if misconfigured."""
     settings = get_settings()
+
     if settings.auth_disabled:
-        if settings.environment != Environment.DEV:
-            raise RuntimeError(
-                "AUTH_DISABLED=true is only permitted when ENVIRONMENT=dev"
-            )
         logger.warning("Auth is disabled — all requests use dev credentials")
         return
-    get_oidc_settings()  # fail fast if required OIDC fields missing
+
+    # fail fast if OIDC config is invalid
+    get_oidc_settings()
 
 
 def _extract_bearer_token_from_request(request: Request) -> str | None:
