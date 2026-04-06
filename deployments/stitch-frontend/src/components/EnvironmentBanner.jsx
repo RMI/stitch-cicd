@@ -1,4 +1,6 @@
+import { useState } from "react";
 import config from "../config/env";
+import ColophonPanel from "./ColophonPanel";
 
 function normalizeEnvLabel(value) {
   return (value ?? "").trim();
@@ -44,6 +46,7 @@ function getBannerClasses(label) {
 }
 
 export default function EnvironmentBanner() {
+  const [isOpen, setIsOpen] = useState(false);
   const label = normalizeEnvLabel(config.appEnv);
 
   if (!label || isProductionEnv(label)) {
@@ -51,11 +54,28 @@ export default function EnvironmentBanner() {
   }
 
   return (
-    <div className={`${getBannerClasses(label)} sticky top-0 z-50 w-full`}>
-      <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-1 text-sm font-medium">
-        <span>{label.toUpperCase()} Environment</span>
-        <span className="opacity-80">Diagnostics coming soon</span>
+    <div className="sticky top-0 z-50 w-full">
+      <div className={getBannerClasses(label)}>
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-1 text-sm font-medium">
+          <span>{label.toUpperCase()} Environment</span>
+
+          <button
+            type="button"
+            onClick={() => setIsOpen((value) => !value)}
+            className="rounded border border-white/30 px-2 py-0.5 text-sm hover:bg-white/10"
+            aria-expanded={isOpen}
+            aria-controls="frontend-diagnostics-panel"
+          >
+            {isOpen ? "Hide diagnostics" : "Show diagnostics"}
+          </button>
+        </div>
       </div>
+
+      {isOpen ? (
+        <div id="frontend-diagnostics-panel">
+          <ColophonPanel />
+        </div>
+      ) : null}
     </div>
   );
 }
