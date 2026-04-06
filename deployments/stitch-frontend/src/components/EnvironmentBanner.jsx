@@ -73,7 +73,7 @@ export default function EnvironmentBanner() {
 
       {isOpen ? (
         <div id="frontend-diagnostics-panel">
-          <ColophonPanel />
+          <ColophonPanel diagnosticsOpen={isOpen} />
         </div>
       ) : null}
     </div>

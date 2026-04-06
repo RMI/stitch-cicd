@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import config from "../config/env";
+import useBackendDiagnostics from "../hooks/useBackendDiagnostics";
 
 function getConnectionInfo() {
   const nav = navigator;
@@ -41,24 +42,65 @@ function useSystemInfo() {
   return systemInfo;
 }
 
-function getEnvValue(key, fallback = "N/A") {
-  const value = import.meta.env[key];
-
-  if (typeof value === "boolean") {
-    return String(value);
+function formatBackendSection(state) {
+  if (state.loading) {
+    return {
+      Status: "Loading...",
+    };
   }
 
-  return value?.toString() ?? fallback;
+  if (state.error) {
+    return {
+      Status: "Unavailable",
+      Error: state.error,
+      Endpoint: `${config.apiBaseUrl}/health/details`,
+    };
+  }
+
+  if (!state.data || typeof state.data !== "object") {
+    return {
+      Status: "Unavailable",
+      Endpoint: `${config.apiBaseUrl}/health/details`,
+    };
+  }
+
+  const data = state.data;
+  const runtime = data.runtime ?? {};
+  const auth = data.auth ?? {};
+  const frontend = data.frontend ?? {};
+  const database = data.database ?? {};
+  const build = data.build ?? {};
+
+  return {
+    Status: data.status ?? "unknown",
+    Service: data.service ?? "unknown",
+    Environment: runtime.environment ?? "unknown",
+    "Started At": runtime.started_at ?? "unknown",
+    "Uptime (s)": String(runtime.uptime_seconds ?? "unknown"),
+    "Auth Disabled": String(auth.disabled ?? "unknown"),
+    "Auth Validated": String(auth.startup_validated ?? "unknown"),
+    "Frontend Origin": frontend.origin ?? "unknown",
+    "DB Dialect": database.dialect ?? "unknown",
+    "DB Host": database.host ?? "n/a",
+    "DB Port": String(database.port ?? "n/a"),
+    "DB Name": database.database ?? "unknown",
+    "DB Reachable": String(database.reachable ?? "unknown"),
+    "Build Version": build.app_version ?? "unknown",
+    "Build ID": build.build_id ?? "unknown",
+    "Build Git SHA": build.git_sha ? String(build.git_sha).slice(0, 7) : "unknown",
+    "Build Time": build.build_time ?? "unknown",
+  };
 }
 
-export default function ColophonPanel() {
+export default function ColophonPanel({ diagnosticsOpen = false }) {
   const systemInfo = useSystemInfo();
+  const backendDiagnostics = useBackendDiagnostics(diagnosticsOpen);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
 
   const sections = useMemo(() => {
     return {
-      "Build Info": {
+      "Frontend Build Info": {
         Environment: config.appEnv,
         "API Base URL": config.apiBaseUrl,
         "App Version": config.build.appVersion,
@@ -68,6 +110,7 @@ export default function ColophonPanel() {
         "Vite Version": config.build.viteVersion,
         "Build Time": config.build.buildTime,
       },
+      "Backend Diagnostics": formatBackendSection(backendDiagnostics),
       "Runtime Info": {
         "User Agent": systemInfo.userAgent,
         "Screen Resolution": systemInfo.screenResolution,
@@ -76,7 +119,7 @@ export default function ColophonPanel() {
         Connection: systemInfo.connectionType,
       },
     };
-  }, [systemInfo]);
+  }, [systemInfo, backendDiagnostics]);
 
   async function handleCopy() {
     const text = Object.entries(sections)
@@ -107,7 +150,7 @@ export default function ColophonPanel() {
       <div className="mx-auto max-w-4xl px-4 py-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-slate-900">
-            Frontend Diagnostics
+            Diagnostics
           </h2>
 
           <button
@@ -120,7 +163,7 @@ export default function ColophonPanel() {
           </button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           {Object.entries(sections).map(([section, values]) => (
             <div
               key={section}
