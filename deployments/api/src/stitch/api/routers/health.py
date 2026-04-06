@@ -6,6 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.status import HTTP_200_OK, HTTP_503_SERVICE_UNAVAILABLE
 
+from stitch.api.build_info import get_build_info
 from stitch.api.db.config import EngineDep
 from stitch.api.settings import SettingsDep
 
@@ -57,6 +58,8 @@ async def check_health_details(
         getattr(request.app.state, "auth_config_validated", False)
     )
 
+    local_build = get_build_info()
+
     db_status: dict[str, object] = {
         **_database_target(settings),
         "reachable": False,
@@ -91,10 +94,10 @@ async def check_health_details(
         },
         "database": db_status,
         "build": {
-            "app_version": settings.app_version,
-            "build_id": settings.build_id,
-            "git_sha": settings.git_sha,
-            "build_time": settings.build_time,
+            "app_version": settings.app_version or local_build.app_version,
+            "build_id": settings.build_id or local_build.build_id,
+            "git_sha": settings.git_sha or local_build.git_sha,
+            "build_time": settings.build_time or local_build.build_time,
         },
     }
 

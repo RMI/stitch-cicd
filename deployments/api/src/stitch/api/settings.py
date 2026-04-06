@@ -76,10 +76,10 @@ class Settings(BaseSettings):
     frontend_origin_url: OriginUrl = HttpUrl("http://localhost:3000")
     auth_disabled: bool = False
 
-    app_version: str = "unknown"
-    build_id: str = "unknown"
-    git_sha: str = "unknown"
-    build_time: str = "unknown"
+    app_version: str | None = None
+    build_id: str | None = None
+    git_sha: str | None = None
+    build_time: str | None = None
 
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
         env_file=".env",
