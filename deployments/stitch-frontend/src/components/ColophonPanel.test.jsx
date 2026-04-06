@@ -1,5 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockConfig = vi.hoisted(() => ({
@@ -21,7 +20,7 @@ vi.mock("../config/env", () => ({
 
 describe("ColophonPanel", () => {
   let fetchMock;
-  let clipboardWriteText;
+  let clipboardSpy;
 
   beforeEach(() => {
     fetchMock = vi.fn().mockResolvedValue({
@@ -58,13 +57,18 @@ describe("ColophonPanel", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    clipboardWriteText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "clipboard", {
-      configurable: true,
-      value: {
-        writeText: clipboardWriteText,
-      },
-    });
+    if (!navigator.clipboard) {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: {
+          writeText: vi.fn(),
+        },
+      });
+    }
+
+    clipboardSpy = vi
+      .spyOn(navigator.clipboard, "writeText")
+      .mockResolvedValue(undefined);
 
     Object.defineProperty(navigator, "language", {
       configurable: true,
@@ -101,6 +105,7 @@ describe("ColophonPanel", () => {
   });
 
   afterEach(() => {
+    clipboardSpy?.mockRestore();
     vi.unstubAllGlobals();
   });
 
@@ -144,7 +149,6 @@ describe("ColophonPanel", () => {
   });
 
   it("copies the diagnostics payload", async () => {
-    const user = userEvent.setup();
     const { default: ColophonPanel } = await import("./ColophonPanel");
 
     render(<ColophonPanel diagnosticsOpen />);
@@ -153,14 +157,16 @@ describe("ColophonPanel", () => {
       expect(screen.getByText("stitch-api")).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole("button", { name: "Copy" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
 
     await waitFor(() => {
-      expect(clipboardWriteText).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: "Copied!" })).toBeInTheDocument();
     });
 
-    const copiedText = clipboardWriteText.mock.calls[0][0];
+    expect(clipboardSpy).toHaveBeenCalledTimes(1);
 
+    const copiedText = clipboardSpy.mock.calls[0][0];
+    expect(copiedText).toContain("Bearer Token: [redacted - use Copy token]");
     expect(copiedText).toContain("### Frontend Build Info ###");
     expect(copiedText).toContain("API Base URL: http://localhost:8000/api/v1");
     expect(copiedText).toContain("App Version: 0.0.0");
