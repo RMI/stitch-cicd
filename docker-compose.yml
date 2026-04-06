@@ -81,6 +81,7 @@ services:
         VITE_AUTH0_CLIENT_ID: ${VITE_AUTH0_CLIENT_ID?}
         VITE_AUTH0_AUDIENCE: ${VITE_AUTH0_AUDIENCE?}
         VITE_API_URL: ${VITE_API_URL?}
+        VITE_ENTITY_LINKAGE_URL: ${VITE_ENTITY_LINKAGE_URL:-http://localhost:8001/api/v1}
     ports:
       - "3000:80"
     profiles: ["frontend", "full"]
