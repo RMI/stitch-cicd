@@ -79,11 +79,12 @@ function formatBackendSection(state) {
     "DB Reachable": String(database.reachable ?? "unknown"),
     "Build Version": build.app_version ?? "unknown",
     "Build ID": build.build_id ?? "unknown",
-    "Build Git SHA": build.git_sha ? String(build.git_sha).slice(0, 7) : "unknown",
+    "Build Git SHA": build.git_sha
+      ? String(build.git_sha).slice(0, 7)
+      : "unknown",
     "Build Time": build.build_time ?? "unknown",
   };
 }
-
 
 function redactToken(token) {
   if (!token) {
@@ -176,7 +177,9 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
       ...sections,
       "Frontend Build Info": {
         ...sections["Frontend Build Info"],
-        "Bearer Token": accessToken ? "[redacted - use Copy token]" : tokenStatus,
+        "Bearer Token": accessToken
+          ? "[redacted - use Copy token]"
+          : tokenStatus,
       },
     };
 
@@ -225,9 +228,7 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
     <div className="border-b border-slate-200 bg-slate-50">
       <div className="mx-auto max-w-4xl px-4 py-4">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Diagnostics
-          </h2>
+          <h2 className="text-sm font-semibold text-slate-900">Diagnostics</h2>
 
           <div className="flex items-center gap-2">
             <button

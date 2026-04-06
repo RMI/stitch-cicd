@@ -32,13 +32,13 @@ export default defineConfig(({ mode }) => {
     VITE_APP_ENV: env.VITE_APP_ENV || mode || "development",
     VITE_APP_VERSION: env.VITE_APP_VERSION || getPackageVersion(),
     VITE_BUILD_ID:
-      env.VITE_BUILD_ID ||
-      safeExec("git rev-parse --short HEAD") ||
-      "local",
+      env.VITE_BUILD_ID || safeExec("git rev-parse --short HEAD") || "local",
     VITE_GIT_SHA: env.VITE_GIT_SHA || safeExec("git rev-parse HEAD"),
-    VITE_NODE_VERSION: env.VITE_NODE_VERSION || safeExec("node -p process.version"),
-    VITE_VITE_VERSION: env.VITE_VITE_VERSION || safeExec("npm pkg get devDependencies.vite")
-      .replace(/^"|"$/g, ""),
+    VITE_NODE_VERSION:
+      env.VITE_NODE_VERSION || safeExec("node -p process.version"),
+    VITE_VITE_VERSION:
+      env.VITE_VITE_VERSION ||
+      safeExec("npm pkg get devDependencies.vite").replace(/^"|"$/g, ""),
     VITE_BUILD_TIME: env.VITE_BUILD_TIME || new Date().toISOString(),
   };
 

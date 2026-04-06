@@ -118,7 +118,9 @@ describe("ColophonPanel", () => {
     expect(screen.getByText("Backend Diagnostics")).toBeInTheDocument();
     expect(screen.getByText("Runtime Info")).toBeInTheDocument();
 
-    expect(screen.getByText("http://localhost:8000/api/v1")).toBeInTheDocument();
+    expect(
+      screen.getByText("http://localhost:8000/api/v1"),
+    ).toBeInTheDocument();
     expect(screen.getByText("local-build")).toBeInTheDocument();
     expect(screen.getByText("abcdef1")).toBeInTheDocument();
     expect(screen.getByText("v20.19.0")).toBeInTheDocument();
@@ -160,7 +162,9 @@ describe("ColophonPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Copied!" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Copied!" }),
+      ).toBeInTheDocument();
     });
 
     expect(clipboardSpy).toHaveBeenCalledTimes(1);

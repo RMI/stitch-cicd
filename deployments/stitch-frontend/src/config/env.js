@@ -21,7 +21,8 @@ function loadConfig() {
       audience: import.meta.env.VITE_AUTH0_AUDIENCE,
     }),
     apiBaseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1",
-    appEnv: import.meta.env.VITE_APP_ENV || import.meta.env.MODE || "development",
+    appEnv:
+      import.meta.env.VITE_APP_ENV || import.meta.env.MODE || "development",
 
     build: Object.freeze({
       appVersion: import.meta.env.VITE_APP_VERSION || "0.0.0-dev",
