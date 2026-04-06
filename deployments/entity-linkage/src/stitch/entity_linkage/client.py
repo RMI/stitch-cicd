@@ -17,12 +17,7 @@ def _get_api_base_url() -> str:
     """
     Resolve the downstream Stitch API base URL.
     """
-    settings = get_settings()
-    return (
-        getattr(settings, "stitch_api_base_url", None)
-        or getattr(settings, "api_base_url", None)
-        or "http://api:8000/api/v1"
-    )
+    return str(get_settings().api_base_url)
 
 
 class StitchApiClient:

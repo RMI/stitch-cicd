@@ -1,45 +1,32 @@
-from enum import StrEnum
 from functools import lru_cache
-from typing import Annotated, ClassVar
+from typing import ClassVar
 
-from pydantic import AfterValidator, HttpUrl
+from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Environment(StrEnum):
-    DEV = "dev"
-    TEST = "test"
-    PROD = "prod"
-
-
-def _validate_origin(url: HttpUrl):
-    if url.path and url.path != "/":
-        raise ValueError("URL must be an origin with no path")
-    if url.query:
-        raise ValueError("URL must be an origin with no query string")
-    if url.fragment:
-        raise ValueError("URL must be an origin with no fragment")
-    return url
-
-
-OriginUrl = Annotated[HttpUrl, AfterValidator(_validate_origin)]
-
-
 class Settings(BaseSettings):
-    environment: Environment = Environment.DEV
-    frontend_origin_url: OriginUrl = HttpUrl("http://localhost:3000")
-    auth_disabled: bool = False
+    log_level: str = Field(default="INFO", alias="ENTITY_LINKAGE_LOG_LEVEL")
+    frontend_origin_url: AnyHttpUrl = Field(
+        default="http://localhost:3000",
+        alias="ENTITY_LINKAGE_FRONTEND_ORIGIN_URL",
+    )
+    auth_disabled: bool = Field(default=False, alias="AUTH_DISABLED")
+
+    # explicit downstream API target
+    api_base_url: AnyHttpUrl = Field(
+        default="http://api:8000/api/v1",
+        alias="ENTITY_LINKAGE_API_BASE_URL",
+    )
 
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-
-
-SettingsDep = Annotated[Settings, get_settings]

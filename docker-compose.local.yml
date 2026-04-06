@@ -38,7 +38,7 @@ services:
     env_file:
       - .env
     environment:
-      LOG_LEVEL: ${ENTITYLINKAGE_LOG_LEVEL:-info}
+      LOG_LEVEL: ${ENTITY_LINKAGE_LOG_LEVEL:-info}
     healthcheck:
       test:
         [
@@ -52,9 +52,6 @@ services:
       start_interval: 1s
     ports:
       - "8001:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     profiles: ["entity-linkage", "full", "friends"]
-    depends_on:
-      api:
-        condition: service_healthy
-      seed:
-        condition: service_completed_successfully
