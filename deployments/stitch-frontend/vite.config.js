@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => {
       safeExec("git rev-parse --short HEAD") ||
       "local",
     VITE_GIT_SHA: env.VITE_GIT_SHA || safeExec("git rev-parse HEAD"),
-    VITE_NODE_VERSION: env.VITE_NODE_VERSION || process.version,
+    VITE_NODE_VERSION: env.VITE_NODE_VERSION || safeExec("node -p process.version"),
     VITE_VITE_VERSION: env.VITE_VITE_VERSION || safeExec("npm pkg get devDependencies.vite")
       .replace(/^"|"$/g, ""),
     VITE_BUILD_TIME: env.VITE_BUILD_TIME || new Date().toISOString(),

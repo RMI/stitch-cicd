@@ -22,25 +22,16 @@ function getConnectionInfo() {
 }
 
 function useSystemInfo() {
-  const [systemInfo, setSystemInfo] = useState({
-    userAgent: "Loading...",
-    screenResolution: "Loading...",
-    connectionType: "Loading...",
-    language: "Loading...",
-    devicePixelRatio: "Loading...",
-  });
-
-  useEffect(() => {
-    setSystemInfo({
+  return useMemo(
+    () => ({
       userAgent: navigator.userAgent,
       screenResolution: `${window.innerWidth}x${window.innerHeight}`,
       connectionType: getConnectionInfo(),
       language: navigator.language || "N/A",
       devicePixelRatio: `${window.devicePixelRatio}x`,
-    });
-  }, []);
-
-  return systemInfo;
+    }),
+    [],
+  );
 }
 
 function formatBackendSection(state) {
