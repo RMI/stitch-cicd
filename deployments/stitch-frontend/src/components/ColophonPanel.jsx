@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import config from "../config/env";
 import useBackendDiagnostics from "../hooks/useBackendDiagnostics";
 
@@ -92,11 +93,68 @@ function formatBackendSection(state) {
   };
 }
 
+
+function redactToken(token) {
+  if (!token) {
+    return "Unavailable";
+  }
+
+  if (token.length <= 24) {
+    return token;
+  }
+
+  return `${token.slice(0, 12)}...${token.slice(-8)}`;
+}
+
 export default function ColophonPanel({ diagnosticsOpen = false }) {
   const systemInfo = useSystemInfo();
   const backendDiagnostics = useBackendDiagnostics(diagnosticsOpen);
+  const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
+
+  const [accessToken, setAccessToken] = useState("");
+  const [tokenStatus, setTokenStatus] = useState("Loading...");
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  const [tokenCopied, setTokenCopied] = useState(false);
+  const [tokenCopyError, setTokenCopyError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadToken() {
+      if (isLoading) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        setTokenStatus("Not authenticated");
+        setAccessToken("");
+        return;
+      }
+
+      try {
+        const token = await getAccessTokenSilently();
+
+        if (!cancelled) {
+          setAccessToken(token);
+          setTokenStatus("Available");
+        }
+      } catch (error) {
+        console.error("Failed to load access token:", error);
+
+        if (!cancelled) {
+          setAccessToken("");
+          setTokenStatus("Unavailable");
+        }
+      }
+    }
+
+    void loadToken();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [getAccessTokenSilently, isAuthenticated, isLoading]);
 
   const sections = useMemo(() => {
     return {
@@ -109,6 +167,7 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
         "Node Version": config.build.nodeVersion,
         "Vite Version": config.build.viteVersion,
         "Build Time": config.build.buildTime,
+        "Bearer Token": accessToken ? redactToken(accessToken) : tokenStatus,
       },
       "Backend Diagnostics": formatBackendSection(backendDiagnostics),
       "Runtime Info": {
@@ -119,10 +178,18 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
         Connection: systemInfo.connectionType,
       },
     };
-  }, [systemInfo, backendDiagnostics]);
+  }, [systemInfo, backendDiagnostics, accessToken, tokenStatus]);
 
   async function handleCopy() {
-    const text = Object.entries(sections)
+    const safeSections = {
+      ...sections,
+      "Frontend Build Info": {
+        ...sections["Frontend Build Info"],
+        "Bearer Token": accessToken ? "[redacted - use Copy token]" : tokenStatus,
+      },
+    };
+
+    const text = Object.entries(safeSections)
       .map(([section, values]) => {
         const body = Object.entries(values)
           .map(([key, value]) => `${key}: ${value}`)
@@ -145,6 +212,24 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
     }
   }
 
+  async function handleCopyToken() {
+    if (!accessToken) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(`Bearer ${accessToken}`);
+      setTokenCopied(true);
+      setTokenCopyError(false);
+      window.setTimeout(() => setTokenCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy token:", error);
+      setTokenCopyError(true);
+      setTokenCopied(false);
+      window.setTimeout(() => setTokenCopyError(false), 2000);
+    }
+  }
+
   return (
     <div className="border-b border-slate-200 bg-slate-50">
       <div className="mx-auto max-w-4xl px-4 py-4">
@@ -153,17 +238,33 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
             Diagnostics
           </h2>
 
-          <button
-            type="button"
-            onClick={() => void handleCopy()}
-            className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-100"
-            title="Copy diagnostic information"
-          >
-            {copied ? "Copied!" : copyError ? "Copy failed" : "Copy"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void handleCopyToken()}
+              disabled={!accessToken}
+              className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              title="Copy Bearer token for API tools"
+            >
+              {tokenCopied
+                ? "Token copied!"
+                : tokenCopyError
+                  ? "Token copy failed"
+                  : "Copy token"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleCopy()}
+              className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-100"
+              title="Copy diagnostic information"
+            >
+              {copied ? "Copied!" : copyError ? "Copy failed" : "Copy"}
+            </button>
+          </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {Object.entries(sections).map(([section, values]) => (
             <div
               key={section}
