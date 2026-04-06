@@ -123,7 +123,10 @@ describe("ColophonPanel", () => {
     });
 
     expect(screen.getByText("postgresql")).toBeInTheDocument();
-    expect(screen.getByText("true")).toBeInTheDocument();
+    const reachableLabel = screen.getByText("DB Reachable");
+    expect(reachableLabel.closest("div")).toHaveTextContent("true");
+    const validatedLabel = screen.getByText("Auth Validated");
+    expect(validatedLabel.closest("div")).toHaveTextContent("true");
     expect(screen.getByText("VitestBrowser/1.0")).toBeInTheDocument();
     expect(screen.getByText("1440x900")).toBeInTheDocument();
     expect(screen.getByText("2x")).toBeInTheDocument();
