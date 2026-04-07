@@ -19,12 +19,12 @@ jobs:
 
       - name: Compute frontend build metadata
         run: |
-          APP_VERSION=$(node -p "require('./package.json').version")
+          APP_VERSION=$(node -p "require('./deployments/stitch-frontend/package.json').version")
           BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           GIT_SHA="${GITHUB_SHA}"
           BUILD_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           NODE_VERSION=$(node -p "process.version")
-          VITE_VERSION=$(node -p "require('./package.json').devDependencies.vite")
+          VITE_VERSION=$(node -p "require('./deployments/stitch-frontend/package.json').devDependencies.vite")
 
           if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
             APP_ENV="pr-${{ github.event.pull_request.number }}"
