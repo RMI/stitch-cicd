@@ -14,35 +14,19 @@ function isProductionEnv(label) {
 function getBannerClasses(label) {
   const normalized = label.toLowerCase();
 
-  if (normalized === "main") {
-    return "bg-green-500 text-white";
-  }
-
-  if (normalized === "next") {
-    return "bg-yellow-400 text-black";
-  }
-
-  if (normalized.startsWith("hotfix")) {
-    return "bg-orange-500 text-white";
-  }
-
-  if (
-    normalized === "development" ||
-    normalized === "develop" ||
-    normalized === "dev"
-  ) {
-    return "bg-red-500 text-white";
-  }
-
-  if (normalized.startsWith("pr-")) {
-    return "bg-indigo-500 text-white";
-  }
-
-  if (normalized === "local") {
-    return "bg-slate-700 text-white";
-  }
-
-  return "bg-pink-500 text-white";
+    if (normalized === "main") {
+      return "bg-green-500 text-white";
+    } else if (normalized === "next") {
+      return "bg-yellow-500 text-white";
+    } else if (normalized.startsWith("hotfix")) {
+      return "bg-orange-500 text-white";
+    } else if (normalized.startsWith("develop")) {
+      return "bg-red-500 text-white";
+    } else if (normalized.startsWith("pr-")) {
+      return "bg-indigo-500 text-white";
+    } else {
+      return "bg-pink-500 text-white";
+    }
 }
 
 export default function EnvironmentBanner() {
