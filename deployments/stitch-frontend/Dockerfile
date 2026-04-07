@@ -16,12 +16,12 @@ ARG VITE_AUTH0_AUDIENCE
 ARG VITE_API_URL
 
 ARG VITE_APP_ENV=production
-ARG VITE_APP_VERSION=0.0.0-dev
-ARG VITE_BUILD_ID=unknown
-ARG VITE_GIT_SHA=unknown
-ARG VITE_NODE_VERSION=unknown
-ARG VITE_VITE_VERSION=unknown
-ARG VITE_BUILD_TIME=unknown
+ARG VITE_APP_VERSION
+ARG VITE_BUILD_ID
+ARG VITE_BUILD_TIME
+ARG VITE_GIT_SHA
+ARG VITE_NODE_VERSION
+ARG VITE_VITE_VERSION
 
 ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN \
     VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID \
@@ -35,7 +35,14 @@ ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN \
     VITE_VITE_VERSION=$VITE_VITE_VERSION \
     VITE_BUILD_TIME=$VITE_BUILD_TIME
 
-RUN npm run build
+# --- derive build metadata if not provided ---
+RUN \
+  export VITE_APP_VERSION=${VITE_APP_VERSION:-$(node -p "require('./package.json').version")} && \
+  export VITE_BUILD_ID=${VITE_BUILD_ID:-docker-local} && \
+  export VITE_BUILD_TIME=${VITE_BUILD_TIME:-$(date -u +%Y-%m-%dT%H:%M:%SZ)} && \
+  export VITE_NODE_VERSION=${VITE_NODE_VERSION:-$(node -p process.version)} && \
+  export VITE_VITE_VERSION=${VITE_VITE_VERSION:-$(node -p "require('./package.json').devDependencies.vite")} && \
+  npm run build
 
 ########################
 # 2) Runtime stage (serve static files)
