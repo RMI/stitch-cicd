@@ -76,6 +76,22 @@ def _candidate_to_view(model: MergeCandidateModel) -> MergeCandidateView:
     )
 
 
+async def _load_candidate_model(
+    session: AsyncSession, candidate_id: int
+) -> MergeCandidateModel:
+    stmt = (
+        select(MergeCandidateModel)
+        .options(selectinload(MergeCandidateModel.items))
+        .where(MergeCandidateModel.id == candidate_id)
+    )
+    model = await session.scalar(stmt)
+    if model is None:
+        raise ResourceNotFoundError(
+            f"No merge candidate found for id = {candidate_id}."
+        )
+    return model
+
+
 async def list_merge_candidates(session: AsyncSession) -> list[MergeCandidateView]:
     stmt = (
         select(MergeCandidateModel)
@@ -89,17 +105,8 @@ async def list_merge_candidates(session: AsyncSession) -> list[MergeCandidateVie
 async def get_merge_candidate(
     session: AsyncSession, candidate_id: int
 ) -> MergeCandidateView:
-    stmt = (
-        select(MergeCandidateModel)
-        .options(selectinload(MergeCandidateModel.items))
-        .where(MergeCandidateModel.id == candidate_id)
-    )
-    model = await session.scalar(stmt)
-    if model is None:
-        raise ResourceNotFoundError(
-            f"No merge candidate found for id = {candidate_id}."
-        )
-    return _candidate_to_view(model)
+    candidate = await _load_candidate_model(session, candidate_id)
+    return _candidate_to_view(candidate)
 
 
 async def create_merge_candidate(
@@ -184,7 +191,7 @@ async def approve_merge_candidate(
     candidate.last_updated_by_id = user.id
     candidate.merged_resource_id = merged_resource.id
     await session.flush()
-    await session.refresh(candidate, ["items"])
+    candidate = await _load_candidate_model(session, candidate_id)
     return _candidate_to_view(candidate)
 
 
@@ -215,5 +222,5 @@ async def deny_merge_candidate(
     candidate.reviewed_by_id = user.id
     candidate.last_updated_by_id = user.id
     await session.flush()
-    await session.refresh(candidate, ["items"])
+    candidate = await _load_candidate_model(session, candidate_id)
     return _candidate_to_view(candidate)

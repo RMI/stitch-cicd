@@ -55,31 +55,6 @@ async def get_all_resources(
     )
 
 
-@router.get("/{id}", response_model=OGFieldView)
-async def get_resource(
-    *, uow: UnitOfWorkDep, user: CurrentUser, id: int
-) -> OGFieldView:
-    res: OGFieldResource = await resource_actions.get(session=uow.session, id=id)
-    return resource_to_view(resource=res)
-
-
-@router.get("/{id}/detail", response_model=OGFieldDetailView)
-async def get_resource_detail(
-    *, uow: UnitOfWorkDep, user: CurrentUser, id: int
-) -> OGFieldDetailView:
-    res: OGFieldResource = await resource_actions.get(session=uow.session, id=id)
-    return resource_to_detail_view(resource=res)
-
-
-@router.post("/", response_model=OGFieldResource)
-async def create_resource(
-    *, uow: UnitOfWorkDep, user: CurrentUser, resource_in: OGFieldResource
-) -> OGFieldResource:
-    return await resource_actions.create(
-        session=uow.session, user=user, resource=resource_in
-    )
-
-
 @router.get("/merge-candidates", response_model=list[MergeCandidateView])
 async def list_merge_candidates(
     *, uow: UnitOfWorkDep, _user: CurrentUser
@@ -178,3 +153,28 @@ async def deny_merge_candidate(
             status_code=500,
             detail="Internal error during merge candidate denial",
         )
+
+
+@router.get("/{id}", response_model=OGFieldView)
+async def get_resource(
+    *, uow: UnitOfWorkDep, user: CurrentUser, id: int
+) -> OGFieldView:
+    res: OGFieldResource = await resource_actions.get(session=uow.session, id=id)
+    return resource_to_view(resource=res)
+
+
+@router.get("/{id}/detail", response_model=OGFieldDetailView)
+async def get_resource_detail(
+    *, uow: UnitOfWorkDep, user: CurrentUser, id: int
+) -> OGFieldDetailView:
+    res: OGFieldResource = await resource_actions.get(session=uow.session, id=id)
+    return resource_to_detail_view(resource=res)
+
+
+@router.post("/", response_model=OGFieldResource)
+async def create_resource(
+    *, uow: UnitOfWorkDep, user: CurrentUser, resource_in: OGFieldResource
+) -> OGFieldResource:
+    return await resource_actions.create(
+        session=uow.session, user=user, resource=resource_in
+    )
