@@ -42,7 +42,9 @@ async def _load_mergeable_resources(
 
     missing_ids = set(unique_ids).difference({r.id for r in results})
     if missing_ids:
-        msg = f"Resources not found for ids: [{','.join(map(str, sorted(missing_ids)))}]"
+        msg = (
+            f"Resources not found for ids: [{','.join(map(str, sorted(missing_ids)))}]"
+        )
         raise ResourceNotFoundError(msg)
 
     repointed = [r for r in results if r.repointed_id is not None]
@@ -63,7 +65,9 @@ def _fingerprint(resource_ids: Sequence[int]) -> str:
 def _candidate_to_view(model: MergeCandidateModel) -> MergeCandidateView:
     return MergeCandidateView(
         id=model.id,
-        resource_ids=[item.resource_id for item in sorted(model.items, key=lambda i: i.position)],
+        resource_ids=[
+            item.resource_id for item in sorted(model.items, key=lambda i: i.position)
+        ],
         status=model.status,
         review_notes=model.review_notes,
         merged_resource_id=model.merged_resource_id,
@@ -176,7 +180,9 @@ async def approve_merge_candidate(
             f"Merge candidate {candidate_id} is not pending; current status={candidate.status}."
         )
 
-    resource_ids = [item.resource_id for item in sorted(candidate.items, key=lambda i: i.position)]
+    resource_ids = [
+        item.resource_id for item in sorted(candidate.items, key=lambda i: i.position)
+    ]
     await _load_mergeable_resources(session, resource_ids)
     merged_resource = await apply_resource_merge(
         session=session,

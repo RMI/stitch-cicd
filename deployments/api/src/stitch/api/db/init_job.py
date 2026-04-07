@@ -17,7 +17,6 @@ from stitch.api.db.model import (
     StitchBase,
     create_coalesced_view,
 )
-from stitch.api.db.model.merge_candidate import MergeCandidateModel, MergeCandidateItemModel
 
 logger = logging.getLogger("db-init")
 

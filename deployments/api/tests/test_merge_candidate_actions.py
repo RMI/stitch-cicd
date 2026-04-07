@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 
 NOW = datetime.now(timezone.utc)
 
+
 @dataclass
 class FakeItem:
     resource_id: int
@@ -96,7 +97,10 @@ def test_candidate_to_view_sorts_items_by_position():
     candidate = FakeCandidate(
         id=1,
         status=MergeCandidateStatus.PENDING,
-        items=[FakeItem(resource_id=19, position=1), FakeItem(resource_id=18, position=0)],
+        items=[
+            FakeItem(resource_id=19, position=1),
+            FakeItem(resource_id=18, position=0),
+        ],
     )
 
     view = mca._candidate_to_view(candidate)
@@ -108,8 +112,16 @@ def test_candidate_to_view_sorts_items_by_position():
 
 @pytest.mark.anyio
 async def test_list_merge_candidates_returns_views_in_query_order():
-    first = FakeCandidate(id=2, status=MergeCandidateStatus.PENDING, items=[FakeItem(18, 0), FakeItem(19, 1)])
-    second = FakeCandidate(id=1, status=MergeCandidateStatus.DENIED, items=[FakeItem(20, 0), FakeItem(21, 1)])
+    first = FakeCandidate(
+        id=2,
+        status=MergeCandidateStatus.PENDING,
+        items=[FakeItem(18, 0), FakeItem(19, 1)],
+    )
+    second = FakeCandidate(
+        id=1,
+        status=MergeCandidateStatus.DENIED,
+        items=[FakeItem(20, 0), FakeItem(21, 1)],
+    )
     session = FakeSession(scalars_result=[first, second])
 
     views = await mca.list_merge_candidates(session)
@@ -129,11 +141,17 @@ async def test_get_merge_candidate_raises_when_missing():
 
 @pytest.mark.anyio
 async def test_create_merge_candidate_rejects_existing_pending(monkeypatch, user):
-    existing = FakeCandidate(id=1, status=MergeCandidateStatus.PENDING, items=[FakeItem(18, 0), FakeItem(19, 1)])
+    existing = FakeCandidate(
+        id=1,
+        status=MergeCandidateStatus.PENDING,
+        items=[FakeItem(18, 0), FakeItem(19, 1)],
+    )
     session = FakeSession(scalar_result=existing)
     monkeypatch.setattr(mca, "_load_mergeable_resources", AsyncMock())
 
-    with pytest.raises(InvalidActionError, match="pending merge candidate already exists"):
+    with pytest.raises(
+        InvalidActionError, match="pending merge candidate already exists"
+    ):
         await mca.create_merge_candidate(
             session=session,
             user=user,
@@ -143,11 +161,17 @@ async def test_create_merge_candidate_rejects_existing_pending(monkeypatch, user
 
 @pytest.mark.anyio
 async def test_create_merge_candidate_rejects_existing_denied(monkeypatch, user):
-    existing = FakeCandidate(id=1, status=MergeCandidateStatus.DENIED, items=[FakeItem(18, 0), FakeItem(19, 1)])
+    existing = FakeCandidate(
+        id=1,
+        status=MergeCandidateStatus.DENIED,
+        items=[FakeItem(18, 0), FakeItem(19, 1)],
+    )
     session = FakeSession(scalar_result=existing)
     monkeypatch.setattr(mca, "_load_mergeable_resources", AsyncMock())
 
-    with pytest.raises(InvalidActionError, match="denied merge candidate already exists"):
+    with pytest.raises(
+        InvalidActionError, match="denied merge candidate already exists"
+    ):
         await mca.create_merge_candidate(
             session=session,
             user=user,
@@ -157,11 +181,17 @@ async def test_create_merge_candidate_rejects_existing_denied(monkeypatch, user)
 
 @pytest.mark.anyio
 async def test_create_merge_candidate_rejects_existing_approved(monkeypatch, user):
-    existing = FakeCandidate(id=1, status=MergeCandidateStatus.APPROVED, items=[FakeItem(18, 0), FakeItem(19, 1)])
+    existing = FakeCandidate(
+        id=1,
+        status=MergeCandidateStatus.APPROVED,
+        items=[FakeItem(18, 0), FakeItem(19, 1)],
+    )
     session = FakeSession(scalar_result=existing)
     monkeypatch.setattr(mca, "_load_mergeable_resources", AsyncMock())
 
-    with pytest.raises(InvalidActionError, match="approved merge candidate already exists"):
+    with pytest.raises(
+        InvalidActionError, match="approved merge candidate already exists"
+    ):
         await mca.create_merge_candidate(
             session=session,
             user=user,
@@ -171,11 +201,17 @@ async def test_create_merge_candidate_rejects_existing_approved(monkeypatch, use
 
 @pytest.mark.anyio
 async def test_create_merge_candidate_persists_candidate_and_items(monkeypatch, user):
-    created = FakeCandidate(id=42, status=MergeCandidateStatus.PENDING, items=[], fingerprint="18:19")
+    created = FakeCandidate(
+        id=42, status=MergeCandidateStatus.PENDING, items=[], fingerprint="18:19"
+    )
     session = FakeSession(scalar_result=None)
 
     monkeypatch.setattr(mca, "_load_mergeable_resources", AsyncMock())
-    monkeypatch.setattr(mca.MergeCandidateModel, "create", staticmethod(lambda created_by, fingerprint: created))
+    monkeypatch.setattr(
+        mca.MergeCandidateModel,
+        "create",
+        staticmethod(lambda created_by, fingerprint: created),
+    )
 
     @dataclass
     class FakeItemModel:
@@ -201,7 +237,10 @@ async def test_create_merge_candidate_persists_candidate_and_items(monkeypatch, 
     )
 
     assert session.added == [created]
-    assert [(item.resource_id, item.position) for item in session.added_all] == [(18, 0), (19, 1)]
+    assert [(item.resource_id, item.position) for item in session.added_all] == [
+        (18, 0),
+        (19, 1),
+    ]
     assert session.flush_calls == 2
     assert view.id == 42
     assert view.resource_ids == [18, 19]
@@ -210,7 +249,11 @@ async def test_create_merge_candidate_persists_candidate_and_items(monkeypatch, 
 
 @pytest.mark.anyio
 async def test_approve_merge_candidate_rejects_non_pending(user):
-    candidate = FakeCandidate(id=7, status=MergeCandidateStatus.APPROVED, items=[FakeItem(18, 0), FakeItem(19, 1)])
+    candidate = FakeCandidate(
+        id=7,
+        status=MergeCandidateStatus.APPROVED,
+        items=[FakeItem(18, 0), FakeItem(19, 1)],
+    )
     session = FakeSession(scalar_result=candidate)
 
     with pytest.raises(InvalidActionError, match="is not pending"):
@@ -218,8 +261,14 @@ async def test_approve_merge_candidate_rejects_non_pending(user):
 
 
 @pytest.mark.anyio
-async def test_approve_merge_candidate_applies_merge_and_updates_candidate(monkeypatch, user):
-    candidate = FakeCandidate(id=7, status=MergeCandidateStatus.PENDING, items=[FakeItem(18, 0), FakeItem(19, 1)])
+async def test_approve_merge_candidate_applies_merge_and_updates_candidate(
+    monkeypatch, user
+):
+    candidate = FakeCandidate(
+        id=7,
+        status=MergeCandidateStatus.PENDING,
+        items=[FakeItem(18, 0), FakeItem(19, 1)],
+    )
     session = FakeSession(scalar_result=candidate)
     load_mergeable = AsyncMock()
     apply_merge = AsyncMock(return_value=FakeMergedResource(id=31))
@@ -234,7 +283,9 @@ async def test_approve_merge_candidate_applies_merge_and_updates_candidate(monke
     )
 
     load_mergeable.assert_awaited_once_with(session, [18, 19])
-    apply_merge.assert_awaited_once_with(session=session, user=user, resource_ids=[18, 19])
+    apply_merge.assert_awaited_once_with(
+        session=session, user=user, resource_ids=[18, 19]
+    )
     assert candidate.status == MergeCandidateStatus.APPROVED
     assert candidate.review_notes == "looks good"
     assert candidate.reviewed_by_id == user.id
@@ -247,7 +298,11 @@ async def test_approve_merge_candidate_applies_merge_and_updates_candidate(monke
 
 @pytest.mark.anyio
 async def test_deny_merge_candidate_rejects_non_pending(user):
-    candidate = FakeCandidate(id=9, status=MergeCandidateStatus.DENIED, items=[FakeItem(18, 0), FakeItem(19, 1)])
+    candidate = FakeCandidate(
+        id=9,
+        status=MergeCandidateStatus.DENIED,
+        items=[FakeItem(18, 0), FakeItem(19, 1)],
+    )
     session = FakeSession(scalar_result=candidate)
 
     with pytest.raises(InvalidActionError, match="is not pending"):
@@ -256,7 +311,11 @@ async def test_deny_merge_candidate_rejects_non_pending(user):
 
 @pytest.mark.anyio
 async def test_deny_merge_candidate_updates_candidate(monkeypatch, user):
-    candidate = FakeCandidate(id=9, status=MergeCandidateStatus.PENDING, items=[FakeItem(18, 0), FakeItem(19, 1)])
+    candidate = FakeCandidate(
+        id=9,
+        status=MergeCandidateStatus.PENDING,
+        items=[FakeItem(18, 0), FakeItem(19, 1)],
+    )
     session = FakeSession(scalar_result=candidate)
 
     view = await mca.deny_merge_candidate(
