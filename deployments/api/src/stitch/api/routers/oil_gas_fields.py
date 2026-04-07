@@ -14,6 +14,11 @@ from stitch.api.entities import (
 from stitch.api.db import og_field_resource_actions as resource_actions
 from stitch.api.db import merge_candidate_actions
 from stitch.api.db.config import UnitOfWorkDep
+from stitch.api.db.errors import (
+    InvalidActionError,
+    ResourceNotFoundError,
+    ResourceIntegrityError,
+)
 from stitch.api.auth import CurrentUser
 from stitch.api.db.utils import (
     resource_to_view,
@@ -91,6 +96,10 @@ async def create_merge_candidate(
             user=user,
             request=request,
         )
+    except (InvalidActionError, ResourceIntegrityError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except ResourceNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
     except HTTPException:
         raise
     except Exception as exc:
@@ -120,13 +129,17 @@ async def approve_merge_candidate(
             candidate_id=id,
             request=request,
         )
+    except (InvalidActionError, ResourceIntegrityError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except ResourceNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception("Error while approving merge candidate %s: %s", id, exc)
+        logger.exception("Error while denying merge candidate %s: %s", id, exc)
         raise HTTPException(
             status_code=500,
-            detail="Internal error during merge candidate approval",
+            detail="Internal error during merge candidate denial",
         )
 
 
@@ -145,13 +158,17 @@ async def deny_merge_candidate(
             candidate_id=id,
             request=request,
         )
+    except (InvalidActionError, ResourceIntegrityError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except ResourceNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
     except HTTPException:
         raise
     except Exception as exc:
-        logger.exception("Error while denying merge candidate %s: %s", id, exc)
+        logger.exception("Error while approving merge candidate %s: %s", id, exc)
         raise HTTPException(
             status_code=500,
-            detail="Internal error during merge candidate denial",
+            detail="Internal error during merge candidate approval",
         )
 
 
