@@ -91,7 +91,7 @@ services:
         VITE_AUTH0_CLIENT_ID: ${VITE_AUTH0_CLIENT_ID?}
         VITE_AUTH0_AUDIENCE: ${VITE_AUTH0_AUDIENCE?}
         VITE_API_URL: ${VITE_API_URL?}
-        VITE_APP_ENV: ${VITE_APP_ENV:-docker}
+        VITE_APP_ENV: ${VITE_APP_ENV:-development-docker}
         VITE_APP_VERSION: ${VITE_APP_VERSION:-0.0.0-dev}
         VITE_BUILD_ID: ${VITE_BUILD_ID:-docker-local}
         VITE_GIT_SHA: ${VITE_GIT_SHA:-unknown}
