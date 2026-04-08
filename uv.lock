@@ -12,6 +12,7 @@ members = [
     "stitch",
     "stitch-api",
     "stitch-auth",
+    "stitch-entity-linkage",
     "stitch-models",
     "stitch-ogsi",
     "stitch-seed",
@@ -1344,6 +1345,47 @@ requires-dist = [
 dev = [
     { name = "cryptography", specifier = ">=44.0.0" },
     { name = "pytest", specifier = ">=8.0" },
+]
+
+[[package]]
+name = "stitch-entity-linkage"
+version = "0.1.0"
+source = { editable = "deployments/entity-linkage" }
+dependencies = [
+    { name = "fastapi", extra = ["standard"] },
+    { name = "httpx" },
+    { name = "pydantic-settings" },
+    { name = "stitch-auth" },
+    { name = "stitch-models" },
+    { name = "stitch-ogsi" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "aiosqlite" },
+    { name = "httpx" },
+    { name = "polyfactory" },
+    { name = "pytest" },
+    { name = "pytest-anyio" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", extras = ["standard"], specifier = ">=0.124.0" },
+    { name = "httpx", specifier = ">=0.28.0" },
+    { name = "pydantic-settings", specifier = ">=2.12.0" },
+    { name = "stitch-auth", editable = "packages/stitch-auth" },
+    { name = "stitch-models", editable = "packages/stitch-models" },
+    { name = "stitch-ogsi", editable = "packages/stitch-ogsi" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "aiosqlite", specifier = ">=0.21.0" },
+    { name = "httpx", specifier = ">=0.28.0" },
+    { name = "polyfactory", specifier = ">=3.3.0" },
+    { name = "pytest", specifier = ">=8.0" },
+    { name = "pytest-anyio", specifier = ">=0.0.0" },
 ]
 
 [[package]]
