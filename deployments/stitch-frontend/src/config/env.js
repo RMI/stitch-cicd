@@ -32,6 +32,8 @@ function loadConfig() {
       viteVersion: import.meta.env.VITE_VITE_VERSION || "unknown",
       buildTime: import.meta.env.VITE_BUILD_TIME || "unknown",
     }),
+    entityLinkageBaseUrl:
+      import.meta.env.VITE_ENTITY_LINKAGE_URL || "http://localhost:8001/api/v1",
   });
 }
 

@@ -97,6 +97,7 @@ services:
         VITE_GIT_SHA: ${VITE_GIT_SHA:-unknown}
         VITE_NODE_VERSION: ${VITE_NODE_VERSION:-20}
         VITE_BUILD_TIME: ${VITE_BUILD_TIME:-unknown}
+        VITE_ENTITY_LINKAGE_URL: ${VITE_ENTITY_LINKAGE_URL:-http://localhost:8001/api/v1}
     ports:
       - "3000:80"
     profiles: ["frontend", "full"]

@@ -43,8 +43,11 @@ uv-sync-dev:
 py-lint: uv-dev
 	$(RUFF) check
 
-py-test: api-test pkg-test
-py-test-exact: api-test-exact pkg-test-exact
+py-test: py-deployment-test pkg-test
+py-test-exact: py-deployment-test-exact pkg-test-exact
+
+py-deployment-test: api-test entity-linkage-test
+py-deployment-test-exact: api-test-exact entity-linkage-test-exact
 
 py-format-check: uv-dev
 	$(RUFF) format --check
@@ -132,8 +135,16 @@ stack-api-dev:
 		--profile frontend \
 		--profile tools \
 		--profile seed \
+		--profile friends \
 		up --build \
 		-d
+
+entity-linkage-build:
+	$(UV) build --package stitch-entity-linkage
+entity-linkage-test:
+	$(MAKE) uv-test-target PKG=stitch-entity-linkage TEST_PATH=deployments/entity-linkage
+entity-linkage-test-exact:
+	$(MAKE) uv-test-target-exact PKG=stitch-entity-linkage TEST_PATH=deployments/entity-linkage
 
 # ---------------------------------------------------------------------
 # stitch-frontend
@@ -174,6 +185,7 @@ stack-frontend-dev:
 		--profile api \
 		--profile tools \
 		--profile seed \
+		--profile friends \
 		up --build \
 		-d
 
