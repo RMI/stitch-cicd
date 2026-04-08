@@ -5,7 +5,6 @@ from contextlib import AbstractAsyncContextManager
 import pytest
 from fastapi.testclient import TestClient
 
-from stitch.entity_linkage.auth import AuthContext
 from stitch.entity_linkage.entities import (
     FieldCandidate,
     FieldDetailCandidate,
@@ -15,6 +14,8 @@ from stitch.entity_linkage.entities import (
 from stitch.entity_linkage.errors import StitchAPIError
 from stitch.entity_linkage.main import app
 from stitch.entity_linkage.routers import start as start_module
+from stitch.entity_linkage.auth import get_request_auth_context
+from stitch.entity_linkage import main as main_module
 
 
 def make_auth_context(
@@ -139,13 +140,19 @@ def api_client_factory(
 
 
 @pytest.fixture
-def test_client(auth_context: RequestAuthContext):
+def test_client(
+    auth_context: RequestAuthContext,
+    monkeypatch: pytest.MonkeyPatch,
+):
     async def override_auth_context() -> RequestAuthContext:
         return auth_context
 
-    app.dependency_overrides[AuthContext] = override_auth_context
+    monkeypatch.setattr(main_module, "validate_auth_config_at_startup", lambda: None)
+    app.dependency_overrides[get_request_auth_context] = override_auth_context
+
     with TestClient(app) as client:
         yield client
+
     app.dependency_overrides.clear()
 
 
@@ -179,7 +186,7 @@ def test_post_start_returns_serialized_response_model(
 
     assert response.status_code == 200
     assert response.json() == {
-        "initiated_by": "Dev User",
+        "initiated_by": "Integration Tester",
         "apply_merges": False,
         "relay_mode": "transparent",
         "pages_fetched": 2,
