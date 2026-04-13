@@ -3,6 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, ClassVar, Literal
 
+from fastapi import Depends
 from pydantic import AfterValidator, HttpUrl, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
@@ -75,6 +76,11 @@ class Settings(BaseSettings):
     frontend_origin_url: OriginUrl = HttpUrl("http://localhost:3000")
     auth_disabled: bool = False
 
+    app_version: str | None = None
+    build_id: str | None = None
+    git_sha: str | None = None
+    build_time: str | None = None
+
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -92,4 +98,4 @@ def get_settings() -> Settings:
     return Settings()
 
 
-SettingsDep = Annotated[Settings, get_settings]
+SettingsDep = Annotated[Settings, Depends(get_settings)]

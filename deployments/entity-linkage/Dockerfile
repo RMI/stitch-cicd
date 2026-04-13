@@ -16,7 +16,7 @@ WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-workspace --package stitch-api
+    uv sync --frozen --no-install-workspace --package stitch-entity-linkage
 
 # ── runtime target ────────────────────────────────────────────────────
 FROM base AS runtime
@@ -30,18 +30,9 @@ COPY ./packages /app/packages
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --package stitch-api
+    uv sync --locked --package stitch-entity-linkage
 
-ARG APP_VERSION=unknown
-ARG BUILD_ID=unknown
-ARG GIT_SHA=unknown
-ARG BUILD_TIME=unknown
-
-ENV PATH="/app/.venv/bin:$PATH" \
-    APP_VERSION="${APP_VERSION}" \
-    BUILD_ID="${BUILD_ID}" \
-    GIT_SHA="${GIT_SHA}" \
-    BUILD_TIME="${BUILD_TIME}"
-
+ENV PATH="/app/.venv/bin:$PATH"
 USER stitch-app
-CMD ["uvicorn", "stitch.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+CMD ["uvicorn", "stitch.entity_linkage.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,158 @@
+[
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "gem",
+        "name": "FAKE FIELD ALPHA",
+        "country": "AAA",
+        "basin": "SCENARIO: SIMPLE MERGE",
+        "state_province": "GEM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "wm",
+        "name": "Fake Field Alpha",
+        "country": "AAA",
+        "basin": "SCENARIO: SIMPLE MERGE",
+        "region": "WM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "gem",
+        "name": "FAKE FIELD BETA",
+        "country": "BBB",
+        "basin": "SCENARIO: NO MERGE DIFFERENT COUNTRY",
+        "state_province": "GEM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "wm",
+        "name": "Fake Field Beta",
+        "country": "CCC",
+        "basin": "SCENARIO: NO MERGE DIFFERENT COUNTRY",
+        "region": "WM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "gem",
+        "name": "FAKE FIELD GAMMA",
+        "country": "DDD",
+        "basin": "SCENARIO: THREE WAY MERGE",
+        "state_province": "GEM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "wm",
+        "name": "Fake Field Gamma",
+        "country": "DDD",
+        "basin": "SCENARIO: THREE WAY MERGE",
+        "region": "WM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "rmi",
+        "name": "FAKE FIELD GAMMA",
+        "country": "DDD",
+        "basin": "SCENARIO: THREE WAY MERGE",
+        "reservoir_formation": "RMI FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "gem",
+        "name": "FAKE FIELD DELTA",
+        "country": "EEE",
+        "basin": "SCENARIO: SPLIT BY COUNTRY",
+        "state_province": "GEM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "wm",
+        "name": "Fake Field Delta",
+        "country": "EEE",
+        "basin": "SCENARIO: SPLIT BY COUNTRY",
+        "region": "WM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "rmi",
+        "name": "FAKE FIELD DELTA",
+        "country": "FFF",
+        "basin": "SCENARIO: SPLIT BY COUNTRY",
+        "reservoir_formation": "RMI FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "llm",
+        "name": "Fake Field Delta",
+        "country": "FFF",
+        "basin": "SCENARIO: SPLIT BY COUNTRY",
+        "name_local": "LLM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  },
+  {
+    "id": 0,
+    "source_data": [
+      {
+        "source": "gem",
+        "name": "UNIQUE FIELD OMEGA",
+        "country": "ZZZ",
+        "basin": "SCENARIO: NO DUPLICATES",
+        "state_province": "GEM FIELD LABEL"
+      }
+    ],
+    "constituents": []
+  }
+]
