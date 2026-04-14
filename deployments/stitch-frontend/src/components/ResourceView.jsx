@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useResource } from "../hooks/useResources";
 import FetchButton from "./FetchButton";
@@ -8,13 +8,25 @@ import Input from "./Input";
 import { resourceKeys } from "../queries/resources";
 import config from "../config/env";
 
-export default function ResourceView({ className, endpoint }) {
+export default function ResourceView({ className, endpoint, initialID = null, showControls = true,}) {
   const queryClient = useQueryClient();
-  const [id, setId] = useState(1);
+  const [id, setId] = useState(initialID ?? 1);
   const { data, isLoading, isError, error, refetch } = useResource(
     endpoint,
     id,
   );
+
+  useEffect(() => {
+    if (initialID != null) {
+      setId(initialID);
+    }
+  }, [initialID]);
+
+  useEffect(() => {
+    if (!showControls && initialID != null) {
+      refetch();
+    }
+  }, [showControls, initialID, refetch]);
 
   const handleClear = (id) => {
     queryClient.resetQueries({ queryKey: resourceKeys.detail(endpoint, id) });
@@ -36,6 +48,8 @@ export default function ResourceView({ className, endpoint }) {
           {config.apiBaseUrl}/{endpoint}
         </span>
       </div>
+
+      {showControls && (
       <div className="mb-6 flex gap-3">
         <Input
           type="number"
@@ -52,6 +66,8 @@ export default function ResourceView({ className, endpoint }) {
           disabled={!data && !error}
         />
       </div>
+      )}
+
       <JsonView
         data={data}
         isLoading={isLoading}
