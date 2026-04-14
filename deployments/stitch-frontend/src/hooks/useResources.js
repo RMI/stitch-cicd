@@ -127,7 +127,7 @@ function useMergeCandidatePreviewMock(
   enabled = false,
 ) {
   return useQuery({
-    queryKey: resourceKeys.mergeCandidatePreview(endpoint, id),
+    queryKey: resourceKeys.preview(endpoint, id),
     queryFn: () => Promise.resolve(null),
     enabled,
   });
