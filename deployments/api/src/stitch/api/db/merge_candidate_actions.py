@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from stitch.api.auth import CurrentUser
+from stitch.api.coalesce import coalesce_og_field_resource
 from stitch.api.db.errors import (
     InvalidActionError,
     ResourceIntegrityError,
@@ -18,9 +19,20 @@ from stitch.api.entities import (
     MergeCandidateReviewRequest,
     MergeCandidateStatus,
     MergeCandidateView,
+    OGFieldMergePreviewView,
 )
+from stitch.ogsi.model.og_field import OilGasFieldBase
+from stitch.ogsi.model.types import OGSISrcKey
 
-from .model import MergeCandidateItemModel, MergeCandidateModel, ResourceModel
+from .model import (
+    MergeCandidateItemModel,
+    MergeCandidateModel,
+    MembershipModel,
+    MembershipStatus,
+    OGFieldSourcePriority,
+    OilGasFieldSourceModel,
+    ResourceModel,
+)
 from .og_field_resource_actions import apply_resource_merge
 
 
@@ -165,16 +177,7 @@ async def approve_merge_candidate(
     candidate_id: int,
     request: MergeCandidateReviewRequest | None = None,
 ) -> MergeCandidateView:
-    stmt = (
-        select(MergeCandidateModel)
-        .options(selectinload(MergeCandidateModel.items))
-        .where(MergeCandidateModel.id == candidate_id)
-    )
-    candidate = await session.scalar(stmt)
-    if candidate is None:
-        raise ResourceNotFoundError(
-            f"No merge candidate found for id = {candidate_id}."
-        )
+    candidate = await _load_candidate_model(session, candidate_id)
     if candidate.status != MergeCandidateStatus.PENDING:
         raise InvalidActionError(
             f"Merge candidate {candidate_id} is not pending; current status={candidate.status}."
@@ -197,6 +200,7 @@ async def approve_merge_candidate(
     candidate.last_updated_by_id = user.id
     candidate.merged_resource_id = merged_resource.id
     await session.flush()
+
     candidate = await _load_candidate_model(session, candidate_id)
     return _candidate_to_view(candidate)
 
@@ -207,16 +211,7 @@ async def deny_merge_candidate(
     candidate_id: int,
     request: MergeCandidateReviewRequest | None = None,
 ) -> MergeCandidateView:
-    stmt = (
-        select(MergeCandidateModel)
-        .options(selectinload(MergeCandidateModel.items))
-        .where(MergeCandidateModel.id == candidate_id)
-    )
-    candidate = await session.scalar(stmt)
-    if candidate is None:
-        raise ResourceNotFoundError(
-            f"No merge candidate found for id = {candidate_id}."
-        )
+    candidate = await _load_candidate_model(session, candidate_id)
     if candidate.status != MergeCandidateStatus.PENDING:
         raise InvalidActionError(
             f"Merge candidate {candidate_id} is not pending; current status={candidate.status}."
@@ -230,3 +225,60 @@ async def deny_merge_candidate(
     await session.flush()
     candidate = await _load_candidate_model(session, candidate_id)
     return _candidate_to_view(candidate)
+
+
+async def preview_merge_candidate(
+    session: AsyncSession,
+    candidate_id: int,
+) -> OGFieldMergePreviewView:
+    candidate = await _load_candidate_model(session, candidate_id)
+
+    resource_ids = [
+        item.resource_id
+        for item in sorted(candidate.items, key=lambda i: i.position)
+    ]
+
+    await _load_mergeable_resources(session, resource_ids)
+
+    stmt = (
+        select(OilGasFieldSourceModel)
+        .join(
+            MembershipModel,
+            MembershipModel.source_pk == OilGasFieldSourceModel.id,
+        )
+        .where(MembershipModel.resource_id.in_(resource_ids))
+        .where(MembershipModel.status == MembershipStatus.ACTIVE)
+    )
+    source_models = (await session.scalars(stmt)).all()
+
+    priorities = (
+        await session.scalars(
+            select(OGFieldSourcePriority.source).order_by(
+                OGFieldSourcePriority.priority
+            )
+        )
+    ).all()
+
+    source_entities = [src.as_entity() for src in source_models]
+    merged_data, raw_provenance = coalesce_og_field_resource(
+        source_entities,
+        priorities,
+    )
+
+    provenance: dict[str, OGSISrcKey | None] = {
+        key: (None if value is None else value[1])
+        for key, value in raw_provenance.items()
+    }
+
+    data = OilGasFieldBase(
+        **{
+            field_name: getattr(merged_data, field_name, None)
+            for field_name in OilGasFieldBase.model_fields
+        }
+    )
+
+    return OGFieldMergePreviewView(
+        resource_ids=resource_ids,
+        data=data,
+        provenance=provenance,
+    )
