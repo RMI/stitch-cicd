@@ -1,4 +1,10 @@
-import { getResource, getResources, getResourceDetail, getMergeCandidates, getMergeCandidate, } from "./api";
+import {
+  getResource,
+  getResources,
+  getResourceDetail,
+  getMergeCandidates,
+  getMergeCandidate,
+} from "./api";
 
 export const DEFAULT_STALE_TIME = 60_000;
 export const DEFAULT_PAGE = 1;
@@ -23,7 +29,10 @@ export const resourceKeys = {
   views: (endpoint = "resources") => [...resourceKeys.all(endpoint), "view"],
   view: (endpoint = "resources", id) => [...resourceKeys.views(endpoint), id],
 
-  mergeCandidates: (endpoint = "oil-gas-fields") => [endpoint, "merge-candidates"],
+  mergeCandidates: (endpoint = "oil-gas-fields") => [
+    endpoint,
+    "merge-candidates",
+  ],
   mergeCandidate: (endpoint = "oil-gas-fields", id) => [
     endpoint,
     "merge-candidates",

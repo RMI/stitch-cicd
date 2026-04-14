@@ -23,7 +23,10 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/oil-gas-fields/:id" element={<ResourceDetailPage />} />
           <Route path="/entity-linkage" element={<EntityLinkagePage />} />
-          <Route path="/merge-candidate-review" element={<MergeCandidateReviewPage />} />
+          <Route
+            path="/merge-candidate-review"
+            element={<MergeCandidateReviewPage />}
+          />
         </Routes>
       </div>
     </div>

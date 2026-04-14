@@ -58,7 +58,11 @@ function useMergeCandidatesReal(endpoint = "oil-gas-fields", enabled = false) {
   });
 }
 
-function useMergeCandidateReal(endpoint = "oil-gas-fields", id, enabled = false) {
+function useMergeCandidateReal(
+  endpoint = "oil-gas-fields",
+  id,
+  enabled = false,
+) {
   return useAuthenticatedQuery({
     ...resourceQueries.mergeCandidate(endpoint, id),
     enabled,
@@ -105,7 +109,11 @@ function useMergeCandidatesMock(endpoint = "oil-gas-fields", enabled = false) {
   });
 }
 
-function useMergeCandidateMock(endpoint = "oil-gas-fields", id, enabled = false) {
+function useMergeCandidateMock(
+  endpoint = "oil-gas-fields",
+  id,
+  enabled = false,
+) {
   return useQuery({
     queryKey: resourceKeys.mergeCandidate(endpoint, id),
     queryFn: () => Promise.resolve(null),

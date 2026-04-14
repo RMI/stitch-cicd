@@ -58,7 +58,11 @@ export async function getMergeCandidates(fetcher, endpoint = "oil-gas-fields") {
   return await response.json();
 }
 
-export async function getMergeCandidate(id, fetcher, endpoint = "oil-gas-fields") {
+export async function getMergeCandidate(
+  id,
+  fetcher,
+  endpoint = "oil-gas-fields",
+) {
   const url = `${config.apiBaseUrl}/${endpoint}/merge-candidates/${id}`;
   const response = await fetcher(url);
 

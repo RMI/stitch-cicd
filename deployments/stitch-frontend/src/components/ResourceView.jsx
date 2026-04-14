@@ -8,7 +8,12 @@ import Input from "./Input";
 import { resourceKeys } from "../queries/resources";
 import config from "../config/env";
 
-export default function ResourceView({ className, endpoint, initialID = null, showControls = true,}) {
+export default function ResourceView({
+  className,
+  endpoint,
+  initialID = null,
+  showControls = true,
+}) {
   const queryClient = useQueryClient();
   const [id, setId] = useState(initialID ?? 1);
   const { data, isLoading, isError, error, refetch } = useResource(
@@ -50,22 +55,22 @@ export default function ResourceView({ className, endpoint, initialID = null, sh
       </div>
 
       {showControls && (
-      <div className="mb-6 flex gap-3">
-        <Input
-          type="number"
-          value={id}
-          onChange={(e) => setId(Number(e.target.value))}
-          onKeyDown={handleKeyDown}
-          min={1}
-          max={1000}
-          className="w-24"
-        />
-        <FetchButton onFetch={() => refetch()} isLoading={isLoading} />
-        <ClearCacheButton
-          onClear={() => handleClear(id)}
-          disabled={!data && !error}
-        />
-      </div>
+        <div className="mb-6 flex gap-3">
+          <Input
+            type="number"
+            value={id}
+            onChange={(e) => setId(Number(e.target.value))}
+            onKeyDown={handleKeyDown}
+            min={1}
+            max={1000}
+            className="w-24"
+          />
+          <FetchButton onFetch={() => refetch()} isLoading={isLoading} />
+          <ClearCacheButton
+            onClear={() => handleClear(id)}
+            disabled={!data && !error}
+          />
+        </div>
       )}
 
       <JsonView

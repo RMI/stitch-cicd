@@ -5,10 +5,7 @@ import Card from "../components/Card";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import ResourceView from "../components/ResourceView";
-import {
-  useMergeCandidates,
-  useMergeCandidate,
-} from "../hooks/useResources";
+import { useMergeCandidates, useMergeCandidate } from "../hooks/useResources";
 import { createAuthenticatedFetcher } from "../auth/api";
 import { reviewMergeCandidate } from "../queries/api";
 import { resourceKeys } from "../queries/resources";
@@ -139,10 +136,12 @@ export default function MergeCandidateReviewPage() {
           <div>Total candidates: {candidates?.length ?? 0}</div>
           <div>Pending: {pendingCount}</div>
           <div>
-            Approved: {candidates?.filter((c) => c.status === "APPROVED").length ?? 0}
+            Approved:{" "}
+            {candidates?.filter((c) => c.status === "APPROVED").length ?? 0}
           </div>
           <div>
-            Denied: {candidates?.filter((c) => c.status === "DENIED").length ?? 0}
+            Denied:{" "}
+            {candidates?.filter((c) => c.status === "DENIED").length ?? 0}
           </div>
         </div>
       </Card>
@@ -176,7 +175,9 @@ export default function MergeCandidateReviewPage() {
         </Card>
 
         <div className="space-y-6">
-          <Card title={selectedId ? `Candidate #${selectedId}` : "Candidate detail"}>
+          <Card
+            title={selectedId ? `Candidate #${selectedId}` : "Candidate detail"}
+          >
             {!selectedId ? (
               <p>Select a candidate.</p>
             ) : candidateLoading ? (
@@ -194,7 +195,9 @@ export default function MergeCandidateReviewPage() {
                     <div>Existing notes: {candidate.review_notes}</div>
                   ) : null}
                   {candidate.merged_resource_id ? (
-                    <div>Merged resource ID: {candidate.merged_resource_id}</div>
+                    <div>
+                      Merged resource ID: {candidate.merged_resource_id}
+                    </div>
                   ) : null}
                 </div>
 
@@ -246,9 +249,9 @@ export default function MergeCandidateReviewPage() {
               {candidate.resource_ids.map((resourceId) => (
                 <Card key={resourceId} title={`Resource ${resourceId}`}>
                   <ResourceView
-                  endpoint={ENDPOINT}
-                  initialID={resourceId}
-                  showControls={false}
+                    endpoint={ENDPOINT}
+                    initialID={resourceId}
+                    showControls={false}
                   />
                 </Card>
               ))}
