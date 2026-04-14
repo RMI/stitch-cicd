@@ -234,8 +234,7 @@ async def preview_merge_candidate(
     candidate = await _load_candidate_model(session, candidate_id)
 
     resource_ids = [
-        item.resource_id
-        for item in sorted(candidate.items, key=lambda i: i.position)
+        item.resource_id for item in sorted(candidate.items, key=lambda i: i.position)
     ]
 
     await _load_mergeable_resources(session, resource_ids)

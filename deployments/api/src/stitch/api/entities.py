@@ -132,6 +132,7 @@ class MergeCandidateView(BaseModel):
     reviewed_at: datetime | None = None
     reviewed_by_id: int | None = None
 
+
 class OGFieldMergePreviewView(BaseModel):
     resource_ids: list[int]
     data: OilGasFieldBase
