@@ -29,7 +29,7 @@ export default function ResourceView({
   }, [showControls, initialID, refetch]);
 
   const handleClear = (id) => {
-    queryClient.resetQueries({ queryKey: resourceKeys.detail(endpoint, id) });
+    queryClient.resetQueries({ queryKey: resourceKeys.view(endpoint, id) });
   };
 
   const handleKeyDown = (e) => {
