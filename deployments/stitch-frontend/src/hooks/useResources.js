@@ -121,6 +121,17 @@ function useMergeCandidateMock(
   });
 }
 
+function useMergeCandidatePreviewReal(
+  endpoint = "oil-gas-fields",
+  id,
+  enabled = false,
+) {
+  return useAuthenticatedQuery({
+    ...resourceQueries.mergeCandidatePreview(endpoint, id),
+    enabled,
+  });
+}
+
 // Export one implementation based on the compile-time flag. Assign at module level
 export const useResources = USE_MOCK_DATA ? useResourcesMock : useResourcesReal;
 export const useResource = USE_MOCK_DATA ? useResourceMock : useResourceReal;
@@ -133,3 +144,4 @@ export const useMergeCandidates = USE_MOCK_DATA
 export const useMergeCandidate = USE_MOCK_DATA
   ? useMergeCandidateMock
   : useMergeCandidateReal;
+export const useMergeCandidatePreview = useMergeCandidatePreviewReal;

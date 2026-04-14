@@ -5,10 +5,15 @@ import Card from "../components/Card";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import ResourceView from "../components/ResourceView";
-import { useMergeCandidates, useMergeCandidate } from "../hooks/useResources";
+import {
+  useMergeCandidates,
+  useMergeCandidate,
+  useMergeCandidatePreview,
+} from "../hooks/useResources";
 import { createAuthenticatedFetcher } from "../auth/api";
 import { reviewMergeCandidate } from "../queries/api";
 import { resourceKeys } from "../queries/resources";
+import JsonView from "../components/JsonView";
 
 const ENDPOINT = "oil-gas-fields";
 
@@ -60,6 +65,14 @@ export default function MergeCandidateReviewPage() {
     refetch: refetchCandidates,
   } = useMergeCandidates(ENDPOINT, true);
 
+  const {
+    data: preview,
+    isLoading: previewLoading,
+    isError: previewError,
+    error: previewErrorObj,
+    refetch: refetchPreview,
+  } = useMergeCandidatePreview(ENDPOINT, selectedId, Boolean(selectedId));
+
   useEffect(() => {
     refetchCandidates();
   }, [refetchCandidates]);
@@ -70,6 +83,12 @@ export default function MergeCandidateReviewPage() {
       setSelectedId(firstPending?.id ?? candidates[0].id);
     }
   }, [candidates, selectedId]);
+
+  useEffect(() => {
+    if (selectedId) {
+      refetchPreview();
+    }
+  }, [selectedId, refetchPreview]);
 
   const {
     data: candidate,
@@ -188,6 +207,35 @@ export default function MergeCandidateReviewPage() {
               </pre>
             ) : candidate ? (
               <div className="space-y-4">
+                {!selectedId ? (
+                  <p>Select a candidate.</p>
+                ) : previewLoading ? (
+                  <p>Loading preview…</p>
+                ) : previewError ? (
+                  <pre className="text-sm text-red-700 whitespace-pre-wrap">
+                    {previewErrorObj?.message ?? "Failed to load preview."}
+                  </pre>
+                ) : preview?.data ? (
+                  <div className="space-y-3">
+                    <div className="text-sm text-gray-700">
+                      This is the merged result that will be created if
+                      approved.
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Merging resources: {preview.resource_ids.join(", ")}
+                    </div>
+
+                    <JsonView
+                      data={preview.data}
+                      isLoading={false}
+                      isError={false}
+                      error={null}
+                      message="No preview available."
+                    />
+                  </div>
+                ) : (
+                  <p>No preview available.</p>
+                )}
                 <div className="grid gap-1 text-sm">
                   <div>Status: {candidate.status}</div>
                   <div>Resources: {candidate.resource_ids.join(", ")}</div>

@@ -108,3 +108,20 @@ export async function reviewMergeCandidate(
 
   return await response.json();
 }
+
+export async function getMergeCandidatePreview(
+  id,
+  fetcher,
+  endpoint = "oil-gas-fields",
+) {
+  const url = `${config.apiBaseUrl}/${endpoint}/merge-candidates/${id}/preview`;
+  const response = await fetcher(url);
+
+  if (!response.ok) {
+    const error = new Error(`HTTP error! status: ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+
+  return await response.json();
+}
