@@ -15,17 +15,12 @@ export default function ResourceView({
   showControls = true,
 }) {
   const queryClient = useQueryClient();
-  const [id, setId] = useState(initialID ?? 1);
+  const [inputId, setInputId] = useState(1);
+  const id = initialID ?? inputId;
   const { data, isLoading, isError, error, refetch } = useResource(
     endpoint,
     id,
   );
-
-  useEffect(() => {
-    if (initialID != null) {
-      setId(initialID);
-    }
-  }, [initialID]);
 
   useEffect(() => {
     if (!showControls && initialID != null) {
@@ -58,8 +53,8 @@ export default function ResourceView({
         <div className="mb-6 flex gap-3">
           <Input
             type="number"
-            value={id}
-            onChange={(e) => setId(Number(e.target.value))}
+            value={inputId}
+            onChange={(e) => setInputId(Number(e.target.value))}
             onKeyDown={handleKeyDown}
             min={1}
             max={1000}
