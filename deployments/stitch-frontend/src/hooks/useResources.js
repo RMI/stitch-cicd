@@ -121,6 +121,18 @@ function useMergeCandidateMock(
   });
 }
 
+function useMergeCandidatePreviewMock(
+  endpoint = "oil-gas-fields",
+  id,
+  enabled = false,
+) {
+  return useQuery({
+    queryKey: resourceKeys.mergeCandidatePreview(endpoint, id),
+    queryFn: () => Promise.resolve(null),
+    enabled,
+  });
+}
+
 function useMergeCandidatePreviewReal(
   endpoint = "oil-gas-fields",
   id,
@@ -144,4 +156,6 @@ export const useMergeCandidates = USE_MOCK_DATA
 export const useMergeCandidate = USE_MOCK_DATA
   ? useMergeCandidateMock
   : useMergeCandidateReal;
-export const useMergeCandidatePreview = useMergeCandidatePreviewReal;
+export const useMergeCandidatePreview = USE_MOCK_DATA
+  ? useMergeCandidatePreviewMock
+  : useMergeCandidatePreviewReal;
