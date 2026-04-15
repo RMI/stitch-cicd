@@ -14,6 +14,11 @@ on:
         required: false
         default: "stitch-dev"
         type: string
+      targetPort:
+        description: "Port the applications listens to"
+        required: false
+        default: 8000
+        type: number
 
 jobs:
   deploy-api:
@@ -45,5 +50,6 @@ jobs:
           resourceGroup: STITCH-DEV-RG
           containerAppName: ${{ inputs.containerAppName }}
           containerAppEnvironment: ${{ inputs.containerAppEnvironment }}
+          targetPort: ${{ inputs.targetPort }}
           environmentVariables: LOG_LEVEL=debug AUTH_DISABLED=true
           ingress: "external"
