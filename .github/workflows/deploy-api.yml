@@ -34,3 +34,4 @@ jobs:
           imageToDeploy: ${{ inputs.full-image-name }}
           resourceGroup: STITCH-DEV-RG
           containerAppEnvironment: stitch-dev
+          environmentVariables: LOG_LEVEL=debug AUTH_DISABLED=true
