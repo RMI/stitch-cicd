@@ -48,7 +48,6 @@ jobs:
       postgres-port: ${{ needs.deploy-db.outputs.postgres-port }}
       postgres-db: ${{ needs.deploy-db.outputs.postgres-db }}
       postgres-user: ${{ needs.deploy-db.outputs.postgres-user }}
-      postgres-password: ${{ secrets.STITCH_APP_PASSWORD_DEV }}
 
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}

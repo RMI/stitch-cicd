@@ -32,9 +32,6 @@ on:
       postgres-user:
         required: true
         type: string
-      postgres-password:
-        required: true
-        type: string
       postgres-sslmode:
         required: false
         default: "require"
@@ -87,7 +84,7 @@ jobs:
             POSTGRES_PORT=${{ inputs.postgres-port }}
             POSTGRES_DB=${{ inputs.postgres-db }}
             POSTGRES_USER=${{ inputs.postgres-user }}
-            POSTGRES_PASSWORD=${{ inputs.postgres-password }}
+            POSTGRES_PASSWORD=${{ secrets.STITCH_APP_PASSWORD_DEV }}
             PGSSLMODE=${{ inputs.postgres-sslmode }}
           ingress: "external"
 
