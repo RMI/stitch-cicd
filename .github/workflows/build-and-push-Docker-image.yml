@@ -112,7 +112,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
             APP_VERSION=${{
-              (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) ||
+              (github.event_name == 'pull_request' && format('{0}{1}-{2}', 'pr', github.event.pull_request.number, github.head_ref)) ||
               github.ref_name
             }}
             BUILD_ID= gha-${{ github.run_id }}.${{ github.run_attempt }}
