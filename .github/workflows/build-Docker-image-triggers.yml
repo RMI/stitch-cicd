@@ -33,6 +33,13 @@ jobs:
     secrets: inherit
     with:
       full-image-name: ${{ needs.build_docker_image.outputs.full-image-name }}
+      containerAppName: ${{
+          github.event_name == 'pull_request' && format('{0}{1}','pr', github.event.pull_request.number) ||
+          github.event_name == 'schedule' && 'nightly' ||
+          github.event_name == 'push' && github.ref_name ||
+          github.event_name == 'workflow_dispatch' && github.ref_name ||
+          github.sha
+        }}-api
     needs: [build_docker_image]
 
   add-comment:

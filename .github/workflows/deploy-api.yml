@@ -5,6 +5,16 @@ on:
         description: "Full pushed image name including host/registry, name, and tag"
         required: true
         type: string
+      containerAppName:
+        description: "The name of the Azure Container App."
+        required: true
+        type: string
+      containerAppEnvironment:
+        description: "The name of the Azure Container App environment to deploy to."
+        required: false
+        default: "stitch-preview"
+        type: string
+
 jobs:
   deploy-api:
     runs-on: ubuntu-latest
@@ -33,5 +43,7 @@ jobs:
           # imageToDeploy: mcr.microsoft.com/azuredocs/containerapps-helloworld:latest
           imageToDeploy: ${{ inputs.full-image-name }}
           resourceGroup: STITCH-DEV-RG
-          containerAppEnvironment: stitch-dev
+          containerAppName: ${{ inputs.containerAppName }}
+          containerAppEnvironment: ${{ inputs.containerAppEnvironment }}
           environmentVariables: LOG_LEVEL=debug AUTH_DISABLED=true
+          ingress: "external"
