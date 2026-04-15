@@ -32,7 +32,7 @@ jobs:
     uses: ./.github/workflows/deploy-api.yml
     secrets: inherit
     with:
-      full-image-name: ${{ needs.build_docker_image.outputs.full-image-name }}
+      full-image-name: ${{ needs.build_docker_image.outputs.digest-image-name }}
       containerAppName: ${{
           github.event_name == 'pull_request' && format('{0}{1}','pr', github.event.pull_request.number) ||
           github.event_name == 'schedule' && 'nightly' ||
