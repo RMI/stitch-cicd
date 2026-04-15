@@ -4,8 +4,6 @@ on:
   pull_request:
   push:
     branches: [main]
-  # schedule:
-  #   - cron: '0 0 * * 1,2,3,4,5'
   workflow_dispatch:
 
 jobs:
@@ -27,10 +25,16 @@ jobs:
           github.sha
         }}
 
+  deploy-db:
+    name: "Create DB"
+    uses: ./.github/workflows/deploy-db.yml
+    secrets: inherit
+
   deploy-docker:
     name: "Deploy"
     uses: ./.github/workflows/deploy-api.yml
     secrets: inherit
+    needs: [build_docker_image, deploy-db]
     with:
       full-image-name: ${{ needs.build_docker_image.outputs.digest-image-name }}
       containerAppName: ${{
@@ -40,7 +44,11 @@ jobs:
           github.event_name == 'workflow_dispatch' && github.ref_name ||
           github.sha
         }}-api
-    needs: [build_docker_image]
+      postgres-host: ${{ needs.deploy-db.outputs.postgres-host }}
+      postgres-port: ${{ needs.deploy-db.outputs.postgres-port }}
+      postgres-db: ${{ needs.deploy-db.outputs.postgres-db }}
+      postgres-user: ${{ needs.deploy-db.outputs.postgres-user }}
+      postgres-password: ${{ secrets.STITCH_APP_PASSWORD_DEV }}
 
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}

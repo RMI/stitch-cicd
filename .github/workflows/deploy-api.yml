@@ -19,6 +19,27 @@ on:
         required: false
         default: 8000
         type: number
+      postgres-host:
+        required: true
+        type: string
+      postgres-port:
+        required: false
+        default: "5432"
+        type: string
+      postgres-db:
+        required: true
+        type: string
+      postgres-user:
+        required: true
+        type: string
+      postgres-password:
+        required: true
+        type: string
+      postgres-sslmode:
+        required: false
+        default: "require"
+        type: string
+
     outputs:
       container-app-url:
         description: "HTTPS URL of the deployed Azure Container App"
@@ -58,7 +79,16 @@ jobs:
           containerAppName: ${{ inputs.containerAppName }}
           containerAppEnvironment: ${{ inputs.containerAppEnvironment }}
           targetPort: ${{ inputs.targetPort }}
-          environmentVariables: LOG_LEVEL=debug AUTH_DISABLED=true ENVIRONMENT=${{ (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) || github.ref_name }}
+          environmentVariables: >-
+            LOG_LEVEL=debug
+            AUTH_DISABLED=true
+            ENVIRONMENT=${{ (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) || github.ref_name }}
+            POSTGRES_HOST=${{ inputs.postgres-host }}
+            POSTGRES_PORT=${{ inputs.postgres-port }}
+            POSTGRES_DB=${{ inputs.postgres-db }}
+            POSTGRES_USER=${{ inputs.postgres-user }}
+            POSTGRES_PASSWORD=${{ inputs.postgres-password }}
+            PGSSLMODE=${{ inputs.postgres-sslmode }}
           ingress: "external"
 
       - name: Export application URL
@@ -92,7 +122,6 @@ jobs:
       - name: Create or update comment
         uses: peter-evans/create-or-update-comment@v4
         with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             API Deploy Status ${{ github.head_ref }}

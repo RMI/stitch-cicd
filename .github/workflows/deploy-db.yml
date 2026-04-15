@@ -1,18 +1,30 @@
 ---
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
   workflow_call:
+    outputs:
+      postgres-host:
+        description: "Database server hostname"
+        value: ${{ jobs.create-db.outputs.postgres-host }}
+      postgres-port:
+        description: "Database server port"
+        value: ${{ jobs.create-db.outputs.postgres-port }}
+      postgres-db:
+        description: "Database name"
+        value: ${{ jobs.create-db.outputs.postgres-db }}
+      postgres-user:
+        description: "Application database user"
+        value: ${{ jobs.create-db.outputs.postgres-user }}
 
 name: Create Database
 
 jobs:
   create-db:
     runs-on: ubuntu-latest
+    outputs:
+      postgres-host: ${{ steps.export-db-config.outputs.postgres-host }}
+      postgres-port: ${{ steps.export-db-config.outputs.postgres-port }}
+      postgres-db: ${{ steps.export-db-config.outputs.postgres-db }}
+      postgres-user: ${{ steps.export-db-config.outputs.postgres-user }}
 
     env:
       PGHOST: ${{ vars.PGHOST_DEV }}
@@ -46,6 +58,15 @@ jobs:
           # Trim to 63 chars (Postgres identifier limit)
           CLEAN=$(echo "$CLEAN" | cut -c1-63)
           echo "db-name=$CLEAN" >> "$GITHUB_OUTPUT"
+
+      - name: Export DB config
+        id: export-db-config
+        run: |
+          set -euo pipefail
+          echo "postgres-host=${PGHOST}" >> "$GITHUB_OUTPUT"
+          echo "postgres-port=${PGPORT}" >> "$GITHUB_OUTPUT"
+          echo "postgres-db=${{ steps.normalize-name.outputs.db-name }}" >> "$GITHUB_OUTPUT"
+          echo "postgres-user=stitch_app" >> "$GITHUB_OUTPUT"
 
       - name: Create database if it doesn't exist
         env:
