@@ -12,7 +12,7 @@ on:
       containerAppEnvironment:
         description: "The name of the Azure Container App environment to deploy to."
         required: false
-        default: "stitch-preview"
+        default: "stitch-dev"
         type: string
 
 jobs:
