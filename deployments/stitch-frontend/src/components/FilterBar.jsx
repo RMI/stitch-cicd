@@ -6,7 +6,7 @@ import { FILTER_FIELDS, EMPTY_FILTERS } from "../config/filters";
 function buildOptions(resources, field) {
   const counts = {};
   for (const r of resources) {
-    const val = r[field];
+    const val = r.data?.[field];
     if (val != null) counts[val] = (counts[val] ?? 0) + 1;
   }
   return Object.entries(counts)

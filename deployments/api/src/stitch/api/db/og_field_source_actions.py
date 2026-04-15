@@ -10,11 +10,10 @@ from stitch.api.db.errors import (
     SourceNotFoundError,
 )
 from stitch.api.db.utils import partition_by_id_none
-from stitch.api.entities import User
+from stitch.api.entities import OGFieldQueryParams, User
 from stitch.ogsi.model import OGFieldSource, OGFieldResource
 
 from .model import (
-    MembershipStatus,
     OilGasFieldSourceModel,
     ResourceModel,
     MembershipModel,
@@ -113,7 +112,7 @@ async def attach_sources_to_resource(
     memberships = [
         MembershipModel.create(
             created_by=user,
-            resource=resource,
+            resource_id=resource.id,
             source=src.source,
             source_pk=src.id,
         )
@@ -139,12 +138,10 @@ async def get_sources(
     return [model.as_entity() for model in models]
 
 
-async def list_og_sources(session: AsyncSession) -> Sequence[OGFieldSource]:
-    stmt = (
-        select(OilGasFieldSourceModel)
-        .join(MembershipModel, MembershipModel.source_pk == OilGasFieldSourceModel.id)
-        .where(MembershipModel.status == MembershipStatus.ACTIVE)
-        .distinct()
-    )
-    models = (await session.scalars(stmt)).all()
-    return tuple(m.as_entity() for m in models)
+async def query(
+    session: AsyncSession,
+    params: OGFieldQueryParams,
+) -> tuple[Sequence[OGFieldSource], int]:
+    models = await OilGasFieldSourceModel.query(session, params)
+    total = await OilGasFieldSourceModel.count(session, params)
+    return tuple(m.as_entity() for m in models), total

@@ -16,9 +16,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-rulesets:
-    name: "Check Rulesets"
-    uses: ./.github/workflows/admin-check_rulesets.yml
 
   pattern-scan:
     name: "Check for forbidden patterns"

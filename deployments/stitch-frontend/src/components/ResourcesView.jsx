@@ -1,34 +1,70 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useResources } from "../hooks/useResources";
 import FetchButton from "./FetchButton";
 import ClearCacheButton from "./ClearCacheButton";
 import ResourcesTable from "./ResourcesTable";
 import FilterBar from "./FilterBar";
+import Pagination from "./Pagination";
 import { EMPTY_FILTERS } from "../config/filters";
-import { resourceKeys } from "../queries/resources";
+import {
+  resourceKeys,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_PAGE,
+} from "../queries/resources";
 import config from "../config/env";
-
-// OR within a field, AND across fields.
-function applyFilters(resources, filters) {
-  if (!resources) return resources;
-  return resources.filter((resource) =>
-    Object.entries(filters).every(
-      ([field, values]) => !values.length || values.includes(resource[field]),
-    ),
-  );
-}
 
 export default function ResourcesView({ className, endpoint }) {
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, refetch } = useResources(endpoint);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Number(searchParams.get("page") ?? DEFAULT_PAGE);
+  const pageSize = Number(searchParams.get("page_size") ?? DEFAULT_PAGE_SIZE);
+  const [enabled, setEnabled] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [sortConfig, setSortConfig] = useState({
+    column: null,
+    direction: "asc",
+  });
 
-  const handleClear = () => {
-    queryClient.setQueryData(resourceKeys.lists(endpoint), []);
+  const { data, isLoading, isError, refetch } = useResources(endpoint, {
+    page,
+    page_size: pageSize,
+    enabled,
+    filters,
+    sort_by: sortConfig.column ?? undefined,
+    sort_order: sortConfig.column ? sortConfig.direction : undefined,
+  });
+
+  const handleFetch = () => {
+    setEnabled(true);
+    refetch();
   };
 
-  const filteredData = applyFilters(data, filters);
+  const handleClear = () => {
+    queryClient.removeQueries({ queryKey: resourceKeys.lists(endpoint) });
+    setEnabled(false);
+    setFilters(EMPTY_FILTERS);
+    setSearchParams({});
+  };
+
+  const handlePageChange = (newPage) => {
+    setSearchParams({ page: newPage, page_size: pageSize });
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setSearchParams({ page: DEFAULT_PAGE, page_size: newSize });
+  };
+
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+    setSearchParams({ page: DEFAULT_PAGE, page_size: pageSize });
+  };
+
+  const handleSortChange = (newSortConfig) => {
+    setSortConfig(newSortConfig);
+    setSearchParams({ page: DEFAULT_PAGE, page_size: pageSize });
+  };
 
   return (
     <div className={`max-w-4xl mx-auto ${className}`}>
@@ -39,18 +75,18 @@ export default function ResourcesView({ className, endpoint }) {
         </span>
       </div>
       <div className="mb-4 flex gap-3">
-        <FetchButton onFetch={() => refetch()} isLoading={isLoading} />
+        <FetchButton onFetch={handleFetch} isLoading={isLoading} />
         <ClearCacheButton
           onClear={handleClear}
-          disabled={!data?.length && !isError}
+          disabled={!data?.items?.length && !isError}
         />
       </div>
-      {data?.length > 0 && (
+      {data?.items?.length > 0 && (
         <div className="mb-4">
           <FilterBar
-            resources={data}
+            resources={data?.items}
             filters={filters}
-            onFiltersChange={setFilters}
+            onFiltersChange={handleFiltersChange}
           />
         </div>
       )}
@@ -59,12 +95,26 @@ export default function ResourcesView({ className, endpoint }) {
           Failed to load resources. Check your connection and try again.
         </p>
       )}
-      {!isError && data && filteredData?.length === 0 && (
+      {!isError && data && data.items?.length === 0 && (
         <p className="text-sm text-gray-400">
           No resources match the current filters.
         </p>
       )}
-      <ResourcesTable resources={filteredData} />
+      <ResourcesTable
+        resources={data?.items}
+        sortConfig={sortConfig}
+        onSort={handleSortChange}
+      />
+      {data && (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={data.total_count}
+          totalPages={data.total_pages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
     </div>
   );
 }

@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, ClassVar
+from typing import Any, ClassVar, override
 
 from pydantic import TypeAdapter
 from sqlalchemy import (
-    Float,
-    Integer,
-    String,
     JSON,
     inspect,
+    select,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 from stitch.ogsi.model import OGFieldSource, OilGasOperator, OilGasOwner
@@ -22,55 +20,45 @@ from stitch.ogsi.model.types import (
 )
 
 from stitch.api.db.model.types import PORTABLE_BIGINT
-from stitch.api.entities import User
+from stitch.api.entities import OGFieldQueryParams, User
 
 from .common import Base
+from .membership import MembershipModel, MembershipStatus
 from .mixins import TimestampMixin, UserAuditMixin
+from .og_field_query_mixin import OGFieldQueryMixin
 
 
-class OilGasFieldSourceModel(TimestampMixin, UserAuditMixin, Base):
+class OilGasFieldSourceModel(OGFieldQueryMixin, TimestampMixin, UserAuditMixin, Base):
     """A single OG field source record (canonicalized), feedable into a Resource."""
 
     type_adapter: ClassVar[TypeAdapter[OGFieldSource]] = TypeAdapter(OGFieldSource)
 
-    __tablename__ = "oil_gas_field_sources"
+    __tablename__: str = "oil_gas_field_sources"
 
     id: Mapped[int] = mapped_column(PORTABLE_BIGINT, primary_key=True)
 
     # SqlAlchemy will translate Literal types into Enums
     source: Mapped[OGSISrcKey] = mapped_column(nullable=False)
 
-    # Domain columns (aligned with OilGasFieldBase)
-    name: Mapped[str | None] = mapped_column(String, nullable=True)
-    country: Mapped[str | None] = mapped_column(String, nullable=True)
-    basin: Mapped[str | None] = mapped_column(String, nullable=True)
-    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
-    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
-    name_local: Mapped[str | None] = mapped_column(String, nullable=True)
-    state_province: Mapped[str | None] = mapped_column(String, nullable=True)
-    region: Mapped[str | None] = mapped_column(String, nullable=True)
-    reservoir_formation: Mapped[str | None] = mapped_column(String, nullable=True)
-    discovery_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    production_start_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    fid_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
-
-    # Enum/Literal columns
-    location_type: Mapped[LocationType | None] = mapped_column(
-        default=None, nullable=True
-    )
-    production_conventionality: Mapped[ProductionConventionality | None] = (
-        mapped_column(default=None, nullable=True)
-    )
-    primary_hydrocarbon_group: Mapped[PrimaryHydrocarbonGroup | None] = mapped_column(
-        default=None, nullable=True
-    )
-    field_status: Mapped[FieldStatus | None] = mapped_column(
-        default=None, nullable=True
-    )
-
     # JSON columns
     owners: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
     operators: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
+
+    @classmethod
+    @override
+    def _base_query(cls, params: OGFieldQueryParams):
+        """Filter to sources with at least one active membership."""
+
+        active_membership = (
+            select(1)
+            .where(MembershipModel.source_pk == cls.id)
+            .where(MembershipModel.status == MembershipStatus.ACTIVE)
+            .exists()
+        )
+        stmt = select(cls).where(active_membership)
+        for cond in cls._build_conditions(params):
+            stmt = stmt.where(cond)
+        return cls._apply_sort(stmt, params)
 
     @classmethod
     def create(
