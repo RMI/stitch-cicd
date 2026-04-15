@@ -85,11 +85,11 @@ jobs:
           echo "container_app_url=https://$fqdn" >> "$GITHUB_OUTPUT"
 
   add_comment:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event.pull_request.number != null }}
+    needs: [deploy-api]
     runs-on: ubuntu-latest
     steps:
       - name: Find Comment
-        # https://github.com/peter-evans/find-comment
         uses: peter-evans/find-comment@v3
         id: fc
         with:
@@ -98,15 +98,12 @@ jobs:
           body-includes: API Deploy Status
 
       - name: Create or update comment
-        # https://github.com/peter-evans/create-or-update-comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             API Deploy Status
-            ```
-            ${{ needs.deploy-api.outputs.container-app-url }}
-            ${{ needs.deploy-api.outputs.container-app-fqdn }}
-            ```
+            url='${{ needs.deploy-api.outputs.container-app-url }}'
+            fqdn='${{ needs.deploy-api.outputs.container-app-fqdn }}'
           edit-mode: replace
