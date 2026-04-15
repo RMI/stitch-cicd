@@ -1,5 +1,9 @@
 import { getResource, getResources, getResourceDetail } from "./api";
 
+export const DEFAULT_STALE_TIME = 60_000;
+export const DEFAULT_PAGE = 1;
+export const DEFAULT_PAGE_SIZE = 10;
+
 // Query key factory - hierarchical for easy invalidation
 export const resourceKeys = {
   all: (endpoint = "resources") => [endpoint],
@@ -22,10 +26,31 @@ export const resourceKeys = {
 
 // Query definitions
 export const resourceQueries = {
-  list: (endpoint = "resources") => ({
-    queryKey: resourceKeys.lists(endpoint),
-    queryFn: (fetcher) => getResources(fetcher, endpoint),
+  list: (
+    endpoint = "resources",
+    page = DEFAULT_PAGE,
+    page_size = DEFAULT_PAGE_SIZE,
+    filters = {},
+    sort_by,
+    sort_order,
+  ) => ({
+    queryKey: resourceKeys.list(endpoint, {
+      page,
+      page_size,
+      ...filters,
+      sort_by,
+      sort_order,
+    }),
+    queryFn: (fetcher) =>
+      getResources(fetcher, endpoint, {
+        page,
+        page_size,
+        filters,
+        sort_by,
+        sort_order,
+      }),
     enabled: false,
+    staleTime: DEFAULT_STALE_TIME,
   }),
 
   detail: (endpoint = "resources", id) => ({
