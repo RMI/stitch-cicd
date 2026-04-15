@@ -19,6 +19,13 @@ on:
         required: false
         default: 8000
         type: number
+    outputs:
+      container-app-url:
+        description: "HTTPS URL of the deployed Azure Container App"
+        value: ${{ jobs.deploy-api.outputs.container-app-url }}
+      container-app-fqdn:
+        description: "Ingress FQDN of the deployed Azure Container App"
+        value: ${{ jobs.deploy-api.outputs.container-app-fqdn }}
 
 jobs:
   deploy-api:
@@ -28,8 +35,9 @@ jobs:
       contents: read
       packages: read
     timeout-minutes: 25
-    # outputs:
-    #   full-image-name: ${{ steps.export-output.outputs.full-image-name }}
+    outputs:
+      container-app-url: ${{ steps.export-app-url.outputs.container_app_url }}
+      container-app-fqdn: ${{ steps.export-app-url.outputs.container_app_fqdn }}
 
     steps:
 
@@ -45,7 +53,6 @@ jobs:
       - name: Build and deploy Container App
         uses: azure/container-apps-deploy-action@v1
         with:
-          # imageToDeploy: mcr.microsoft.com/azuredocs/containerapps-helloworld:latest
           imageToDeploy: ${{ inputs.full-image-name }}
           resourceGroup: STITCH-DEV-RG
           containerAppName: ${{ inputs.containerAppName }}
@@ -53,3 +60,53 @@ jobs:
           targetPort: ${{ inputs.targetPort }}
           environmentVariables: LOG_LEVEL=debug AUTH_DISABLED=true
           ingress: "external"
+
+      - name: Export application URL
+        id: export-app-url
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fqdn="$(
+            az containerapp show \
+              --name "${{ inputs.containerAppName }}" \
+              --resource-group "STITCH-DEV-RG" \
+              --query "properties.configuration.ingress.fqdn" \
+              --output tsv
+          )"
+
+          if [ -z "$fqdn" ]; then
+            echo "Failed to resolve container app ingress FQDN" >&2
+            exit 1
+          fi
+
+          echo "Resolved FQDN: $fqdn"
+          echo "container_app_fqdn=$fqdn" >> "$GITHUB_OUTPUT"
+          echo "container_app_url=https://$fqdn" >> "$GITHUB_OUTPUT"
+
+  add_comment:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find Comment
+        # https://github.com/peter-evans/find-comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: API Deploy Status
+
+      - name: Create or update comment
+        # https://github.com/peter-evans/create-or-update-comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            API Deploy Status
+            ```
+            ${{ needs.deploy-api.outputs.container-app-url }}
+            ${{ needs.deploy-api.outputs.container-app-fqdn }}
+            ```
+          edit-mode: replace
