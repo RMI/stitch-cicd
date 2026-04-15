@@ -58,7 +58,7 @@ jobs:
           containerAppName: ${{ inputs.containerAppName }}
           containerAppEnvironment: ${{ inputs.containerAppEnvironment }}
           targetPort: ${{ inputs.targetPort }}
-          environmentVariables: LOG_LEVEL=debug AUTH_DISABLED=true
+          environmentVariables: LOG_LEVEL=debug AUTH_DISABLED=true ENVIRONMENT=${{ (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) || github.ref_name }}
           ingress: "external"
 
       - name: Export application URL
