@@ -89,21 +89,13 @@ jobs:
     needs: [deploy-api]
     runs-on: ubuntu-latest
     steps:
-      - name: Find Comment
-        uses: peter-evans/find-comment@v3
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: API Deploy Status
-
       - name: Create or update comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            API Deploy Status
+            API Deploy Status ${{ github.head_ref }}
             url='${{ needs.deploy-api.outputs.container-app-url }}'
             fqdn='${{ needs.deploy-api.outputs.container-app-fqdn }}'
           edit-mode: replace
