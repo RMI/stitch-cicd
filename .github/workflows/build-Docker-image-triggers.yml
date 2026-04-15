@@ -41,6 +41,8 @@ jobs:
           github.sha
         }}-api
     needs: [build_docker_image]
+    outputs:
+      container-app-url: ${{ jobs.deploy-docker.outputs.container-app-url }}
 
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}
