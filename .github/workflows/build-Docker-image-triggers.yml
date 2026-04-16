@@ -60,6 +60,14 @@ jobs:
       postgres-db: ${{ needs.deploy-db.outputs.postgres-db }}
       postgres-user: ${{ needs.deploy-db.outputs.postgres-user }}
 
+  deploy-frontend:
+    name: "Deploy frontend"
+    uses: ./.github/workflows/azure-static-web-apps.yml
+    secrets: inherit
+    needs: [deploy-docker]
+    with:
+      api-url: ${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
+
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}
     uses: RMI-PACTA/actions/.github/workflows/add-comment-table.yml@main
