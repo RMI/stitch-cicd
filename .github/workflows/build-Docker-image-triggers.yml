@@ -78,7 +78,7 @@ jobs:
 
   deploy-docker:
     name: "Deploy API"
-    uses: ./.github/workflows/deploy-api.yml
+    uses: ./.github/workflows/deploy-container.yml
     secrets: inherit
     needs: [build_api_docker_image, deploy-db, run-db-init]
     with:
@@ -113,7 +113,7 @@ jobs:
 
   deploy-entity-linkage:
     name: "Deploy entity linkage"
-    uses: ./.github/workflows/deploy-api.yml
+    uses: ./.github/workflows/deploy-container.yml
     secrets: inherit
     needs: [build_entity_linkage_docker_image, deploy-docker]
     with:
