@@ -25,15 +25,15 @@ def test_load_settings_invalid_enum_raises(monkeypatch):
 
 
 class DummyInspector:
-    def __init__(self, tables, views=None):
-        self._tables = tables
-        self._views = views or []
+    def __init__(self, table_names, view_names=None):
+        self._table_names = table_names
+        self._view_names = view_names or []
 
     def get_table_names(self, schema="public"):
-        return self._tables
+        return list(self._table_names)
 
     def get_view_names(self, schema="public"):
-        return self._views
+        return list(self._view_names)
 
 
 def test_classify_db_state_empty(monkeypatch):
@@ -65,6 +65,22 @@ def test_classify_db_state_partial(monkeypatch):
     state, existing = ij.classify_db_state(dummy_engine, expected)
     assert state == "partial_or_mismatch"
     assert "users" in existing
+
+
+def test_classify_db_state_ok_with_view(monkeypatch):
+    monkeypatch.setattr(
+        ij,
+        "inspect",
+        lambda engine: DummyInspector(
+            ["users"],
+            ["resource_coalesced_view"],
+        ),
+    )
+    dummy_engine = object()
+    expected = {"users", "resource_coalesced_view"}
+    state, existing = ij.classify_db_state(dummy_engine, expected)
+    assert state == "ok"
+    assert existing == {"users", "resource_coalesced_view"}
 
 
 # ---------- seed_already_applied tests (mock engine.connect()) ----------
