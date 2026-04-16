@@ -80,6 +80,9 @@ jobs:
           echo "Database '$DB_NAME' dropped."
 
   delete-api-container-app:
+    permissions:
+      id-token: write
+      contents: read
     runs-on: ubuntu-latest
 
     env:
