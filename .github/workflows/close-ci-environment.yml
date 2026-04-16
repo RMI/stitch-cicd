@@ -133,7 +133,11 @@ jobs:
 
   close-static-web-app-preview:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      checks: write
+      contents: read
+      id-token: write
+      pull-requests: write
 
     steps:
       - name: Close Azure Static Web Apps preview
