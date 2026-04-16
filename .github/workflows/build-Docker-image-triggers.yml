@@ -59,6 +59,21 @@ jobs:
       postgres-port: ${{ needs.deploy-db.outputs.postgres-port }}
       postgres-db: ${{ needs.deploy-db.outputs.postgres-db }}
       postgres-user: ${{ needs.deploy-db.outputs.postgres-user }}
+      frontend-origin-url: ${{
+          github.event_name == 'pull_request' &&
+          format('https://witty-mushroom-017a3dc1e-{0}.westus2.1.azurestaticapps.net', github.event.pull_request.number) ||
+          github.event_name == 'push' &&
+          format('https://witty-mushroom-017a3dc1e-{0}.westus2.1.azurestaticapps.net', github.ref_name) ||
+          'http://localhost:3000'
+        }}
+
+  deploy-frontend:
+    name: "Deploy frontend"
+    uses: ./.github/workflows/azure-static-web-apps.yml
+    secrets: inherit
+    needs: [deploy-docker]
+    with:
+      api-url: ${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
 
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}
