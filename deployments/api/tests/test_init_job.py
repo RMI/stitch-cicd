@@ -25,11 +25,15 @@ def test_load_settings_invalid_enum_raises(monkeypatch):
 
 
 class DummyInspector:
-    def __init__(self, table_names):
-        self._names = table_names
+    def __init__(self, tables, views=None):
+        self._tables = tables
+        self._views = views or []
 
     def get_table_names(self, schema="public"):
-        return list(self._names)
+        return self._tables
+
+    def get_view_names(self, schema="public"):
+        return self._views
 
 
 def test_classify_db_state_empty(monkeypatch):
