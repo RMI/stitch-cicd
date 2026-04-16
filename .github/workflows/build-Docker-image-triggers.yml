@@ -26,7 +26,7 @@ jobs:
         }}
 
   build_entity_linkage_docker_image:
-    name: "Build and publish API"
+    name: "Build and publish Entity Linkage"
     uses: ./.github/workflows/build-and-push-Docker-image.yml
     secrets: inherit
     permissions:
@@ -43,7 +43,7 @@ jobs:
         }}
 
   build_seed_docker_image:
-    name: "Build and publish API"
+    name: "Build and publish Seed"
     uses: ./.github/workflows/build-and-push-Docker-image.yml
     secrets: inherit
     permissions:
