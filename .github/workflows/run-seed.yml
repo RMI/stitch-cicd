@@ -1,0 +1,41 @@
+name: Run seed job
+
+on:
+  workflow_call:
+    inputs:
+      full-image-name:
+        description: "Full pushed image name including host/registry, name, and digest"
+        required: true
+        type: string
+      api-url:
+        description: "Base API URL for the deployed API"
+        required: true
+        type: string
+
+jobs:
+  run-seed:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    timeout-minutes: 25
+
+    steps:
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Pull seed image
+        run: docker pull "${{ inputs.full-image-name }}"
+
+      - name: Run seed job
+        env:
+          LOG_LEVEL: info
+          API_BASE_URL: ${{ inputs.api-url }}
+        run: |
+          set -euo pipefail
+
+          docker run --rm \
+            -e LOG_LEVEL \
+            -e API_BASE_URL \
+            "${{ inputs.full-image-name }}" \
+            python -m stitch.api.seed
