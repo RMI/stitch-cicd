@@ -30,11 +30,22 @@ jobs:
     uses: ./.github/workflows/deploy-db.yml
     secrets: inherit
 
+  run-db-init:
+    name: "Run DB init"
+    uses: ./.github/workflows/run-db-init.yml
+    secrets: inherit
+    needs: [build_docker_image, deploy-db]
+    with:
+      full-image-name: ${{ needs.build_docker_image.outputs.digest-image-name }}
+      postgres-host: ${{ needs.deploy-db.outputs.postgres-host }}
+      postgres-port: ${{ needs.deploy-db.outputs.postgres-port }}
+      postgres-db: ${{ needs.deploy-db.outputs.postgres-db }}
+
   deploy-docker:
     name: "Deploy"
     uses: ./.github/workflows/deploy-api.yml
     secrets: inherit
-    needs: [build_docker_image, deploy-db]
+    needs: [build_docker_image, deploy-db, run-db-init]
     with:
       full-image-name: ${{ needs.build_docker_image.outputs.digest-image-name }}
       containerAppName: ${{
@@ -55,4 +66,3 @@ jobs:
     needs: [build_docker_image]
     with:
       header: "Docker build status"
-
