@@ -108,8 +108,8 @@ jobs:
         POSTGRES_PORT=${{ needs.deploy-db.outputs.postgres-port }}
         POSTGRES_DB=${{ needs.deploy-db.outputs.postgres-db }}
         POSTGRES_USER=${{ needs.deploy-db.outputs.postgres-user }}
-        POSTGRES_PASSWORD=${{ secrets.STITCH_APP_PASSWORD_DEV }}
         PGSSLMODE=require
+      inject-stitch-app-password: true
 
   deploy-entity-linkage:
     name: "Deploy entity linkage"

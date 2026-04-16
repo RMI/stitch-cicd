@@ -20,10 +20,14 @@ on:
         default: 8000
         type: number
       environment-variables:
-        description: "Whitespace-delimited KEY=value pairs to inject into the Container App"
+        description: "Whitespace-delimited non-secret KEY=value pairs"
         required: false
         default: ""
         type: string
+      inject-stitch-app-password:
+        required: false
+        default: false
+        type: boolean
 
     outputs:
       container-app-url:
@@ -55,6 +59,20 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - run: echo "fullname=${{ inputs.full-image-name }}"
+
+      - name: Assemble environment variables
+        id: envvars
+        shell: bash
+        run: |
+          set -euo pipefail
+          envvars='${{ inputs.environment-variables }}'
+          if [ "${{ inputs.inject-stitch-app-password }}" = "true" ]; then
+            envvars="$envvars POSTGRES_PASSWORD=${{ secrets.STITCH_APP_PASSWORD_DEV }}"
+          fi
+          echo "environment_variables<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$envvars" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          echo "$envvars"
 
       - name: Build and deploy Container App
         uses: azure/container-apps-deploy-action@v1
