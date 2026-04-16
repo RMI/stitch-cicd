@@ -118,7 +118,7 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
   const [tokenCopied, setTokenCopied] = useState(false);
   const [tokenCopyError, setTokenCopyError] = useState(false);
 
-  const apiDocsUrl = useMemo(() => getApiDocsUrl(config.apiBaseUrl), []);
+  const apiDocsUrl = getApiDocsUrl(config.apiBaseUrl);
 
   useEffect(() => {
     let cancelled = false;
@@ -258,7 +258,7 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
             <a
               href={apiDocsUrl}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-100"
               title="Open FastAPI docs"
             >
