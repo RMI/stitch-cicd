@@ -66,13 +66,14 @@ jobs:
         run: |
           set -euo pipefail
           envvars='${{ inputs.environment-variables }}'
+          echo "$envvars"
           if [ "${{ inputs.inject-stitch-app-password }}" = "true" ]; then
             envvars="$envvars POSTGRES_PASSWORD=${{ secrets.STITCH_APP_PASSWORD_DEV }}"
+            echo "Also adding POSTGRES_PASSWORD"
           fi
           echo "environment_variables<<EOF" >> "$GITHUB_OUTPUT"
           echo "$envvars" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
-          echo "$envvars"
 
       - name: Build and deploy Container App
         uses: azure/container-apps-deploy-action@v1
