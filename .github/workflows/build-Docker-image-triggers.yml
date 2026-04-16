@@ -149,9 +149,10 @@ jobs:
     name: "Deploy frontend"
     uses: ./.github/workflows/azure-static-web-apps.yml
     secrets: inherit
-    needs: [deploy-docker]
+    needs: [deploy-docker, deploy-entity-linkage]
     with:
       api-url: ${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
+      entity-linkage-url: ${{ format('{0}/api/v1', needs.deploy-entity-linkage.outputs.container-app-url) }}
 
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}
