@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_docker_image:
-    name: "Call build and push action"
+  build_api_docker_image:
+    name: "Build and publish API"
     uses: ./.github/workflows/build-and-push-Docker-image.yml
     secrets: inherit
     permissions:
@@ -17,6 +17,24 @@ jobs:
     with:
       dockerfile: deployments/api/Dockerfile
       image-name: ${{ github.event.repository.name }}-api
+      image-tag: ${{
+          github.event_name == 'pull_request' && format('{0}{1}','pr', github.event.pull_request.number) ||
+          github.event_name == 'schedule' && 'nightly' ||
+          github.event_name == 'push' && github.ref_name ||
+          github.event_name == 'workflow_dispatch' && github.ref_name ||
+          github.sha
+        }}
+
+  build_seed_docker_image:
+    name: "Build and publish API"
+    uses: ./.github/workflows/build-and-push-Docker-image.yml
+    secrets: inherit
+    permissions:
+      packages: write
+      contents: read
+    with:
+      dockerfile: deployments/seed/Dockerfile
+      image-name: ${{ github.event.repository.name }}-seed
       image-tag: ${{
           github.event_name == 'pull_request' && format('{0}{1}','pr', github.event.pull_request.number) ||
           github.event_name == 'schedule' && 'nightly' ||
