@@ -98,6 +98,14 @@ function redactToken(token) {
   return `${token.slice(0, 12)}...${token.slice(-8)}`;
 }
 
+function getApiDocsUrl(apiBaseUrl) {
+  if (!apiBaseUrl) {
+    return "";
+  }
+
+  return apiBaseUrl.replace(/\/api\/v1\/?$/, "/docs");
+}
+
 export default function ColophonPanel({ diagnosticsOpen = false }) {
   const systemInfo = useSystemInfo();
   const backendDiagnostics = useBackendDiagnostics(diagnosticsOpen);
@@ -109,6 +117,8 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
   const [copyError, setCopyError] = useState(false);
   const [tokenCopied, setTokenCopied] = useState(false);
   const [tokenCopyError, setTokenCopyError] = useState(false);
+
+  const apiDocsUrl = useMemo(() => getApiDocsUrl(config.apiBaseUrl), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -244,6 +254,16 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
                   ? "Token copy failed"
                   : "Copy token"}
             </button>
+
+            <a
+              href={apiDocsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-100"
+              title="Open FastAPI docs"
+            >
+              API docs
+            </a>
 
             <button
               type="button"
