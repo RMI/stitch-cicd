@@ -52,9 +52,9 @@ jobs:
     name: "Run DB init"
     uses: ./.github/workflows/run-db-init.yml
     secrets: inherit
-    needs: [build_docker_image, deploy-db]
+    needs: [build_api_docker_image, deploy-db]
     with:
-      full-image-name: ${{ needs.build_docker_image.outputs.digest-image-name }}
+      full-image-name: ${{ needs.build_api_docker_image.outputs.digest-image-name }}
       postgres-host: ${{ needs.deploy-db.outputs.postgres-host }}
       postgres-port: ${{ needs.deploy-db.outputs.postgres-port }}
       postgres-db: ${{ needs.deploy-db.outputs.postgres-db }}
@@ -63,9 +63,9 @@ jobs:
     name: "Deploy"
     uses: ./.github/workflows/deploy-api.yml
     secrets: inherit
-    needs: [build_docker_image, deploy-db, run-db-init]
+    needs: [build_api_docker_image, deploy-db, run-db-init]
     with:
-      full-image-name: ${{ needs.build_docker_image.outputs.digest-image-name }}
+      full-image-name: ${{ needs.build_api_docker_image.outputs.digest-image-name }}
       containerAppName: ${{
           github.event_name == 'pull_request' && format('{0}{1}','pr', github.event.pull_request.number) ||
           github.event_name == 'schedule' && 'nightly' ||
@@ -85,6 +85,15 @@ jobs:
           'http://localhost:3000'
         }}
 
+  run-seed:
+    name: "Run seed"
+    uses: ./.github/workflows/run-seed.yml
+    secrets: inherit
+    needs: [build_seed_docker_image, deploy-docker]
+    with:
+      full-image-name: ${{ needs.build_seed_docker_image.outputs.digest-image-name }}
+      api-url: ${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
+
   deploy-frontend:
     name: "Deploy frontend"
     uses: ./.github/workflows/azure-static-web-apps.yml
@@ -96,6 +105,6 @@ jobs:
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}
     uses: RMI-PACTA/actions/.github/workflows/add-comment-table.yml@main
-    needs: [build_docker_image]
+    needs: [build_api_docker_image, build_seed_docker_image]
     with:
       header: "Docker build status"
