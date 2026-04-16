@@ -30,9 +30,11 @@ createRoot(document.getElementById("root")).render(
       useRefreshTokens={true}
     >
       <QueryClientProvider client={queryClient}>
+        <AuthGate>
           <BrowserRouter>
             <App />
           </BrowserRouter>
+        </AuthGate>
       </QueryClientProvider>
     </Auth0Provider>
   </StrictMode>,
