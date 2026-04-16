@@ -35,6 +35,7 @@ jobs:
         run: make frontend-build
         env:
           VITE_API_URL: ${{ inputs.api-url }}
+          VITE_APP_ENV: ${{ (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) || github.ref_name }}
           VITE_AUTH0_AUDIENCE: https://stitch-api.local
           VITE_AUTH0_CLIENT_ID: TS1V1soQbccAV1sitFFCfUaIlSwHD2S2
           VITE_AUTH0_DOMAIN: https://rmi-spd.us.auth0.com
