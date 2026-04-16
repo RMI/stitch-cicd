@@ -27,15 +27,28 @@ jobs:
       - name: Pull seed image
         run: docker pull "${{ inputs.full-image-name }}"
 
+      - name: Checkout
+        uses: actions/checkout@v5
+
       - name: Run seed job
         env:
-          LOG_LEVEL: info
           API_BASE_URL: ${{ inputs.api-url }}
+          FAKER_POST_COUNT: "5"
+          LOG_LEVEL: "INFO"
+          RANDOM_SEED: "8675309"
+          SEED_SOURCE: "mixed"
+          NULL_PROBABILITY: "0.3"
+          STATIC_PAYLOAD_DIR: "/mnt/data"
         run: |
           set -euo pipefail
 
           docker run --rm \
             -e LOG_LEVEL \
             -e API_BASE_URL \
-            "${{ inputs.full-image-name }}" \
-            python -m stitch.api.seed
+            -e FAKER_POST_COUNT \
+            -e RANDOM_SEED \
+            -e SEED_SOURCE \
+            -e NULL_PROBABILITY \
+            -e STATIC_PAYLOAD_DIR \
+            -v "$GITHUB_WORKSPACE/deployments/seed/data:/mnt/data:ro" \
+            "${{ inputs.full-image-name }}"
