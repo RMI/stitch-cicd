@@ -159,7 +159,7 @@ class TestSettings:
         """Verify default environment is dev."""
         settings = Settings()
 
-        assert settings.environment.value == "dev"
+        assert settings.environment == "dev"
 
     def test_default_frontend_origin_url(self, monkeypatch):
         """Verify default frontend origin URL is http://localhost:3000."""

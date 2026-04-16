@@ -4,8 +4,6 @@ on:
   pull_request:
   push:
     branches: [main]
-  # schedule:
-  #   - cron: '0 0 * * 1,2,3,4,5'
   workflow_dispatch:
 
 jobs:
@@ -27,10 +25,44 @@ jobs:
           github.sha
         }}
 
+  deploy-db:
+    name: "Create DB"
+    uses: ./.github/workflows/deploy-db.yml
+    secrets: inherit
+
+  run-db-init:
+    name: "Run DB init"
+    uses: ./.github/workflows/run-db-init.yml
+    secrets: inherit
+    needs: [build_docker_image, deploy-db]
+    with:
+      full-image-name: ${{ needs.build_docker_image.outputs.digest-image-name }}
+      postgres-host: ${{ needs.deploy-db.outputs.postgres-host }}
+      postgres-port: ${{ needs.deploy-db.outputs.postgres-port }}
+      postgres-db: ${{ needs.deploy-db.outputs.postgres-db }}
+
+  deploy-docker:
+    name: "Deploy"
+    uses: ./.github/workflows/deploy-api.yml
+    secrets: inherit
+    needs: [build_docker_image, deploy-db, run-db-init]
+    with:
+      full-image-name: ${{ needs.build_docker_image.outputs.digest-image-name }}
+      containerAppName: ${{
+          github.event_name == 'pull_request' && format('{0}{1}','pr', github.event.pull_request.number) ||
+          github.event_name == 'schedule' && 'nightly' ||
+          github.event_name == 'push' && github.ref_name ||
+          github.event_name == 'workflow_dispatch' && github.ref_name ||
+          github.sha
+        }}-api
+      postgres-host: ${{ needs.deploy-db.outputs.postgres-host }}
+      postgres-port: ${{ needs.deploy-db.outputs.postgres-port }}
+      postgres-db: ${{ needs.deploy-db.outputs.postgres-db }}
+      postgres-user: ${{ needs.deploy-db.outputs.postgres-user }}
+
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}
     uses: RMI-PACTA/actions/.github/workflows/add-comment-table.yml@main
     needs: [build_docker_image]
     with:
       header: "Docker build status"
-
