@@ -15,43 +15,26 @@ on:
         default: "stitch-dev"
         type: string
       targetPort:
-        description: "Port the applications listens to"
+        description: "Port the application listens on"
         required: false
         default: 8000
         type: number
-      postgres-host:
-        required: true
-        type: string
-      postgres-port:
+      environment-variables:
+        description: "Whitespace-delimited KEY=value pairs to inject into the Container App"
         required: false
-        default: "5432"
-        type: string
-      postgres-db:
-        required: true
-        type: string
-      postgres-user:
-        required: true
-        type: string
-      postgres-sslmode:
-        required: false
-        default: "require"
-        type: string
-      frontend-origin-url:
-        description: "Allowed frontend origin for CORS"
-        required: false
-        default: "http://localhost:3000"
+        default: ""
         type: string
 
     outputs:
       container-app-url:
         description: "HTTPS URL of the deployed Azure Container App"
-        value: ${{ jobs.deploy-api.outputs.container-app-url }}
+        value: ${{ jobs.deploy-container-app.outputs.container-app-url }}
       container-app-fqdn:
         description: "Ingress FQDN of the deployed Azure Container App"
-        value: ${{ jobs.deploy-api.outputs.container-app-fqdn }}
+        value: ${{ jobs.deploy-container-app.outputs.container-app-fqdn }}
 
 jobs:
-  deploy-api:
+  deploy-container-app:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -81,17 +64,7 @@ jobs:
           containerAppName: ${{ inputs.containerAppName }}
           containerAppEnvironment: ${{ inputs.containerAppEnvironment }}
           targetPort: ${{ inputs.targetPort }}
-          environmentVariables: >-
-            LOG_LEVEL=debug
-            FRONTEND_ORIGIN_URL=${{ inputs.frontend-origin-url }}
-            AUTH_DISABLED=true
-            ENVIRONMENT=${{ (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) || github.ref_name }}
-            POSTGRES_HOST=${{ inputs.postgres-host }}
-            POSTGRES_PORT=${{ inputs.postgres-port }}
-            POSTGRES_DB=${{ inputs.postgres-db }}
-            POSTGRES_USER=${{ inputs.postgres-user }}
-            POSTGRES_PASSWORD=${{ secrets.STITCH_APP_PASSWORD_DEV }}
-            PGSSLMODE=${{ inputs.postgres-sslmode }}
+          environmentVariables: ${{ inputs.environment-variables }}
           ingress: "external"
 
       - name: Export application URL
@@ -119,7 +92,7 @@ jobs:
 
   add_comment:
     if: ${{ github.event.pull_request.number != null }}
-    needs: [deploy-api]
+    needs: [deploy-container-app]
     runs-on: ubuntu-latest
     steps:
       - name: Create or update comment
@@ -128,6 +101,6 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             API Deploy Status ${{ github.head_ref }}
-            url='${{ needs.deploy-api.outputs.container-app-url }}'
-            fqdn='${{ needs.deploy-api.outputs.container-app-fqdn }}'
+            url='${{ needs.deploy-container-app.outputs.container-app-url }}'
+            fqdn='${{ needs.deploy-container-app.outputs.container-app-fqdn }}'
           edit-mode: replace
