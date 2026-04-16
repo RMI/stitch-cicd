@@ -25,6 +25,23 @@ jobs:
           github.sha
         }}
 
+  build_entity_linkage_docker_image:
+    name: "Build and publish API"
+    uses: ./.github/workflows/build-and-push-Docker-image.yml
+    secrets: inherit
+    permissions:
+      packages: write
+      contents: read
+    with:
+      dockerfile: deployments/entity-linkage/Dockerfile
+      image-name: ${{ github.event.repository.name }}-entity-linkage
+      image-tag: ${{ github.event_name == 'pull_request' && format('{0}{1}','pr', github.event.pull_request.number) ||
+          github.event_name == 'schedule' && 'nightly' ||
+          github.event_name == 'push' && github.ref_name ||
+          github.event_name == 'workflow_dispatch' && github.ref_name ||
+          github.sha
+        }}
+
   build_seed_docker_image:
     name: "Build and publish API"
     uses: ./.github/workflows/build-and-push-Docker-image.yml
