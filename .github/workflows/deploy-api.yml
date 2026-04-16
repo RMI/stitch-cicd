@@ -36,6 +36,11 @@ on:
         required: false
         default: "require"
         type: string
+      frontend-origin-url:
+        description: "Allowed frontend origin for CORS"
+        required: false
+        default: "http://localhost:3000"
+        type: string
 
     outputs:
       container-app-url:
@@ -78,6 +83,7 @@ jobs:
           targetPort: ${{ inputs.targetPort }}
           environmentVariables: >-
             LOG_LEVEL=debug
+            FRONTEND_ORIGIN_URL=${{ inputs.frontend-origin-url }}
             AUTH_DISABLED=true
             ENVIRONMENT=${{ (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) || github.ref_name }}
             POSTGRES_HOST=${{ inputs.postgres-host }}
