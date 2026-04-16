@@ -83,7 +83,7 @@ jobs:
           containerAppName: ${{ inputs.containerAppName }}
           containerAppEnvironment: ${{ inputs.containerAppEnvironment }}
           targetPort: ${{ inputs.targetPort }}
-          environmentVariables: ${{ inputs.environment-variables }}
+          environmentVariables: ${{ steps.envvars.outputs.environment_variables }}
           ingress: "external"
 
       - name: Export application URL
