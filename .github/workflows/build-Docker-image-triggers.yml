@@ -127,6 +127,7 @@ jobs:
         }}-entity-linkage
       environment-variables: >-
         LOG_LEVEL=info
+        AUTH_DISABLED=true
         ENTITY_LINKAGE_API_BASE_URL=${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
         ENTITY_LINKAGE_FRONTEND_ORIGIN_URL=${{
           github.event_name == 'pull_request' &&
