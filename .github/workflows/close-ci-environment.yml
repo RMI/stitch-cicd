@@ -1,5 +1,5 @@
 ---
-name: Close PR DB
+name: Close CI environment
 
 on:
   pull_request:
