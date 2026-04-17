@@ -166,25 +166,25 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
   }, [getAccessTokenSilently, isAuthenticated, isLoading]);
 
   const sections = {
-      "Frontend Build Info": {
-        Environment: config.appEnv,
-        "API Base URL": config.apiBaseUrl,
-        "App Version": config.build.appVersion,
-        "Build ID": config.build.buildId,
-        "Git SHA": config.build.gitSha.slice(0, 7),
-        "Node Version": config.build.nodeVersion,
-        "Vite Version": config.build.viteVersion,
-        "Build Time": config.build.buildTime,
-        "Bearer Token": accessToken ? redactToken(accessToken) : tokenStatus,
-      },
-      "Backend Diagnostics": formatBackendSection(backendDiagnostics),
-      "Runtime Info": {
-        "User Agent": systemInfo.userAgent,
-        "Screen Resolution": systemInfo.screenResolution,
-        "Device Pixel Ratio": systemInfo.devicePixelRatio,
-        Language: systemInfo.language,
-        Connection: systemInfo.connectionType,
-      },
+    "Frontend Build Info": {
+      Environment: config.appEnv,
+      "API Base URL": config.apiBaseUrl,
+      "App Version": config.build.appVersion,
+      "Build ID": config.build.buildId,
+      "Git SHA": config.build.gitSha.slice(0, 7),
+      "Node Version": config.build.nodeVersion,
+      "Vite Version": config.build.viteVersion,
+      "Build Time": config.build.buildTime,
+      "Bearer Token": accessToken ? redactToken(accessToken) : tokenStatus,
+    },
+    "Backend Diagnostics": formatBackendSection(backendDiagnostics),
+    "Runtime Info": {
+      "User Agent": systemInfo.userAgent,
+      "Screen Resolution": systemInfo.screenResolution,
+      "Device Pixel Ratio": systemInfo.devicePixelRatio,
+      Language: systemInfo.language,
+      Connection: systemInfo.connectionType,
+    },
   };
 
   async function handleCopy() {

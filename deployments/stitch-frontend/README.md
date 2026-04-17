@@ -274,12 +274,12 @@ it("shows a loading indicator", () => {
 
 `src/test/utils.jsx` exports:
 
-| Export                              | Description                                                                                     |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Export                              | Description                                                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `renderWithQueryClient(ui)`         | Renders inside `QueryClientProvider` + `MemoryRouter`; returns `{ queryClient, ...rtlResult }` |
-| `auth0TestDefaults`                 | Default Auth0 mock state (authenticated); spread and override for auth tests                    |
-| `createMockResponse(data, options)` | Builds a mock `fetch` response object                                                           |
-| `createMockError(status)`           | Builds a mock error `fetch` response                                                            |
+| `auth0TestDefaults`                 | Default Auth0 mock state (authenticated); spread and override for auth tests                   |
+| `createMockResponse(data, options)` | Builds a mock `fetch` response object                                                          |
+| `createMockError(status)`           | Builds a mock error `fetch` response                                                           |
 
 Additional libraries:
 

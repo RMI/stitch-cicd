@@ -1,11 +1,7 @@
 let resolvedConfig = null;
 let configPromise = null;
 
-const REQUIRED_CONFIG_KEYS = [
-  "auth0Domain",
-  "auth0ClientId",
-  "auth0Audience",
-];
+const REQUIRED_CONFIG_KEYS = ["auth0Domain", "auth0ClientId", "auth0Audience"];
 
 const DEFAULT_CONFIG_PATH = "/config.json";
 
