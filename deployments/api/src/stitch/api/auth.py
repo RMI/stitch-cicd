@@ -46,8 +46,7 @@ def validate_auth_config_at_startup() -> None:
     """Called from FastAPI lifespan. Fail fast if misconfigured."""
     settings = get_settings()
     if settings.auth_disabled:
-        env = settings.environment.strip().lower()
-        if not env.startswith("dev") and not env.startswith("pr-") and env != "main":
+        if not settings.allows_disabled_auth:
             raise RuntimeError(
                 "AUTH_DISABLED=true is only permitted when ENVIRONMENT=dev, ENVIRONMENT=main, or ENVIRONMENT starts with 'pr-'"
             )
