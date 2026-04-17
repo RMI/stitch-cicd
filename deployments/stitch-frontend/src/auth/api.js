@@ -1,4 +1,4 @@
-import config from "../config/env";
+import { getConfig } from "../config/env";
 
 /**
  * Returns a `fetch`-compatible function that automatically attaches a Bearer
@@ -10,6 +10,7 @@ import config from "../config/env";
  * @returns {Function} An async `(url, options?) => Response` fetcher.
  */
 export function createAuthenticatedFetcher(getAccessTokenSilently) {
+  const config = getConfig();
   return async (url, options = {}) => {
     const token = await getAccessTokenSilently({
       authorizationParams: { audience: config.auth0.audience },

@@ -1,28 +1,52 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const mockConfig = vi.hoisted(() => ({
   appEnv: "local",
   apiBaseUrl: "http://localhost:8000/api/v1",
+  entityLinkageBaseUrl: "http://localhost:8001/api/v1",
+  auth0: {
+    domain: "example.auth0.com",
+    clientId: "client-id",
+    audience: "https://stitch-api.local",
+  },
   build: {
     appVersion: "0.0.0",
     buildId: "local-build",
-    gitSha: "abcdef123456",
+    gitSha: "abcdef1",
     nodeVersion: "v20.19.0",
     viteVersion: "^7.2.4",
     buildTime: "2026-04-06T12:00:00Z",
   },
 }));
 
-vi.mock("../config/env", () => ({
-  default: mockConfig,
-}));
+vi.mock("../config/env", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    getConfig: vi.fn(() => mockConfig),
+  };
+});
 
 describe("ColophonPanel", () => {
   let fetchMock;
   let clipboardSpy;
+  let getAccessTokenSilently;
 
   beforeEach(() => {
+    getAccessTokenSilently = vi.fn().mockResolvedValue("test-access-token");
+
+    vi.mocked(useAuth0).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+      user: { sub: "test-user-id", email: "test@example.com" },
+      getAccessTokenSilently,
+      loginWithRedirect: vi.fn(),
+      logout: vi.fn(),
+    });
+
     fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({
@@ -102,12 +126,28 @@ describe("ColophonPanel", () => {
       configurable: true,
       value: 2,
     });
+
+    mockConfig.appEnv = "local";
+    mockConfig.apiBaseUrl = "http://localhost:8000/api/v1";
+    mockConfig.entityLinkageBaseUrl = "http://localhost:8001/api/v1";
+    mockConfig.auth0 = {
+      domain: "example.auth0.com",
+      clientId: "client-id",
+      audience: "https://stitch-api.local",
+    };
+    mockConfig.build = {
+      appVersion: "0.0.0",
+      buildId: "local-build",
+      gitSha: "abcdef1",
+      nodeVersion: "v20.19.0",
+      viteVersion: "^7.2.4",
+      buildTime: "2026-04-06T12:00:00Z",
+    };
   });
 
   afterEach(() => {
     clipboardSpy?.mockRestore();
     vi.unstubAllGlobals();
-    mockConfig.apiBaseUrl = "http://localhost:8000/api/v1";
   });
 
   it("renders frontend, backend, and runtime diagnostics", async () => {
@@ -140,15 +180,17 @@ describe("ColophonPanel", () => {
     expect(screen.getByText("2x")).toBeInTheDocument();
     expect(screen.getByText("4g (10 Mbps)")).toBeInTheDocument();
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8000/api/v1/health/details",
-      {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8000/api/v1/health/details",
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
         },
-      },
-    );
+      );
+    });
   });
 
   it("renders API docs link with correct URL", async () => {

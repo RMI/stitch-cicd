@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import config from "../config/env";
+import { getConfig } from "../config/env";
 
 export default function useBackendDiagnostics(enabled) {
   const [state, setState] = useState({
@@ -7,6 +7,7 @@ export default function useBackendDiagnostics(enabled) {
     error: null,
     data: null,
   });
+  const config = getConfig();
 
   useEffect(() => {
     if (!enabled) {
@@ -66,7 +67,7 @@ export default function useBackendDiagnostics(enabled) {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, config.apiBaseUrl]);
 
   return state;
 }
