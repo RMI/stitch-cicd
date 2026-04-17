@@ -158,10 +158,12 @@ The flag is read at module-load time in `src/hooks/useResources.js`, so it must 
 
 For preview and production deployments:
 
-1. Build the frontend
-2. Generate or replace `public/config.json` with environment-specific values
+1. Generate or replace `public/config.json` with environment-specific values
+2. Build the frontend
 3. Deploy static assets
 4. Serve `/config.json` with `Cache-Control: no-store`
+
+If you need to generate the file after the build, update `dist/config.json` instead; changing `public/config.json` post-build does not affect the already-built artifacts.
 
 `config.json` is public and must not contain secrets.
 
