@@ -91,7 +91,12 @@ class Settings(BaseSettings):
     @property
     def allows_disabled_auth(self) -> bool:
         env = self.environment_name
-        return env.startswith("dev") or env.startswith("pr-") or env == "main"
+        return (
+            env in {"dev", "development"}
+            or env.startswith("dev-")
+            or env.startswith("pr-")
+            or env == "main"
+        )
 
     def get_database_url(self) -> URL:
         if self.dialect == "sqlite":
