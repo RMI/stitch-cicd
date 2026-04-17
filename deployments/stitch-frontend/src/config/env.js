@@ -78,3 +78,13 @@ export function getConfig() {
   }
   return resolvedConfig;
 }
+
+export function setConfigForTests(config) {
+  resolvedConfig = Object.freeze(config);
+  configPromise = Promise.resolve(resolvedConfig);
+}
+
+export function resetConfigForTests() {
+  resolvedConfig = null;
+  configPromise = null;
+}

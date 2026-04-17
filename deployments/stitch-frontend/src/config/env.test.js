@@ -47,7 +47,7 @@ describe("config/env", () => {
     expect(config.entityLinkageBaseUrl).toBe(
       "https://entity-linkage.test/api/v1",
     );
-    expect(config.appEnv).toBe("pr-14");
+    expect(config.appEnv).toBe("test");
 
     expect(config.build.buildId).toBe("gha-123");
     expect(config.build.gitSha).toBe("abcdef123");
