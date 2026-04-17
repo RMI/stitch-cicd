@@ -52,18 +52,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
-          path: /tmp/frontend-artifact
+          path: .artifact-download
 
       - name: Inspect downloaded artifact
         shell: bash
         run: |
           set -euo pipefail
+          echo "Workspace: $(pwd)"
           echo "Downloaded artifact directory:"
-          pwd
-          ls -la /tmp/frontend-artifact
+          ls -la .artifact-download
           echo
           echo "Tarball contents:"
-          tar -tzf /tmp/frontend-artifact/dist.tgz | sed -n '1,120p'
+          tar -tzf .artifact-download/dist.tgz | sed -n '1,120p'
 
       - name: Extract frontend dist
         shell: bash
@@ -71,13 +71,13 @@ jobs:
           set -euo pipefail
           rm -rf .swa-dist
           mkdir -p .swa-dist
-          tar -xzf /tmp/frontend-artifact/dist.tgz -C .swa-dist
+          tar -xzf .artifact-download/dist.tgz -C .swa-dist
 
           echo "Extracted files:"
-          find /tmp/frontend-dist -maxdepth 3 -type f | sort | sed -n '1,200p'
+          find .swa-dist -maxdepth 3 -type f | sort | sed -n '1,200p'
 
-          test -f /tmp/frontend-dist/index.html || {
-            echo "Expected /tmp/frontend-dist/index.html but it was not found" >&2
+          test -f .swa-dist/index.html || {
+            echo "Expected .swa-dist/index.html but it was not found" >&2
             exit 1
           }
 
@@ -89,7 +89,7 @@ jobs:
           CONFIG_TIME="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           CONFIG_ID="cfg-${{ inputs.app-env }}-$(date -u +'%Y%m%dT%H%M%SZ')"
 
-          cat > /tmp/frontend-dist/config.json <<EOF
+          cat > .swa-dist/config.json <<EOF
           {
             "appEnv": "${{ inputs.app-env }}",
             "apiUrl": "${{ inputs.api-url }}",
@@ -103,16 +103,22 @@ jobs:
           EOF
 
           echo "Generated config.json:"
-          cat /tmp/frontend-dist/config.json
+          cat .swa-dist/config.json
 
       - name: Add SWA cache-control config
         shell: bash
         run: |
           set -euo pipefail
-          cp deployments/stitch-frontend/public/staticwebapp.config.json /tmp/frontend-dist/staticwebapp.config.json
+          cp deployments/stitch-frontend/public/staticwebapp.config.json .swa-dist/staticwebapp.config.json
 
           echo "Final deploy directory:"
-          find /tmp/frontend-dist -maxdepth 2 -type f | sort | sed -n '1,200p'
+          find .swa-dist -maxdepth 2 -type f | sort | sed -n '1,200p'
+
+          echo
+          echo "Sanity checks:"
+          test -f .swa-dist/index.html
+          test -f .swa-dist/config.json
+          test -f .swa-dist/staticwebapp.config.json
 
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
