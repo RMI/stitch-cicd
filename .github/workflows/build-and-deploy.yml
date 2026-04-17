@@ -1,4 +1,4 @@
-name: Docker build & test
+name: CD Pipeline
 
 on:
   pull_request:
