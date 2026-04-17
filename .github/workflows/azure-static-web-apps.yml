@@ -133,3 +133,31 @@ jobs:
           skip_app_build: true
           app_location: ".swa-dist"
           skip_api_build: true
+
+      - name: Write comment JSON
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/comment-json
+          SWA_URL="https://witty-mushroom-017a3dc1e-${{ github.event.pull_request.number }}.westus2.1.azurestaticapps.net"
+          cat > /tmp/comment-json/comment-json-frontend.json <<EOF
+          {
+            "section": "deployments",
+            "kind": "static_site",
+            "name": "frontend",
+            "warnings": [],
+            "data": {
+              "service": "frontend",
+              "url": "[open](${SWA_URL})"
+            }
+          }
+          EOF
+
+      - name: Upload comment JSON artifact
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: comment-json-frontend
+          path: /tmp/comment-json/*.json
+          if-no-files-found: error

@@ -123,3 +123,33 @@ jobs:
           STITCH_MIGRATOR_PASSWORD: ${{ secrets.STITCH_MIGRATOR_PASSWORD_DEV }}
           STITCH_APP_PASSWORD: ${{ secrets.STITCH_APP_PASSWORD_DEV }}
         run: deployments/db/00-init-roles.sh
+
+
+      - name: Write comment JSON
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/comment-json
+          cat > /tmp/comment-json/comment-json-db-deploy.json <<EOF
+          {
+            "section": "database",
+            "kind": "postgres_database",
+            "name": "db",
+            "warnings": [],
+            "data": {
+              "db_name": "${{ steps.normalize-name.outputs.db-name }}",
+              "postgres_host": "`${PGHOST}`",
+              "postgres_port": "`${PGPORT}`",
+              "postgres_db": "`${{ steps.normalize-name.outputs.db-name }}`",
+            }
+          }
+          EOF
+
+      - name: Upload comment JSON artifact
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: comment-json-db-deploy
+          path: /tmp/comment-json/*.json
+          if-no-files-found: error
