@@ -165,8 +165,7 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
     };
   }, [getAccessTokenSilently, isAuthenticated, isLoading]);
 
-  const sections = useMemo(() => {
-    return {
+  const sections = {
       "Frontend Build Info": {
         Environment: config.appEnv,
         "API Base URL": config.apiBaseUrl,
@@ -186,8 +185,7 @@ export default function ColophonPanel({ diagnosticsOpen = false }) {
         Language: systemInfo.language,
         Connection: systemInfo.connectionType,
       },
-    };
-  }, [systemInfo, backendDiagnostics, accessToken, tokenStatus]);
+  };
 
   async function handleCopy() {
     const safeSections = {

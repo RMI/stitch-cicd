@@ -67,7 +67,7 @@ export default function useBackendDiagnostics(enabled) {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, config.apiBaseUrl]);
 
   return state;
 }
