@@ -144,7 +144,7 @@ docker run \
   -e POSTGRES_PORT='5432' \
   -e POSTGRES_USER='stitch_migrator' \
   -e POSTGRES_PASSWORD='CHANGE_ME123!' \
-  -e POSSTGRES_DB=<database_name>
+  -e POSTGRES_DB=<database_name> \
   --rm \
   stitch-api:latest python -m stitch.api.db.init_job
 ```
