@@ -69,9 +69,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/frontend-dist
-          mkdir -p /tmp/frontend-dist
-          tar -xzf /tmp/frontend-artifact/dist.tgz -C /tmp/frontend-dist
+          rm -rf .swa-dist
+          mkdir -p .swa-dist
+          tar -xzf /tmp/frontend-artifact/dist.tgz -C .swa-dist
 
           echo "Extracted files:"
           find /tmp/frontend-dist -maxdepth 3 -type f | sort | sed -n '1,200p'
@@ -125,5 +125,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           skip_app_build: true
-          app_location: "/tmp/frontend-dist"
+          app_location: ".swa-dist"
           skip_api_build: true
