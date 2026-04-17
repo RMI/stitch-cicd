@@ -1,11 +1,11 @@
 import { getConfig } from "../config/env";
-const config = getConfig();
 
 export async function getResources(
   fetcher,
   endpoint = "resources",
   { page = 1, page_size = 50, filters = {}, sort_by, sort_order } = {},
 ) {
+  const config = getConfig();
   const params = new URLSearchParams({ page, page_size });
   for (const [key, values] of Object.entries(filters)) {
     for (const v of values) {
@@ -23,6 +23,7 @@ export async function getResources(
 }
 
 export async function getResource(id, fetcher, endpoint = "resources") {
+  const config = getConfig();
   const url = `${config.apiBaseUrl}/${endpoint}/${id}`;
   const response = await fetcher(url);
   if (!response.ok) {
@@ -35,6 +36,7 @@ export async function getResource(id, fetcher, endpoint = "resources") {
 }
 
 export async function getResourceDetail(id, fetcher, endpoint = "resources") {
+  const config = getConfig();
   const url = `${config.apiBaseUrl}/${endpoint}/${id}/detail`;
   const response = await fetcher(url);
   if (!response.ok) {
@@ -47,6 +49,7 @@ export async function getResourceDetail(id, fetcher, endpoint = "resources") {
 }
 
 export async function getMergeCandidates(fetcher, endpoint = "oil-gas-fields") {
+  const config = getConfig();
   const url = `${config.apiBaseUrl}/${endpoint}/merge-candidates`;
   const response = await fetcher(url);
 
@@ -64,6 +67,7 @@ export async function getMergeCandidate(
   fetcher,
   endpoint = "oil-gas-fields",
 ) {
+  const config = getConfig();
   const url = `${config.apiBaseUrl}/${endpoint}/merge-candidates/${id}`;
   const response = await fetcher(url);
 
@@ -83,6 +87,7 @@ export async function reviewMergeCandidate(
   endpoint = "oil-gas-fields",
   review_notes = "",
 ) {
+  const config = getConfig();
   const url = `${config.apiBaseUrl}/${endpoint}/merge-candidates/${id}/${action}`;
   const response = await fetcher(url, {
     method: "POST",
@@ -115,6 +120,7 @@ export async function getMergeCandidatePreview(
   fetcher,
   endpoint = "oil-gas-fields",
 ) {
+  const config = getConfig();
   const url = `${config.apiBaseUrl}/${endpoint}/merge-candidates/${id}/preview`;
   const response = await fetcher(url);
 

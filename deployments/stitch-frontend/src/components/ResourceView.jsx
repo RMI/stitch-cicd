@@ -7,7 +7,6 @@ import JsonView from "./JsonView";
 import Input from "./Input";
 import { resourceKeys } from "../queries/resources";
 import { getConfig } from "../config/env";
-const config = getConfig();
 
 export default function ResourceView({
   className,
@@ -15,6 +14,7 @@ export default function ResourceView({
   initialID = null,
   showControls = true,
 }) {
+  const config = getConfig();
   const queryClient = useQueryClient();
   const [inputId, setInputId] = useState(1);
   const id = initialID ?? inputId;

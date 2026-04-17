@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { getConfig } from "../config/env";
-const config = getConfig();
 
 export default function useBackendDiagnostics(enabled) {
   const [state, setState] = useState({
@@ -8,6 +7,7 @@ export default function useBackendDiagnostics(enabled) {
     error: null,
     data: null,
   });
+  const config = getConfig();
 
   useEffect(() => {
     if (!enabled) {

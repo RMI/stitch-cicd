@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import useBackendDiagnostics from "../hooks/useBackendDiagnostics";
 import { getConfig } from "../config/env";
-const config = getConfig();
 
 function getConnectionInfo() {
   const nav = navigator;
@@ -36,6 +35,7 @@ function useSystemInfo() {
 }
 
 function formatBackendSection(state) {
+  const config = getConfig();
   if (state.loading) {
     return {
       Status: "Loading...",
@@ -113,6 +113,7 @@ function getApiDocsUrl(apiBaseUrl) {
 }
 
 export default function ColophonPanel({ diagnosticsOpen = false }) {
+  const config = getConfig();
   const systemInfo = useSystemInfo();
   const backendDiagnostics = useBackendDiagnostics(diagnosticsOpen);
   const { getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
