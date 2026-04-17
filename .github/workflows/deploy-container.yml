@@ -114,22 +114,6 @@ jobs:
           echo "container_app_fqdn=$fqdn" >> "$GITHUB_OUTPUT"
           echo "container_app_url=https://$fqdn" >> "$GITHUB_OUTPUT"
 
-  upload_comment_json_placeholder_disabled:
-    if: false
-    needs: [deploy-container-app]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create or update comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            API Deploy Status ${{ github.head_ref }}
-            url='${{ needs.deploy-container-app.outputs.container-app-url }}'
-            fqdn='${{ needs.deploy-container-app.outputs.container-app-fqdn }}'
-          edit-mode: replace
-
-
       - name: Write comment JSON
         if: ${{ github.event_name == 'pull_request' }}
         shell: bash
