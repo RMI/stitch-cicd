@@ -136,7 +136,7 @@ jobs:
       environment-variables: >-
         LOG_LEVEL=info
         AUTH_DISABLED=true
-        ENTITY_LINKAGE_API_BASE_URL=${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
+        ENTITY_LINKAGE_API_BASE_URL=${{ format('{0}/api/v1', needs.deploy-api.outputs.container-app-url) }}
         ENTITY_LINKAGE_FRONTEND_ORIGIN_URL=${{
           github.event_name == 'pull_request' &&
           format('https://witty-mushroom-017a3dc1e-{0}.westus2.1.azurestaticapps.net', github.event.pull_request.number) ||
@@ -154,20 +154,20 @@ jobs:
     needs: [build_seed_docker_image, deploy-api]
     with:
       full-image-name: ${{ needs.build_seed_docker_image.outputs.digest-image-name }}
-      api-url: ${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
+      api-url: ${{ format('{0}/api/v1', needs.deploy-api.outputs.container-app-url) }}
 
   deploy-frontend:
     name: "Deploy frontend"
     uses: ./.github/workflows/azure-static-web-apps.yml
     secrets: inherit
-    needs: [build-frontend, deploy-docker, deploy-entity-linkage]
+    needs: [build-frontend, deploy-api, deploy-entity-linkage]
     with:
       artifact-name: dist-tgz
       app-env: ${{
           github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) ||
           github.ref_name
         }}
-      api-url: ${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
+      api-url: ${{ format('{0}/api/v1', needs.deploy-api.outputs.container-app-url) }}
       entity-linkage-url: ${{ format('{0}/api/v1', needs.deploy-entity-linkage.outputs.container-app-url) }}
       auth0-domain: rmi-spd.us.auth0.com
       auth0-client-id: TS1V1soQbccAV1sitFFCfUaIlSwHD2S2
