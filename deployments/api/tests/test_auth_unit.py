@@ -11,7 +11,9 @@ from stitch.api.settings import Settings
 from stitch.auth.settings import OIDCSettings
 
 
-def _make_settings(*, auth_disabled: bool = False, environment: str = "dev") -> Settings:
+def _make_settings(
+    *, auth_disabled: bool = False, environment: str = "dev"
+) -> Settings:
     """Build a Settings instance with overridden fields."""
     return Settings(
         auth_disabled=auth_disabled,
