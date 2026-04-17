@@ -7,6 +7,7 @@ React frontend application styled with Tailwind CSS and built with Vite.
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Scripts](#scripts)
+- [Configuration](#configuration)
 - [API](#api)
 - [Testing](#testing)
 - [Queries](#queries)
@@ -24,11 +25,12 @@ React frontend application styled with Tailwind CSS and built with Vite.
 
 ## Project Structure
 
-```
+```text
 stitch-frontend/
 ├── mockData/                    # Static JSON fixtures for mock data mode
 │   └── og_field_resources.json
-├── public/                      # Static assets
+├── public/                      # Static assets and runtime config
+│   └── config.json              # Browser runtime config (committed local defaults)
 ├── src/
 │   ├── auth/                    # Auth0 integration and gate component
 │   ├── components/              # Shared UI components
@@ -41,7 +43,7 @@ stitch-frontend/
 │   │   ├── SectionHeader.jsx    # Titled section divider
 │   │   └── SourceMixBar.jsx     # Data source proportion bar
 │   ├── config/
-│   │   ├── env.js               # Runtime environment config
+│   │   ├── env.js               # Runtime config loader/accessors + build metadata
 │   │   └── filters.js           # Filter field definitions (FILTER_FIELDS, EMPTY_FILTERS)
 │   ├── hooks/
 │   │   ├── useAuthenticatedQuery.js
@@ -55,7 +57,7 @@ stitch-frontend/
 │   ├── queries/                 # TanStack Query key factory and definitions
 │   ├── test/                    # Test setup and shared utilities
 │   ├── App.jsx                  # Route definitions
-│   ├── main.jsx                 # App entry point with providers
+│   ├── main.jsx                 # App entry point with async bootstrap
 │   └── index.css                # Global styles and Tailwind imports
 ├── index.html
 ├── vite.config.js               # envDir points to project root for .env
@@ -91,6 +93,78 @@ npm run test:ui
 npm run test:coverage
 ```
 
+## Configuration
+
+The frontend uses a split configuration model:
+
+- **Runtime browser config** is loaded from `public/config.json`
+- **Build metadata** is injected at build time via Vite env vars
+- **Compile-time feature flags** remain in env files when needed
+
+### Runtime browser config
+
+At startup, `src/config/env.js` fetches `/config.json` before the app renders.
+
+This file contains public, deployment-specific browser settings such as:
+
+- `appEnv`
+- `apiUrl`
+- `entityLinkageUrl`
+- `auth0Domain`
+- `auth0ClientId`
+- `auth0Audience`
+
+A committed `public/config.json` provides local development defaults. Preview and production deployments should replace or generate that file during deployment.
+
+Example:
+
+```json
+{
+  "appEnv": "local",
+  "apiUrl": "http://localhost:8000/api/v1",
+  "entityLinkageUrl": "http://localhost:8001/api/v1",
+  "auth0Domain": "rmi-spd.us.auth0.com",
+  "auth0ClientId": "TS1V1soQbccAV1sitFFCfUaIlSwHD2S2",
+  "auth0Audience": "https://stitch-api.local"
+}
+```
+
+### Build-time values
+
+Build metadata remains build-time configuration. These values are read from `import.meta.env` during the Vite build and surfaced through `config.build`:
+
+- `VITE_APP_VERSION`
+- `VITE_BUILD_ID`
+- `VITE_GIT_SHA`
+- `VITE_NODE_VERSION`
+- `VITE_VITE_VERSION`
+- `VITE_BUILD_TIME`
+
+These are useful for colophon/build-info UI and deployment debugging.
+
+### Compile-time flags
+
+`VITE_USE_MOCK_DATA` is still a compile-time flag.
+
+Set it in `.env.local` when you want the UI to use mock resources instead of the real API:
+
+```dotenv
+VITE_USE_MOCK_DATA=true
+```
+
+The flag is read at module-load time in `src/hooks/useResources.js`, so it must be present when the frontend is built or started.
+
+### Deployment notes
+
+For preview and production deployments:
+
+1. Build the frontend
+2. Generate or replace `public/config.json` with environment-specific values
+3. Deploy static assets
+4. Serve `/config.json` with `Cache-Control: no-store`
+
+`config.json` is public and must not contain secrets.
+
 ## Mock Data
 
 The app supports a mock data mode for local UI development. When enabled, `useResources()` and `useResource(id)` serve data directly from `mockData/og_field_resources.json` instead of hitting the real API.
@@ -99,7 +173,7 @@ The app supports a mock data mode for local UI development. When enabled, `useRe
 
 **Toggle:** set `VITE_USE_MOCK_DATA` in your `.env.local` file:
 
-```
+```dotenv
 VITE_USE_MOCK_DATA=true
 ```
 
@@ -109,7 +183,7 @@ The flag is read at compile time in `src/hooks/useResources.js`:
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === "true";
 ```
 
-The real and mock implementations are separate functions selected once at module-load time — no conditional hook calls at render time.
+The real and mock implementations are separate functions selected once at module evaluation time — no conditional hook calls at render time.
 
 ## API
 
@@ -200,12 +274,12 @@ it("shows a loading indicator", () => {
 
 `src/test/utils.jsx` exports:
 
-| Export                              | Description                                                                                    |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Export                              | Description                                                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `renderWithQueryClient(ui)`         | Renders inside `QueryClientProvider` + `MemoryRouter`; returns `{ queryClient, ...rtlResult }` |
-| `auth0TestDefaults`                 | Default Auth0 mock state (authenticated); spread and override for auth tests                   |
-| `createMockResponse(data, options)` | Builds a mock `fetch` response object                                                          |
-| `createMockError(status)`           | Builds a mock error `fetch` response                                                           |
+| `auth0TestDefaults`                 | Default Auth0 mock state (authenticated); spread and override for auth tests                    |
+| `createMockResponse(data, options)` | Builds a mock `fetch` response object                                                           |
+| `createMockError(status)`           | Builds a mock error `fetch` response                                                            |
 
 Additional libraries:
 
@@ -221,7 +295,7 @@ This project uses the query key factory pattern recommended by TanStack Query fo
 
 ### Structure
 
-```
+```text
 src/
 ├── queries/
 │   ├── api.js          # API fetch functions
@@ -408,13 +482,44 @@ Active filter selections are displayed as removable chips beneath the dropdowns.
 
 ---
 
+### Runtime deployment model
+
+The frontend bundle does not need environment-specific API/Auth values baked in at build time.
+
+Instead, deployment should provide `public/config.json` with the environment-specific browser config values, then deploy the static assets. This lets the same frontend bundle shape work across local, preview, and production environments.
+
+Recommended deploy sequence:
+
+1. Build the frontend
+2. Write `public/config.json`
+3. Deploy the static site
+4. Ensure `/config.json` is served with `Cache-Control: no-store`
+
+---
+
 ### Canonical Values (Example)
 
-```
+```text
 SWA_NAME=stitch-frontend-demo-02
 RESOURCE_GROUP=STITCH-DEV-RG
-API_URL=https://stitch-db-demo-02.<region>.azurecontainerapps.io
+API_URL=https://stitch-db-demo-02.<region>.azurecontainerapps.io/api/v1
+ENTITY_LINKAGE_URL=https://stitch-entity-linkage-demo-02.<region>.azurecontainerapps.io/api/v1
 AUTH0_DOMAIN=rmi-spd.us.auth0.com
+AUTH0_CLIENT_ID=<public-client-id>
+AUTH0_AUDIENCE=https://stitch-api.local
+```
+
+Example runtime config:
+
+```json
+{
+  "appEnv": "preview",
+  "apiUrl": "https://stitch-db-demo-02.<region>.azurecontainerapps.io/api/v1",
+  "entityLinkageUrl": "https://stitch-entity-linkage-demo-02.<region>.azurecontainerapps.io/api/v1",
+  "auth0Domain": "rmi-spd.us.auth0.com",
+  "auth0ClientId": "<public-client-id>",
+  "auth0Audience": "https://stitch-api.local"
+}
 ```
 
 ---
@@ -437,7 +542,7 @@ Azure Portal → Manage Deployment Token
 
 Add token as GitHub repository secret:
 
-```
+```text
 AZURE_STATIC_WEB_APPS_DEPLOY_TOKEN
 ```
 
@@ -467,7 +572,7 @@ Add your SWA URL to:
 
 Example:
 
-```
+```text
 https://<your-swa>.azurestaticapps.net/
 https://<your-swa>.azurestaticapps.net/callback
 ```
