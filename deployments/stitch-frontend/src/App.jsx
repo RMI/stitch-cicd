@@ -12,7 +12,7 @@ function App() {
       <EnvironmentBanner />
       <div className="p-8">
         <nav className="flex gap-4 mb-4" aria-label="Primary">
-          <Link to="/">Home</Link>
+          <Link to="/">Alex is cool</Link>
           <Link to="/entity-linkage">Entity Linkage</Link>
           <Link to="/merge-candidate-review">Merge Review</Link>
         </nav>
