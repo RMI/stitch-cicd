@@ -125,5 +125,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           skip_app_build: true
-          app_location: "/tmp/frontend-dist/dist"
+          app_location: "/tmp/frontend-dist"
           skip_api_build: true
