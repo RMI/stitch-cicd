@@ -5,6 +5,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockConfig = vi.hoisted(() => ({
   appEnv: "local",
   apiBaseUrl: "http://localhost:8000/api/v1",
+  entityLinkageBaseUrl: "http://localhost:8001/api/v1",
+  auth0: {
+    domain: "example.auth0.com",
+    clientId: "client-id",
+    audience: "https://stitch-api.local",
+  },
   build: {
     appVersion: "0.0.0",
     buildId: "local-build",
@@ -19,24 +25,7 @@ vi.mock("../config/env", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    getConfig: vi.fn(() => ({
-      appEnv: "test",
-      apiBaseUrl: "http://localhost:8000/api/v1",
-      entityLinkageBaseUrl: "http://localhost:8001/api/v1",
-      auth0: {
-        domain: "example.auth0.com",
-        clientId: "client-id",
-        audience: "https://stitch-api.local",
-      },
-      build: {
-        appVersion: "0.0.0-test",
-        buildId: "test-build",
-        gitSha: "abcdef123",
-        nodeVersion: "v20.0.0",
-        viteVersion: "7.2.4",
-        buildTime: "2026-04-17T10:00:00Z",
-      },
-    })),
+    getConfig: vi.fn(() => mockConfig),
   };
 });
 

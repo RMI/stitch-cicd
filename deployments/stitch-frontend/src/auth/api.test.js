@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createAuthenticatedFetcher } from "./api";
 
 describe("createAuthenticatedFetcher", () => {
@@ -14,6 +14,10 @@ describe("createAuthenticatedFetcher", () => {
     );
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("attaches Bearer token to request", async () => {
     await fetcher("http://api.test/data");
 
@@ -25,7 +29,7 @@ describe("createAuthenticatedFetcher", () => {
     await fetcher("http://api.test/data");
 
     expect(getAccessTokenSilently).toHaveBeenCalledWith({
-      authorizationParams: { audience: "https://test-api" },
+      authorizationParams: { audience: "https://stitch-api.local" },
     });
   });
 
