@@ -6,7 +6,8 @@ import ClearCacheButton from "./ClearCacheButton";
 import JsonView from "./JsonView";
 import Input from "./Input";
 import { resourceKeys } from "../queries/resources";
-import config from "../config/env";
+import { getConfig } from "../config/env";
+const config = getConfig();
 
 export default function ResourceView({
   className,

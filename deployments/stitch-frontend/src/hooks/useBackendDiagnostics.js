@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import config from "../config/env";
+import { getConfig } from "../config/env";
+const config = getConfig();
 
 export default function useBackendDiagnostics(enabled) {
   const [state, setState] = useState({

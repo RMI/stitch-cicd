@@ -1,4 +1,5 @@
-import config from "../config/env";
+import { getConfig } from "../config/env";
+const config = getConfig();
 
 /**
  * Returns a `fetch`-compatible function that automatically attaches a Bearer

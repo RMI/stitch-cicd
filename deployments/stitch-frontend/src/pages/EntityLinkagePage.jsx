@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import config from "../config/env";
+import { getConfig } from "../config/env";
+const config = getConfig();
 
 export default function EntityLinkagePage() {
   const { getAccessTokenSilently } = useAuth0();

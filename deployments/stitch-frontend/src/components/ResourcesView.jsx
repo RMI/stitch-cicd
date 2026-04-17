@@ -13,7 +13,8 @@ import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGE,
 } from "../queries/resources";
-import config from "../config/env";
+import { getConfig } from "../config/env";
+const config = getConfig();
 
 export default function ResourcesView({ className, endpoint }) {
   const queryClient = useQueryClient();

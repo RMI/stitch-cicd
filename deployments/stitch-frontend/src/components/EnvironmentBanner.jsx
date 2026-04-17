@@ -1,6 +1,7 @@
 import { useState } from "react";
-import config from "../config/env";
 import ColophonPanel from "./ColophonPanel";
+import { getConfig } from "../config/env";
+const config = getConfig();
 
 function normalizeEnvLabel(value) {
   return (value ?? "").trim();

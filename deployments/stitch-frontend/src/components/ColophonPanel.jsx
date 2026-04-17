@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import config from "../config/env";
 import useBackendDiagnostics from "../hooks/useBackendDiagnostics";
+import { getConfig } from "../config/env";
+const config = getConfig();
 
 function getConnectionInfo() {
   const nav = navigator;
