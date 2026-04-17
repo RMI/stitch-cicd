@@ -60,6 +60,11 @@ export async function loadConfig() {
       .then((runtimeConfig) => {
         resolvedConfig = freezeConfig(runtimeConfig);
         return resolvedConfig;
+      })
+      .catch((error) => {
+        resolvedConfig = null;
+        configPromise = null;
+        throw error;
       });
   }
 
