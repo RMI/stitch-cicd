@@ -3,14 +3,33 @@ name: Azure Static Web Apps CI/CD
 on:
   workflow_call:
     inputs:
+      artifact-name:
+        description: "Uploaded frontend artifact name"
+        required: true
+        type: string
+      app-env:
+        description: "Runtime app environment label"
+        required: true
+        type: string
       api-url:
-        description: "Base API URL to inject into the frontend build"
+        description: "Base API URL to inject into runtime config"
         required: true
         type: string
       entity-linkage-url:
-        description: "Base entity-linkage URL to inject into the frontend build"
-        required: false
-        default: "http://localhost:8001/api/v1"
+        description: "Base entity linkage URL to inject into runtime config"
+        required: true
+        type: string
+      auth0-domain:
+        description: "Auth0 domain"
+        required: true
+        type: string
+      auth0-client-id:
+        description: "Auth0 client ID"
+        required: true
+        type: string
+      auth0-audience:
+        description: "Auth0 audience"
+        required: true
         type: string
 
 jobs:
@@ -29,22 +48,45 @@ jobs:
           submodules: true
           lfs: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version-file: deployments/stitch-frontend/package.json
-          cache: "npm"
-          cache-dependency-path: deployments/stitch-frontend/package-lock.json
+          name: ${{ inputs.artifact-name }}
+          path: /tmp/frontend-artifact
 
-      - name: Build
-        run: make frontend-build
-        env:
-          VITE_API_URL: ${{ inputs.api-url }}
-          VITE_APP_ENV: ${{ (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) || github.ref_name }}
-          VITE_AUTH0_AUDIENCE: https://stitch-api.local
-          VITE_AUTH0_CLIENT_ID: TS1V1soQbccAV1sitFFCfUaIlSwHD2S2
-          VITE_AUTH0_DOMAIN: https://rmi-spd.us.auth0.com
-          VITE_ENTITY_LINKAGE_URL: ${{ inputs.entity-linkage-url }}
+      - name: Extract frontend dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/frontend-dist/dist
+          tar -xzf /tmp/frontend-artifact/dist.tgz -C /tmp/frontend-dist/dist
+
+      - name: Generate runtime config
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CONFIG_TIME="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          CONFIG_ID="cfg-${{ inputs.app-env }}-$(date -u +'%Y%m%dT%H%M%SZ')"
+
+          cat > /tmp/frontend-dist/dist/config.json <<EOF
+          {
+            "appEnv": "${{ inputs.app-env }}",
+            "apiUrl": "${{ inputs.api-url }}",
+            "entityLinkageUrl": "${{ inputs.entity-linkage-url }}",
+            "auth0Domain": "${{ inputs.auth0-domain }}",
+            "auth0ClientId": "${{ inputs.auth0-client-id }}",
+            "auth0Audience": "${{ inputs.auth0-audience }}",
+            "configId": "${CONFIG_ID}",
+            "configTime": "${CONFIG_TIME}"
+          }
+          EOF
+
+      - name: Add SWA cache-control config
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp deployments/stitch-frontend/public/staticwebapp.config.json /tmp/frontend-dist/dist/staticwebapp.config.json
 
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
@@ -57,5 +99,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           skip_app_build: true
-          app_location: "/deployments/stitch-frontend/dist"
+          app_location: "/tmp/frontend-dist/dist"
           skip_api_build: true

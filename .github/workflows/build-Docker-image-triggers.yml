@@ -7,6 +7,11 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-frontend:
+    name: "Build frontend"
+    uses: ./.github/workflows/node-build.yml
+    secrets: inherit
+
   build_api_docker_image:
     name: "Build and publish API"
     uses: ./.github/workflows/build-and-push-Docker-image.yml
@@ -35,7 +40,8 @@ jobs:
     with:
       dockerfile: deployments/entity-linkage/Dockerfile
       image-name: ${{ github.event.repository.name }}-entity-linkage
-      image-tag: ${{ github.event_name == 'pull_request' && format('{0}{1}','pr', github.event.pull_request.number) ||
+      image-tag: ${{
+          github.event_name == 'pull_request' && format('{0}{1}','pr', github.event.pull_request.number) ||
           github.event_name == 'schedule' && 'nightly' ||
           github.event_name == 'push' && github.ref_name ||
           github.event_name == 'workflow_dispatch' && github.ref_name ||
@@ -154,10 +160,18 @@ jobs:
     name: "Deploy frontend"
     uses: ./.github/workflows/azure-static-web-apps.yml
     secrets: inherit
-    needs: [deploy-docker, deploy-entity-linkage]
+    needs: [build-frontend, deploy-docker, deploy-entity-linkage]
     with:
+      artifact-name: dist-tgz
+      app-env: ${{
+          github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) ||
+          github.ref_name
+        }}
       api-url: ${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
       entity-linkage-url: ${{ format('{0}/api/v1', needs.deploy-entity-linkage.outputs.container-app-url) }}
+      auth0-domain: rmi-spd.us.auth0.com
+      auth0-client-id: TS1V1soQbccAV1sitFFCfUaIlSwHD2S2
+      auth0-audience: https://stitch-api.local
 
   add-comment:
     if: ${{ github.event_name == 'pull_request' }}

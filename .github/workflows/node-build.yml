@@ -34,8 +34,6 @@ jobs:
             APP_ENV="${GITHUB_REF_NAME}"
           fi
 
-          echo "VITE_APP_VERSION=${APP_VERSION}" >> "$GITHUB_ENV"
-          echo "VITE_APP_VERSION=${APP_VERSION}"
           echo "VITE_BUILD_TIME=${BUILD_TIME}" >> "$GITHUB_ENV"
           echo "VITE_BUILD_TIME=${BUILD_TIME}" 
           echo "VITE_GIT_SHA=${GIT_SHA}" >> "$GITHUB_ENV"
@@ -46,8 +44,6 @@ jobs:
           echo "VITE_NODE_VERSION=${NODE_VERSION}"
           echo "VITE_VITE_VERSION=${VITE_VERSION}" >> "$GITHUB_ENV"
           echo "VITE_VITE_VERSION=${VITE_VERSION}"
-          echo "VITE_APP_ENV=${APP_ENV}" >> "$GITHUB_ENV"
-          echo "VITE_APP_ENV=${APP_ENV}"
 
       - name: Build
         run: make frontend-build
