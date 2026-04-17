@@ -1,28 +1,20 @@
-const REQUIRED_KEYS = [
-  "VITE_AUTH0_DOMAIN",
-  "VITE_AUTH0_CLIENT_ID",
-  "VITE_AUTH0_AUDIENCE",
+const REQUIRED_CONFIG_KEYS = [
+  "auth0Domain",
+  "auth0ClientId",
+  "auth0Audience",
 ];
 
-function loadConfig() {
-  const missing = REQUIRED_KEYS.filter((key) => !import.meta.env[key]);
+const DEFAULT_CONFIG_PATH = "/config.json";
 
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(", ")}. ` +
-        `Check your .env file or deployment config.`,
-    );
-  }
-
+function freezeConfig(runtimeConfig) {
   return Object.freeze({
     auth0: Object.freeze({
-      domain: import.meta.env.VITE_AUTH0_DOMAIN,
-      clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
-      audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+      domain: runtimeConfig.auth0Domain,
+      clientId: runtimeConfig.auth0ClientId,
+      audience: runtimeConfig.auth0Audience,
     }),
-    apiBaseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1",
-    appEnv:
-      import.meta.env.VITE_APP_ENV || import.meta.env.MODE || "development",
+    apiBaseUrl: runtimeConfig.apiUrl || "http://localhost:8000/api/v1",
+    appEnv: runtimeConfig.appEnv || "development",
 
     build: Object.freeze({
       appVersion: import.meta.env.VITE_APP_VERSION || "0.0.0-dev",
@@ -32,10 +24,45 @@ function loadConfig() {
       viteVersion: import.meta.env.VITE_VITE_VERSION || "unknown",
       buildTime: import.meta.env.VITE_BUILD_TIME || "unknown",
     }),
+
     entityLinkageBaseUrl:
-      import.meta.env.VITE_ENTITY_LINKAGE_URL || "http://localhost:8001/api/v1",
+      runtimeConfig.entityLinkageUrl || "http://localhost:8001/api/v1",
   });
 }
 
-export const config = loadConfig();
-export default config;
+function validateRuntimeConfig(config) {
+  if (!config || typeof config !== "object") {
+    throw new Error("Runtime config is missing or invalid.");
+  }
+
+  const missing = REQUIRED_CONFIG_KEYS.filter((key) => !config[key]);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required runtime config values: ${missing.join(", ")}. ` +
+        `Check ${DEFAULT_CONFIG_PATH} or deployment config.`,
+    );
+  }
+
+  return config;
+}
+
+export async function loadConfig() {
+  const response = await fetch(DEFAULT_CONFIG_PATH, {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to load runtime config from ${DEFAULT_CONFIG_PATH}: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  const runtimeConfig = validateRuntimeConfig(await response.json());
+  return freezeConfig(runtimeConfig);
+}
+
+export default loadConfig;
