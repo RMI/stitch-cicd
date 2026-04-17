@@ -80,6 +80,24 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @property
+    def environment_name(self) -> str:
+        return self.environment.strip().lower()
+
+    @property
+    def is_prod(self) -> bool:
+        return self.environment_name in {"prod", "production"}
+
+    @property
+    def allows_disabled_auth(self) -> bool:
+        env = self.environment_name
+        return (
+            env in {"dev", "development"}
+            or env.startswith("dev-")
+            or env.startswith("pr-")
+            or env == "main"
+        )
+
     def get_database_url(self) -> URL:
         if self.dialect == "sqlite":
             return SqliteConfig().to_url()
