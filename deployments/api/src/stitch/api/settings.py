@@ -1,4 +1,3 @@
-from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, ClassVar, Literal
@@ -9,12 +8,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
 Dialect = Literal["postgresql", "sqlite"]
-
-
-class Environment(StrEnum):
-    DEV = "dev"
-    TEST = "test"
-    PROD = "prod"
 
 
 class PostgresConfig(BaseSettings, cli_parse_args=False):
@@ -71,7 +64,7 @@ OriginUrl = Annotated[HttpUrl, AfterValidator(_validate_origin)]
 
 
 class Settings(BaseSettings):
-    environment: Environment = Environment.DEV
+    environment: str = "dev"
     dialect: Dialect = "postgresql"
     frontend_origin_url: OriginUrl = HttpUrl("http://localhost:3000")
     auth_disabled: bool = False
