@@ -82,7 +82,7 @@ jobs:
       postgres-port: ${{ needs.deploy-db.outputs.postgres-port }}
       postgres-db: ${{ needs.deploy-db.outputs.postgres-db }}
 
-  deploy-docker:
+  deploy-api:
     name: "Deploy API"
     uses: ./.github/workflows/deploy-container.yml
     secrets: inherit
@@ -123,7 +123,7 @@ jobs:
     name: "Deploy entity linkage"
     uses: ./.github/workflows/deploy-container.yml
     secrets: inherit
-    needs: [build_entity_linkage_docker_image, deploy-docker]
+    needs: [build_entity_linkage_docker_image, deploy-api]
     with:
       full-image-name: ${{ needs.build_entity_linkage_docker_image.outputs.digest-image-name }}
       containerAppName: ${{
@@ -151,7 +151,7 @@ jobs:
     name: "Run seed"
     uses: ./.github/workflows/run-seed.yml
     secrets: inherit
-    needs: [build_seed_docker_image, deploy-docker]
+    needs: [build_seed_docker_image, deploy-api]
     with:
       full-image-name: ${{ needs.build_seed_docker_image.outputs.digest-image-name }}
       api-url: ${{ format('{0}/api/v1', needs.deploy-docker.outputs.container-app-url) }}
