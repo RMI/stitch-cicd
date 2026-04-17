@@ -92,7 +92,7 @@ services:
         VITE_GIT_SHA: ${VITE_GIT_SHA:-unknown}
         VITE_NODE_VERSION: ${VITE_NODE_VERSION:-20}
         VITE_BUILD_TIME: ${VITE_BUILD_TIME:-unknown}
-        VITE_VITE_VERSION: ${VITE_VITE_VERSION:-unknown}
+        VITE_VITE_VERSION: ${VITE_VITE_VERSION:-}
         VITE_USE_MOCK_DATA: ${VITE_USE_MOCK_DATA:-false}
     ports:
       - "3000:80"
