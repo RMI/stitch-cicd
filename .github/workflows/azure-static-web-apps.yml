@@ -1,0 +1,61 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      api-url:
+        description: "Base API URL to inject into the frontend build"
+        required: true
+        type: string
+      entity-linkage-url:
+        description: "Base entity-linkage URL to inject into the frontend build"
+        required: false
+        default: "http://localhost:8001/api/v1"
+        type: string
+
+jobs:
+  build_and_deploy_job:
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    permissions:
+      checks: write
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+          lfs: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: deployments/stitch-frontend/package.json
+          cache: "npm"
+          cache-dependency-path: deployments/stitch-frontend/package-lock.json
+
+      - name: Build
+        run: make frontend-build
+        env:
+          VITE_API_URL: ${{ inputs.api-url }}
+          VITE_APP_ENV: ${{ (github.event_name == 'pull_request' && format('{0}-{1}', 'pr', github.event.pull_request.number)) || github.ref_name }}
+          VITE_AUTH0_AUDIENCE: https://stitch-api.local
+          VITE_AUTH0_CLIENT_ID: TS1V1soQbccAV1sitFFCfUaIlSwHD2S2
+          VITE_AUTH0_DOMAIN: https://rmi-spd.us.auth0.com
+          VITE_ENTITY_LINKAGE_URL: ${{ inputs.entity-linkage-url }}
+
+      - name: Install OIDC Client from Core Package
+        run: npm install @actions/core@1.6.0 @actions/http-client
+
+      - name: Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_DEPLOY_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          skip_app_build: true
+          app_location: "/deployments/stitch-frontend/dist"
+          skip_api_build: true
