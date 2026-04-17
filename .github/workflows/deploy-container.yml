@@ -128,8 +128,8 @@ jobs:
             "warnings": [],
             "data": {
               "service": "${{ inputs.deployment-label }}",
-              "url": "[open](${{ jobs.deploy-container-app.outputs.container-app-url }})",
-              "fqdn": "`${{ jobs.deploy-container-app.outputs.container-app-fqdn }}`"
+              "url": "[open](${{ steps.export-app-url.outputs.container_app_url }})",
+              "fqdn": "`${{ steps.export-app-url.outputs.container_app_fqdn }}`"
             }
           }
           EOF
