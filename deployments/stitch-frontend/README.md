@@ -492,8 +492,8 @@ Instead, deployment should provide `public/config.json` with the environment-spe
 
 Recommended deploy sequence:
 
-1. Build the frontend
-2. Write `public/config.json`
+1. Write `public/config.json`
+2. Build the frontend
 3. Deploy the static site
 4. Ensure `/config.json` is served with `Cache-Control: no-store`
 
