@@ -19,6 +19,11 @@ on:
         required: false
         default: 8000
         type: number
+      deployment-label:
+        description: "Short label for reporting"
+        required: false
+        default: "container-app"
+        type: string
       environment-variables:
         description: "Whitespace-delimited non-secret KEY=value pairs"
         required: false
@@ -109,17 +114,30 @@ jobs:
           echo "container_app_fqdn=$fqdn" >> "$GITHUB_OUTPUT"
           echo "container_app_url=https://$fqdn" >> "$GITHUB_OUTPUT"
 
-  add_comment:
-    if: ${{ github.event.pull_request.number != null }}
-    needs: [deploy-container-app]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create or update comment
-        uses: peter-evans/create-or-update-comment@v4
+      - name: Write comment JSON
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/comment-json
+          cat > /tmp/comment-json/comment-json-deploy-${{ inputs.deployment-label }}.json <<EOF
+          {
+            "section": "deployments",
+            "kind": "container_app",
+            "name": "${{ inputs.deployment-label }}",
+            "warnings": [],
+            "data": {
+              "service": "${{ inputs.deployment-label }}",
+              "url": "[open](${{ steps.export-app-url.outputs.container_app_url }})",
+              "fqdn": "`${{ steps.export-app-url.outputs.container_app_fqdn }}`"
+            }
+          }
+          EOF
+
+      - name: Upload comment JSON artifact
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            API Deploy Status ${{ github.head_ref }}
-            url='${{ needs.deploy-container-app.outputs.container-app-url }}'
-            fqdn='${{ needs.deploy-container-app.outputs.container-app-fqdn }}'
-          edit-mode: replace
+          name: comment-json-deploy-${{ inputs.deployment-label }}
+          path: /tmp/comment-json/*.json
+          if-no-files-found: error

@@ -52,3 +52,32 @@ jobs:
             -e STATIC_PAYLOAD_DIR \
             -v "$GITHUB_WORKSPACE/deployments/seed/data:/mnt/data:ro" \
             "${{ inputs.full-image-name }}"
+
+
+      - name: Write comment JSON
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/comment-json
+          cat > /tmp/comment-json/comment-json-seed.json <<EOF
+          {
+            "section": "seed",
+            "kind": "seed_run",
+            "name": "seed",
+            "warnings": ["Seed ran without auth"],
+            "data": {
+              "job": "seed",
+              "api_url": "`${{ inputs.api-url }}`",
+              "image": "`${{ inputs.full-image-name }}`"
+            }
+          }
+          EOF
+
+      - name: Upload comment JSON artifact
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: comment-json-seed
+          path: /tmp/comment-json/*.json
+          if-no-files-found: error

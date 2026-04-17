@@ -60,3 +60,32 @@ jobs:
             -e PGSSLMODE \
             "${{ inputs.full-image-name }}" \
             python -m stitch.api.db.init_job
+
+
+      - name: Write comment JSON
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/comment-json
+          cat > /tmp/comment-json/comment-json-db-init.json <<EOF
+          {
+            "section": "database",
+            "kind": "db_init",
+            "name": "db-init",
+            "warnings": [],
+            "data": {
+              "job": "db-init",
+              "image": "`${{ inputs.full-image-name }}`",
+              "postgres_db": "`${{ inputs.postgres-db }}`"
+            }
+          }
+          EOF
+
+      - name: Upload comment JSON artifact
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: comment-json-db-init
+          path: /tmp/comment-json/*.json
+          if-no-files-found: error

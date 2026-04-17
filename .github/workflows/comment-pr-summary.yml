@@ -1,0 +1,128 @@
+name: Comment PR summary
+
+on:
+  workflow_call:
+
+jobs:
+  comment-summary:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Download comment JSON artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: comment-json-*
+          path: .comment-artifacts
+          merge-multiple: true
+
+      - name: Inspect downloaded comment JSON artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Downloaded comment artifacts:"
+          find .comment-artifacts -maxdepth 2 -type f | sort | sed -n '1,200p'
+
+      - name: Build summary comment
+        id: build-comment
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('.comment-artifacts')
+          files = sorted(root.rglob('*.json'))
+          items = []
+          parse_warnings = []
+
+          print("Parsing comment artifact files:")
+          for path in files:
+            print(f" - {path}")
+            try:
+              text = path.read_text()
+              items.append(json.loads(text))
+            except Exception as exc:
+              parse_warnings.append(f"{path.name}: failed to parse JSON ({exc})")
+              print(f"   ERROR parsing {path}: {exc}")
+              print("   File contents:")
+              print(text)
+
+          marker = '<!-- stitch-cd-summary -->'
+          lines = ['## CD summary', '', marker, '']
+
+          warnings = list(parse_warnings)
+          sections = {}
+
+          for item in items:
+            for warning in item.get('warnings', []):
+              warnings.append(f"{item.get('name', 'unknown')}: {warning}")
+            sections.setdefault(item.get('section', 'other'), []).append(item)
+
+          if warnings:
+            lines.append('### Warnings')
+            lines.extend([f'- {w}' for w in warnings])
+            lines.append('')
+
+          section_order = ['deployments', 'database', 'seed', 'images']
+          seen = set()
+          ordered_sections = []
+
+          for sec in section_order:
+            if sec in sections:
+              ordered_sections.append(sec)
+              seen.add(sec)
+
+          for sec in sections:
+            if sec not in seen:
+              ordered_sections.append(sec)
+
+          for sec in ordered_sections:
+            group = sections[sec]
+            lines.append(f"### {sec.capitalize()}")
+
+            keys = []
+            for item in group:
+              for k in item.get('data', {}).keys():
+                if k not in keys:
+                  keys.append(k)
+
+            if not keys:
+              lines.append('_No data_')
+              lines.append('')
+              continue
+
+            lines.append('| ' + ' | '.join(keys) + ' |')
+            lines.append('| ' + ' | '.join(['---'] * len(keys)) + ' |')
+
+            for item in sorted(group, key=lambda x: x.get('name', '')):
+              row = [str(item.get('data', {}).get(k, '')) for k in keys]
+              lines.append('| ' + ' | '.join(row) + ' |')
+
+            lines.append('')
+
+          body = '\n'.join(lines).strip() + '\n'
+          print(body)
+          Path('.comment-body.md').write_text(body)
+          PY
+
+          echo "comment_body_path=.comment-body.md" >> "$GITHUB_OUTPUT"
+
+      # - name: Find existing summary comment
+      #   id: find-comment
+      #   uses: peter-evans/find-comment@v3
+      #   with:
+      #     issue-number: ${{ github.event.pull_request.number }}
+      #     body-includes: "<!-- stitch-cd-summary -->"
+
+      - name: Create or update summary comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          body-path: ${{ steps.render.outputs.comment_body_path }}
+          edit-mode: replace
