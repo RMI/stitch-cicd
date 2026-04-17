@@ -95,6 +95,8 @@ jobs:
         FRONTEND_ORIGIN_URL=${{
           github.event_name == 'pull_request' &&
           format('https://witty-mushroom-017a3dc1e-{0}.westus2.1.azurestaticapps.net', github.event.pull_request.number) ||
+          github.event_name == 'push' && github.ref_name == 'main' &&
+          'https://witty-mushroom-017a3dc1e.1.azurestaticapps.net' ||
           github.event_name == 'push' &&
           format('https://witty-mushroom-017a3dc1e-{0}.westus2.1.azurestaticapps.net', github.ref_name) ||
           'http://localhost:3000'
@@ -132,6 +134,8 @@ jobs:
         ENTITY_LINKAGE_FRONTEND_ORIGIN_URL=${{
           github.event_name == 'pull_request' &&
           format('https://witty-mushroom-017a3dc1e-{0}.westus2.1.azurestaticapps.net', github.event.pull_request.number) ||
+          github.event_name == 'push' && github.ref_name == 'main' &&
+          'https://witty-mushroom-017a3dc1e.1.azurestaticapps.net' ||
           github.event_name == 'push' &&
           format('https://witty-mushroom-017a3dc1e-{0}.westus2.1.azurestaticapps.net', github.ref_name) ||
           'http://localhost:3000'
