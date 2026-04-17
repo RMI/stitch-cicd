@@ -54,12 +54,32 @@ jobs:
           name: ${{ inputs.artifact-name }}
           path: /tmp/frontend-artifact
 
+      - name: Inspect downloaded artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Downloaded artifact directory:"
+          pwd
+          ls -la /tmp/frontend-artifact
+          echo
+          echo "Tarball contents:"
+          tar -tzf /tmp/frontend-artifact/dist.tgz | sed -n '1,120p'
+
       - name: Extract frontend dist
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/frontend-dist/dist
-          tar -xzf /tmp/frontend-artifact/dist.tgz -C /tmp/frontend-dist/dist
+          rm -rf /tmp/frontend-dist
+          mkdir -p /tmp/frontend-dist
+          tar -xzf /tmp/frontend-artifact/dist.tgz -C /tmp/frontend-dist
+
+          echo "Extracted files:"
+          find /tmp/frontend-dist -maxdepth 3 -type f | sort | sed -n '1,200p'
+
+          test -f /tmp/frontend-dist/index.html || {
+            echo "Expected /tmp/frontend-dist/index.html but it was not found" >&2
+            exit 1
+          }
 
       - name: Generate runtime config
         shell: bash
@@ -69,7 +89,7 @@ jobs:
           CONFIG_TIME="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           CONFIG_ID="cfg-${{ inputs.app-env }}-$(date -u +'%Y%m%dT%H%M%SZ')"
 
-          cat > /tmp/frontend-dist/dist/config.json <<EOF
+          cat > /tmp/frontend-dist/config.json <<EOF
           {
             "appEnv": "${{ inputs.app-env }}",
             "apiUrl": "${{ inputs.api-url }}",
@@ -82,11 +102,17 @@ jobs:
           }
           EOF
 
+          echo "Generated config.json:"
+          cat /tmp/frontend-dist/config.json
+
       - name: Add SWA cache-control config
         shell: bash
         run: |
           set -euo pipefail
-          cp deployments/stitch-frontend/public/staticwebapp.config.json /tmp/frontend-dist/dist/staticwebapp.config.json
+          cp deployments/stitch-frontend/public/staticwebapp.config.json /tmp/frontend-dist/staticwebapp.config.json
+
+          echo "Final deploy directory:"
+          find /tmp/frontend-dist -maxdepth 2 -type f | sort | sed -n '1,200p'
 
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
