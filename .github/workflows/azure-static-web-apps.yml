@@ -152,7 +152,7 @@ jobs:
             --arg kind "static_site" \
             --arg name "frontend" \
             --arg service "frontend" \
-            --arg url "[open](${swa_url})" \
+            --arg url "[${swa_url}](${swa_url})" \
             '{
               "section": $section,
               "kind": $kind,
