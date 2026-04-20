@@ -48,7 +48,7 @@ def build_comment_body(root: Path) -> str:
         lines.extend([f"- {warning}" for warning in warnings])
         lines.append("")
 
-    section_order = ["deployments", "database", "seed", "images"]
+    section_order = ["deployments", "database", "jobs", "images"]
     seen = set()
     ordered_sections = []
 
