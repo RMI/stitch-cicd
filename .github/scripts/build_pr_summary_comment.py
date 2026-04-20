@@ -32,6 +32,17 @@ def build_comment_body(root: Path) -> str:
             warnings.append(f"{item.get('name', 'unknown')}: {warning}")
         sections.setdefault(item.get("section", "other"), []).append(item)
 
+    frontend_url = ""
+    for item in items:
+        if item.get("name") == "frontend":
+            frontend_url = str(item.get("data", {}).get("url", "")).strip()
+            if frontend_url:
+                break
+
+    if frontend_url:
+        lines.append(f"Frontend: {frontend_url}")
+        lines.append("")
+
     if warnings:
         lines.append("### Warnings")
         lines.extend([f"- {warning}" for warning in warnings])
