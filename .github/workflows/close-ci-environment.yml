@@ -141,7 +141,7 @@ jobs:
       CONTAINER_APP_NAME: ${{
           github.event_name == 'pull_request' && format('{0}{1}', 'pr', github.event.pull_request.number) ||
           github.ref_name
-        }}-api
+        }}-entity-linkage
       RESOURCE_GROUP: STITCH-DEV-RG
 
     steps:
