@@ -112,17 +112,8 @@ jobs:
 
           echo "comment_body_path=.comment-body.md" >> "$GITHUB_OUTPUT"
 
-      # - name: Find existing summary comment
-      #   id: find-comment
-      #   uses: peter-evans/find-comment@v3
-      #   with:
-      #     issue-number: ${{ github.event.pull_request.number }}
-      #     body-includes: "<!-- stitch-cd-summary -->"
-
       - name: Create or update summary comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
           body-path: ${{ steps.render.outputs.comment_body_path }}
-          edit-mode: replace
