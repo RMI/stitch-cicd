@@ -21,9 +21,6 @@ def build_comment_body(root: Path) -> str:
             print("   File contents:")
             print(text)
 
-    marker = "<!-- stitch-cd-summary -->"
-    lines = ["## CD summary", "", marker, ""]
-
     warnings = list(parse_warnings)
     sections = {}
 
@@ -31,6 +28,20 @@ def build_comment_body(root: Path) -> str:
         for warning in item.get("warnings", []):
             warnings.append(f"{item.get('name', 'unknown')}: {warning}")
         sections.setdefault(item.get("section", "other"), []).append(item)
+
+    short_sha = ""
+    for item in items:
+        git_sha = str(item.get("data", {}).get("git_sha", "")).strip()
+        if git_sha:
+            short_sha = git_sha[:7]
+            break
+
+    title = "## CD summary"
+    if short_sha:
+        title = f"{title} `{short_sha}`"
+
+    marker = "<!-- stitch-cd-summary -->"
+    lines = [title, "", marker, ""]
 
     frontend_url = ""
     for item in items:
