@@ -83,7 +83,9 @@ jobs:
 
           for sec in ordered_sections:
             group = sections[sec]
-            lines.append(f"### {sec.capitalize()}")
+            lines.append('<details>')
+            lines.append(f'<summary>{sec.capitalize()} ({len(group)})</summary>')
+            lines.append('')
 
             keys = []
             for item in group:
@@ -94,6 +96,8 @@ jobs:
             if not keys:
               lines.append('_No data_')
               lines.append('')
+              lines.append('</details>')
+              lines.append('')
               continue
 
             lines.append('| ' + ' | '.join(keys) + ' |')
@@ -103,6 +107,8 @@ jobs:
               row = [str(item.get('data', {}).get(k, '')) for k in keys]
               lines.append('| ' + ' | '.join(row) + ' |')
 
+            lines.append('')
+            lines.append('</details>')
             lines.append('')
 
           body = '\n'.join(lines).strip() + '\n'
