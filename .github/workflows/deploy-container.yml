@@ -120,19 +120,29 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/comment-json
-          cat > /tmp/comment-json/comment-json-deploy-${{ inputs.deployment-label }}.json <<EOF
-          {
-            "section": "deployments",
-            "kind": "container_app",
-            "name": "${{ inputs.deployment-label }}",
-            "warnings": [],
-            "data": {
-              "service": "${{ inputs.deployment-label }}",
-              "url": "[open](${{ steps.export-app-url.outputs.container_app_url }})",
-              "fqdn": "`${{ steps.export-app-url.outputs.container_app_fqdn }}`"
-            }
-          }
-          EOF
+          json_file="/tmp/comment-json/comment-json-deploy-${{ inputs.deployment-label }}.json"
+
+          jq -n \
+            --arg section "deployments" \
+            --arg kind "container_app" \
+            --arg name "${{ inputs.deployment-label }}" \
+            --arg service "${{ inputs.deployment-label }}" \
+            --arg url "[open](${{ steps.export-app-url.outputs.container_app_url }})" \
+            --arg fqdn '`${{ steps.export-app-url.outputs.container_app_fqdn }}`' \
+            '{
+              "section": $section,
+              "kind": $kind,
+              "name": $name,
+              "warnings": [],
+              "data": {
+                "service": $service,
+                "url": $url,
+                "fqdn": $fqdn
+              }
+            }' > "$json_file"
+
+          jq empty "$json_file"
+          cat "$json_file"
 
       - name: Upload comment JSON artifact
         if: ${{ github.event_name == 'pull_request' }}

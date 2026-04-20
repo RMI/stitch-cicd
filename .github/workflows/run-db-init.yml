@@ -68,19 +68,29 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/comment-json
-          cat > /tmp/comment-json/comment-json-db-init.json <<EOF
-          {
-            "section": "database",
-            "kind": "db_init",
-            "name": "db-init",
-            "warnings": [],
-            "data": {
-              "job": "db-init",
-              "image": "`${{ inputs.full-image-name }}`",
-              "postgres_db": "`${{ inputs.postgres-db }}`"
-            }
-          }
-          EOF
+          json_file="/tmp/comment-json/comment-json-db-init.json"
+
+          jq -n \
+            --arg section "database" \
+            --arg kind "db_init" \
+            --arg name "db-init" \
+            --arg job "db-init" \
+            --arg image '`${{ inputs.full-image-name }}`' \
+            --arg postgres_db '`${{ inputs.postgres-db }}`' \
+            '{
+              "section": $section,
+              "kind": $kind,
+              "name": $name,
+              "warnings": [],
+              "data": {
+                "job": $job,
+                "image": $image,
+                "postgres_db": $postgres_db
+              }
+            }' > "$json_file"
+
+          jq empty "$json_file"
+          cat "$json_file"
 
       - name: Upload comment JSON artifact
         if: ${{ github.event_name == 'pull_request' }}

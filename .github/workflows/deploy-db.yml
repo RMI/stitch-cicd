@@ -131,20 +131,31 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/comment-json
-          cat > /tmp/comment-json/comment-json-db-deploy.json <<EOF
-          {
-            "section": "database",
-            "kind": "postgres_database",
-            "name": "db",
-            "warnings": [],
-            "data": {
-              "db_name": "${{ steps.normalize-name.outputs.db-name }}",
-              "postgres_host": "`${PGHOST}`",
-              "postgres_port": "`${PGPORT}`",
-              "postgres_db": "`${{ steps.normalize-name.outputs.db-name }}`"
-            }
-          }
-          EOF
+          json_file="/tmp/comment-json/comment-json-db-deploy.json"
+
+          jq -n \
+            --arg section "database" \
+            --arg kind "postgres_database" \
+            --arg name "db" \
+            --arg db_name "${{ steps.normalize-name.outputs.db-name }}" \
+            --arg postgres_host "\`${PGHOST}\`" \
+            --arg postgres_port "\`${PGPORT}\`" \
+            --arg postgres_db "\`${{ steps.normalize-name.outputs.db-name }}\`" \
+            '{
+              "section": $section,
+              "kind": $kind,
+              "name": $name,
+              "warnings": [],
+              "data": {
+                "db_name": $db_name,
+                "postgres_host": $postgres_host,
+                "postgres_port": $postgres_port,
+                "postgres_db": $postgres_db
+              }
+            }' > "$json_file"
+
+          jq empty "$json_file"
+          cat "$json_file"
 
       - name: Upload comment JSON artifact
         if: ${{ github.event_name == 'pull_request' }}
