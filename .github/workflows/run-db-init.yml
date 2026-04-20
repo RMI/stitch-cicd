@@ -71,7 +71,7 @@ jobs:
           json_file="/tmp/comment-json/comment-json-db-init.json"
 
           jq -n \
-            --arg section "database" \
+            --arg section "jobs" \
             --arg kind "db_init" \
             --arg name "db-init" \
             --arg job "db-init" \

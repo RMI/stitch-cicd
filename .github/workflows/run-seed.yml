@@ -63,7 +63,7 @@ jobs:
           json_file="/tmp/comment-json/comment-json-seed.json"
 
           jq -n \
-            --arg section "seed" \
+            --arg section "jobs" \
             --arg kind "seed_run" \
             --arg name "seed" \
             --arg job "seed" \
