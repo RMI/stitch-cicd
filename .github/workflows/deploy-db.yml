@@ -123,3 +123,44 @@ jobs:
           STITCH_MIGRATOR_PASSWORD: ${{ secrets.STITCH_MIGRATOR_PASSWORD_DEV }}
           STITCH_APP_PASSWORD: ${{ secrets.STITCH_APP_PASSWORD_DEV }}
         run: deployments/db/00-init-roles.sh
+
+
+      - name: Write comment JSON
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/comment-json
+          json_file="/tmp/comment-json/comment-json-db-deploy.json"
+
+          jq -n \
+            --arg section "database" \
+            --arg kind "postgres_database" \
+            --arg name "db" \
+            --arg db_name "${{ steps.normalize-name.outputs.db-name }}" \
+            --arg postgres_host "\`${PGHOST}\`" \
+            --arg postgres_port "\`${PGPORT}\`" \
+            --arg postgres_db "\`${{ steps.normalize-name.outputs.db-name }}\`" \
+            '{
+              "section": $section,
+              "kind": $kind,
+              "name": $name,
+              "warnings": [],
+              "data": {
+                "db_name": $db_name,
+                "postgres_host": $postgres_host,
+                "postgres_port": $postgres_port,
+                "postgres_db": $postgres_db
+              }
+            }' > "$json_file"
+
+          jq empty "$json_file"
+          cat "$json_file"
+
+      - name: Upload comment JSON artifact
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: comment-json-db-deploy
+          path: /tmp/comment-json/*.json
+          if-no-files-found: error
