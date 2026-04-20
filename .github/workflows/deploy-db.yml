@@ -141,7 +141,7 @@ jobs:
               "db_name": "${{ steps.normalize-name.outputs.db-name }}",
               "postgres_host": "`${PGHOST}`",
               "postgres_port": "`${PGPORT}`",
-              "postgres_db": "`${{ steps.normalize-name.outputs.db-name }}`",
+              "postgres_db": "`${{ steps.normalize-name.outputs.db-name }}`"
             }
           }
           EOF
