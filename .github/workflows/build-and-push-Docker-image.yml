@@ -60,7 +60,7 @@ jobs:
       - name: Identify LABELs in dockerfile
         id: custom-labels
         run: |
-          DOCKERFILE_LABELS="$(grep "^LABEL" ${{ inputs.dockerfile }} | sed 's/^LABEL[[:space:]]*//')"
+          DOCKERFILE_LABELS="$(grep "^LABEL" ${{ inputs.dockerfile }} | sed 's/^LABEL[[:space:]]*//' || true)"
           echo "$DOCKERFILE_LABELS"
           echo "DOCKERFILE_LABELS<<EOF" >> "$GITHUB_ENV"
           echo "$DOCKERFILE_LABELS" >> "$GITHUB_ENV"
@@ -180,7 +180,7 @@ jobs:
           cat "$json_file"
 
       - name: Upload comment JSON
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.json-filename }}
           path: /tmp/comment-json/*
